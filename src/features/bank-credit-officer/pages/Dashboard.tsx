@@ -6,10 +6,10 @@ import {
   CreditCardOutlined, 
   FileOutlined 
 } from '@ant-design/icons';
-import StatCard from '../components/atoms/StatCard';
-import ProjectsTable from '../components/organisms/ProjectsTable';
+import StatCard from '../../../components/atoms/StatCard';
+import ProjectsTable from '../../../components/organisms/ProjectsTable';
 import { dashboardStats, mockProjects } from '../utils/mockData';
-import { theme } from '../styles/theme';
+import { theme } from '../../../styles/theme';
 
 const DashboardPage = () => {
   const containerStyle: CSSProperties = {

@@ -1,5 +1,5 @@
 import type { CSSProperties } from 'react';
-import { getStatusColor, getStatusBgColor } from '../../utils/helpers';
+import { getStatusColor, getStatusBgColor } from '../../features/bank-credit-officer/utils/helpers';
 
 interface StatusBadgeProps {
   status: string;

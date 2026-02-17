@@ -1,9 +1,9 @@
 import { useState, useMemo } from 'react';
 import type { CSSProperties } from 'react';
-import type { Project } from '../../types';
+import type { Project } from '../../features/bank-credit-officer/types';
 import StatusBadge from '../atoms/StatusBadge';
 import PaymentStatus from '../atoms/PaymentStatus';
-import { formatDate } from '../../utils/helpers';
+import { formatDate } from '../../features/bank-credit-officer/utils/helpers';
 import { theme } from '../../styles/theme';
 
 interface ProjectsTableProps {

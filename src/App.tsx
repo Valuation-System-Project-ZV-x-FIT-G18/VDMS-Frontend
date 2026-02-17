@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import MainLayout from './layouts/MainLayout';
-import DashboardPage from './pages/DashboardPage';
-import AllProjectsPage from './pages/AllProjectsPage';
+import DashboardPage from './features/bank-credit-officer/pages/Dashboard';
+import AllProjectsPage from './features/bank-credit-officer/pages/AllProjects';
 
 function App() {
   const [activePage, setActivePage] = useState('dashboard');

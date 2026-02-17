@@ -1,8 +1,8 @@
 import { useState } from 'react';
 import type { CSSProperties } from 'react';
-import ProjectsTable from '../components/organisms/ProjectsTable';
+import ProjectsTable from '../../../components/organisms/ProjectsTable';
 import { mockProjects } from '../utils/mockData';
-import { theme } from '../styles/theme';
+import { theme } from '../../../styles/theme';
 
 const AllProjectsPage = () => {
   const [statusFilter, setStatusFilter] = useState<string>('All');

@@ -1,5 +1,5 @@
 import type { CSSProperties } from 'react';
-import { getPaymentStatusColor } from '../../utils/helpers';
+import { getPaymentStatusColor } from '../../features/bank-credit-officer/utils/helpers';
 
 interface PaymentStatusProps {
   status: 'Paid' | 'Pending';
