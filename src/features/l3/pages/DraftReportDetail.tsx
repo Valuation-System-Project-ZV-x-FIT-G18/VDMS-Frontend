@@ -8,6 +8,7 @@ interface DraftReportDetailProps {
 
 const DraftReportDetail = ({
   projectId = "PV-2024-8842",
+  onBack,
 }: DraftReportDetailProps) => {
   const [comments, setComments] = useState("");
 
@@ -53,6 +54,20 @@ const DraftReportDetail = ({
     fontSize: "12px",
     color: "#9ca3af",
     fontWeight: 500,
+  };
+
+  const backButtonStyle: CSSProperties = {
+    backgroundColor: "transparent",
+    border: "none",
+    color: "#3b82f6",
+    fontSize: "14px",
+    fontWeight: 600,
+    cursor: "pointer",
+    padding: "0",
+    marginRight: "16px",
+    display: "inline-flex",
+    alignItems: "center",
+    gap: "6px",
   };
 
   const mainGridStyle: CSSProperties = {
@@ -371,6 +386,11 @@ const DraftReportDetail = ({
       {/* Header */}
       <div style={headerStyle}>
         <div style={headerTopStyle}>
+          {onBack && (
+            <button style={backButtonStyle} onClick={onBack}>
+              ← Back to Dashboard
+            </button>
+          )}
           <h1 style={titleStyle}>
             Draft Report: {projectId}
             <span style={statusBadgeStyle}>Under Review</span>

@@ -61,12 +61,12 @@ const MainLayout = ({
 
   return (
     <div style={pageStyle}>
-      {/* ✅ Fixed Header */}
+      {/* Fixed Header */}
       <div style={headerWrapperStyle}>
         <Header userName="John Doe" userRole={getRoleLabel(role)} />
       </div>
 
-      {/* ✅ Sidebar fixed + Content scroll */}
+      {/* Sidebar fixed + Content scroll */}
       <div style={bodyStyle}>
         <div style={sidebarWrapperStyle}>
           <Sidebar

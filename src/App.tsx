@@ -2,13 +2,16 @@ import { useState } from "react";
 import MainLayout from "./layouts/MainLayout";
 import RoleSelectPage from "./pages/RoleSelectPage";
 
-// ✅ Your Bank Credit Officer pages
+// ✅ Bank Credit Officer pages
 import BankDashboardPage from "./features/bank-credit-officer/pages/Dashboard";
 import BankAllProjectsPage from "./features/bank-credit-officer/pages/AllProjects";
+import BankSettingsPage from "./features/bank-credit-officer/pages/Settings";
 
-// ✅ Your Property Owner pages
+// ✅ Property Owner pages
 import OwnerDashboardPage from "./features/property-owner/pages/Dashboard";
 import OwnerAllProjectsPage from "./features/property-owner/pages/AllProjects";
+import OwnerPaymentPage from "./features/property-owner/pages/Payment";
+import OwnerSettingsPage from "./features/property-owner/pages/Settings";
 
 // ✅ Your L3 Manager pages
 import L3DashboardPage from "./features/l3/pages/Dashboard";
@@ -20,10 +23,11 @@ import L3DraftReportDetail from "./features/l3/pages/DraftReportDetail";
 type Role =
   | "bank"
   | "owner"
+  | "l3-manager"
   | "admin"
   | "coordinator"
   | "technical-officer"
-  | "l3-manager";
+  | "senior-valuator";
 
 function BlankRolePage({ title }: { title: string }) {
   return (
@@ -53,7 +57,12 @@ function App() {
     null,
   );
 
-  // ✅ First show role selection page
+  const handleNavigation = (page: string, projectId?: string) => {
+    setActivePage(page);
+    if (projectId) setSelectedProjectId(projectId);
+  };
+
+  // ✅ Role selection first
   if (!role) {
     return (
       <RoleSelectPage
@@ -65,61 +74,58 @@ function App() {
     );
   }
 
-  // ✅ Other roles: show blank pages ONLY (no header/sidebar)
+  // ✅ Other roles: blank pages only
   if (role === "admin") return <BlankRolePage title="Admin Portal" />;
   if (role === "coordinator")
     return <BlankRolePage title="Coordinator Portal" />;
   if (role === "technical-officer")
     return <BlankRolePage title="Technical Officer Portal" />;
+  if (role === "senior-valuator")
+    return <BlankRolePage title="Senior Valuator Portal" />;
 
-  // ✅ Your roles: show real layout (sidebar + header)
+  // ✅ L3 Manager
+  if (role === "l3-manager") {
+    return (
+      <MainLayout
+        activePage={activePage}
+        onNavigate={handleNavigation}
+        role={role}
+      >
+        {activePage === "dashboard" && (
+          <L3DashboardPage onNavigate={handleNavigation} />
+        )}
+        {activePage === "projects" && <L3AllProjectsPage />}
+        {activePage === "approvals" && <L3ApprovalsPage />}
+        {activePage === "reports" && <L3ReportsPage />}
+        {activePage === "draft-review" && (
+          <L3DraftReportDetail
+            projectId={selectedProjectId || "PV-2024-8842"}
+            onBack={() => setActivePage("dashboard")}
+          />
+        )}
+      </MainLayout>
+    );
+  }
+
+  // ✅ For bank/owner show layout
   return (
     <MainLayout
       activePage={activePage}
-      onNavigate={(page, projectId) => {
-        setActivePage(page);
-        if (projectId) setSelectedProjectId(projectId);
-      }}
+      onNavigate={handleNavigation}
       role={role}
     >
       {/* Bank Credit Officer */}
       {role === "bank" && activePage === "dashboard" && <BankDashboardPage />}
       {role === "bank" && activePage === "projects" && <BankAllProjectsPage />}
-      {role === "bank" && activePage === "payment" && (
-        <div>Payment Page (Coming Soon)</div>
-      )}
+      {role === "bank" && activePage === "settings" && <BankSettingsPage />}
 
       {/* Property Owner */}
       {role === "owner" && activePage === "dashboard" && <OwnerDashboardPage />}
       {role === "owner" && activePage === "projects" && (
         <OwnerAllProjectsPage />
       )}
-      {role === "owner" && activePage === "payment" && (
-        <div>Owner Payment (Coming Soon)</div>
-      )}
-
-      {/* L3 Manager */}
-      {role === "l3-manager" && activePage === "dashboard" && (
-        <L3DashboardPage
-          onNavigate={(page, projectId) => {
-            setActivePage(page);
-            if (projectId) setSelectedProjectId(projectId);
-          }}
-        />
-      )}
-      {role === "l3-manager" && activePage === "projects" && (
-        <L3AllProjectsPage />
-      )}
-      {role === "l3-manager" && activePage === "approvals" && (
-        <L3ApprovalsPage />
-      )}
-      {role === "l3-manager" && activePage === "reports" && <L3ReportsPage />}
-      {role === "l3-manager" && activePage === "draft-review" && (
-        <L3DraftReportDetail
-          projectId={selectedProjectId || "PV-2024-8842"}
-          onBack={() => setActivePage("dashboard")}
-        />
-      )}
+      {role === "owner" && activePage === "payment" && <OwnerPaymentPage />}
+      {role === "owner" && activePage === "settings" && <OwnerSettingsPage />}
     </MainLayout>
   );
 }

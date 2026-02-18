@@ -1,5 +1,8 @@
+import { useState } from 'react';
 import type { CSSProperties } from 'react';
-import { BellOutlined, MessageOutlined, ThunderboltFilled } from '@ant-design/icons';
+import { MessageOutlined, ThunderboltFilled } from '@ant-design/icons';
+import NotificationsDropdown from '../components/organisms/NotificationsDropdown';
+import MessagingSystem from '../components/organisms/MessagingSystem';
 import { theme } from '../styles/theme';
 
 interface HeaderProps {
@@ -8,17 +11,18 @@ interface HeaderProps {
 }
 
 const Header = ({ userName, userRole }: HeaderProps) => {
+  const [showMessaging, setShowMessaging] = useState(false);
+
   const headerStyle: CSSProperties = {
     height: '64px',
     backgroundColor: '#e6f7ff',
     borderBottom: `1px solid ${theme.colors.border}`,
     display: 'flex',
     alignItems: 'center',
-    justifyContent: 'space-between', // ✅ left logo + right controls
+    justifyContent: 'space-between',
     padding: '0 16px',
   };
 
-  // ✅ Brand (left)
   const brandStyle: CSSProperties = {
     display: 'flex',
     alignItems: 'center',
@@ -43,7 +47,6 @@ const Header = ({ userName, userRole }: HeaderProps) => {
     color: theme.colors.primary.main,
   };
 
-  // ✅ Right controls group
   const rightStyle: CSSProperties = {
     display: 'flex',
     alignItems: 'center',
@@ -61,16 +64,6 @@ const Header = ({ userName, userRole }: HeaderProps) => {
     alignItems: 'center',
     justifyContent: 'center',
     position: 'relative',
-  };
-
-  const notificationDotStyle: CSSProperties = {
-    position: 'absolute',
-    top: '8px',
-    right: '8px',
-    width: '8px',
-    height: '8px',
-    backgroundColor: '#ff4d4f',
-    borderRadius: '50%',
   };
 
   const userInfoStyle: CSSProperties = {
@@ -91,50 +84,66 @@ const Header = ({ userName, userRole }: HeaderProps) => {
     color: theme.colors.text.secondary,
   };
 
+  const getAvatarColor = () => {
+    const colors = [
+      '#1890ff', '#52c41a', '#722ed1', '#fa8c16',
+      '#eb2f96', '#13c2c2', '#f5222d', '#faad14',
+    ];
+    const index = userName.charCodeAt(0) % colors.length;
+    return colors[index];
+  };
+
   const avatarStyle: CSSProperties = {
     width: '40px',
     height: '40px',
     borderRadius: '50%',
-    backgroundColor: '#1890ff',
+    backgroundColor: getAvatarColor(),
     color: 'white',
     display: 'flex',
     alignItems: 'center',
     justifyContent: 'center',
     fontWeight: 600,
     fontSize: '16px',
+    flexShrink: 0,
   };
 
   return (
-    <header style={headerStyle}>
-      {/* ✅ Company logo/name on the FAR LEFT */}
-      <div style={brandStyle}>
-        <div style={brandIconStyle}>
-          <ThunderboltFilled />
-        </div>
-        <span style={brandTextStyle}>ABC VDMS</span>
-      </div>
-
-      {/* Right side */}
-      <div style={rightStyle}>
-        <button style={iconButtonStyle}>
-          <span style={notificationDotStyle}></span>
-          <BellOutlined style={{ fontSize: '18px', color: '#595959' }} />
-        </button>
-
-        <button style={iconButtonStyle}>
-          <MessageOutlined style={{ fontSize: '18px', color: '#595959' }} />
-        </button>
-
-        <div style={userInfoStyle}>
-          <span style={userNameStyle}>{userName}</span>
-          <span style={userRoleStyle}>{userRole}</span>
+    <>
+      <header style={headerStyle}>
+        <div style={brandStyle}>
+          <div style={brandIconStyle}>
+            <ThunderboltFilled />
+          </div>
+          <span style={brandTextStyle}>ABC VDMS</span>
         </div>
 
-        <div style={avatarStyle}>
-          {userName.charAt(0).toUpperCase()}
+        <div style={rightStyle}>
+          <NotificationsDropdown />
+
+          {/* Message Icon - Opens Messaging System */}
+          <button 
+            style={iconButtonStyle}
+            onClick={() => setShowMessaging(true)}
+          >
+            <MessageOutlined style={{ fontSize: '18px', color: '#595959' }} />
+          </button>
+
+          <div style={userInfoStyle}>
+            <span style={userNameStyle}>{userName}</span>
+            <span style={userRoleStyle}>{userRole}</span>
+          </div>
+
+          <div style={avatarStyle}>
+            {userName.charAt(0).toUpperCase()}
+          </div>
         </div>
-      </div>
-    </header>
+      </header>
+
+      {/* Messaging System Modal */}
+      {showMessaging && (
+        <MessagingSystem onClose={() => setShowMessaging(false)} />
+      )}
+    </>
   );
 };
 

@@ -21,7 +21,7 @@ export interface Project {
   id: string;
   projectId: string; // Display ID like "PROJ-2023-001"
   propertyAddress: string;
-  applicant?: string;
+ applicants?: string[];
   status: ProjectStatus;
   requestedDate: string;
   expectedCompletion: string;
