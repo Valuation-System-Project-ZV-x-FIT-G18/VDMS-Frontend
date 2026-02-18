@@ -5,10 +5,13 @@ import RoleSelectPage from './pages/RoleSelectPage';
 // ✅ Your Bank Credit Officer pages
 import BankDashboardPage from './features/bank-credit-officer/pages/Dashboard';
 import BankAllProjectsPage from './features/bank-credit-officer/pages/AllProjects';
+import SettingsPage from './features/bank-credit-officer/pages/Settings';
 
 // ✅ Your Property Owner pages
 import OwnerDashboardPage from './features/property-owner/pages/Dashboard';
 import OwnerAllProjectsPage from './features/property-owner/pages/AllProjects';
+import PaymentPage from './features/property-owner/pages/Payment';
+import OwnerSettingsPage from './features/property-owner/pages/Settings';
 
 type Role =
   | 'bank'
@@ -30,6 +33,20 @@ function BlankRolePage({ title }: { title: string }) {
     </div>
   );
 }
+
+// ✅ User info per role (later this will come from login/auth)
+const roleConfig = {
+  bank: {
+    userName: 'John Doe',
+    userRole: 'Senior Credit Officer',
+    userType: 'credit_officer' as const,
+  },
+  owner: {
+    userName: 'David Silva',
+    userRole: 'Property Owner',
+    userType: 'property_owner' as const,
+  },
+};
 
 function App() {
   const [role, setRole] = useState<Role | null>(null);
@@ -55,18 +72,28 @@ function App() {
   if (role === 'technical-officer') return <BlankRolePage title="Technical Officer Portal" />;
   if (role === 'senior-valuator') return <BlankRolePage title="Senior Valuator Portal" />;
 
+  // ✅ Get the right user info based on role
+  const currentUser = roleConfig[role];
+
   // ✅ Your roles: show real layout (sidebar + header)
   return (
-    <MainLayout activePage={activePage} onNavigate={handleNavigation}>
+    <MainLayout
+      activePage={activePage}
+      onNavigate={handleNavigation}
+      userName={currentUser.userName}
+      userRole={currentUser.userRole}
+      userType={currentUser.userType}
+    >
       {/* Bank Credit Officer */}
       {role === 'bank' && activePage === 'dashboard' && <BankDashboardPage />}
       {role === 'bank' && activePage === 'projects' && <BankAllProjectsPage />}
-      {role === 'bank' && activePage === 'payment' && <div>Payment Page (Coming Soon)</div>}
+      {role === 'bank' && activePage === 'settings' && <SettingsPage />}
 
       {/* Property Owner */}
       {role === 'owner' && activePage === 'dashboard' && <OwnerDashboardPage />}
       {role === 'owner' && activePage === 'projects' && <OwnerAllProjectsPage />}
-      {role === 'owner' && activePage === 'payment' && <div>Owner Payment (Coming Soon)</div>}
+      {role === 'owner' && activePage === 'payment' && <PaymentPage />}
+     {role === 'owner' && activePage === 'settings' && <OwnerSettingsPage />}
     </MainLayout>
   );
 }
