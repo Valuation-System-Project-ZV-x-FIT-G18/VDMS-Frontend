@@ -1,3 +1,4 @@
+import { useState } from 'react';
 import type { CSSProperties } from 'react';
 import { 
   FolderOutlined, 
@@ -8,13 +9,27 @@ import {
 } from '@ant-design/icons';
 import StatCard from '../../../components/atoms/StatCard';
 import ProjectsTable from '../../../components/organisms/ProjectsTable';
+import ValuationJobDetail from './ValuationJobDetail';
 import { dashboardStats, mockProjects } from '../utils/mockData';
 import { theme } from '../../../styles/theme';
 
 const DashboardPage = () => {
+  const [selectedProjectId, setSelectedProjectId] = useState<string | null>(null);
+
+  if (selectedProjectId) {
+    return (
+      <ValuationJobDetail 
+        projectId={selectedProjectId} 
+        onBack={() => setSelectedProjectId(null)} 
+      />
+    );
+  }
+
   const containerStyle: CSSProperties = {
     maxWidth: '1400px',
     margin: '0 auto',
+    padding: '0 32px',
+    boxSizing: 'border-box',
   };
 
   const headerStyle: CSSProperties = {
@@ -46,7 +61,7 @@ const DashboardPage = () => {
       <div style={headerStyle}>
         <h1 style={titleStyle}>Dashboard Overview</h1>
         <p style={subtitleStyle}>
-          welcome back, here's what's happening with your valuation request today
+          welcome back, here's what's happening with your valuation job today
         </p>
       </div>
 
@@ -85,7 +100,11 @@ const DashboardPage = () => {
       </div>
 
       {/* Projects Table */}
-      <ProjectsTable projects={mockProjects.slice(0, 5)} showSearch />
+      <ProjectsTable 
+        projects={mockProjects.slice(0, 5)} 
+        showSearch 
+        onProjectClick={(projectId) => setSelectedProjectId(projectId)}
+      />
     </div>
   );
 };

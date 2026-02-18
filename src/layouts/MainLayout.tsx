@@ -7,51 +7,61 @@ interface MainLayoutProps {
   children: ReactNode;
   activePage: string;
   onNavigate: (page: string) => void;
+  userName: string;
+  userRole: string;
+  userType: 'credit_officer' | 'property_owner';
 }
 
-const MainLayout = ({ children, activePage, onNavigate }: MainLayoutProps) => {
+const MainLayout = ({ children, activePage, onNavigate, userName, userRole, userType }: MainLayoutProps) => {
   const pageStyle: CSSProperties = {
-    height: "100vh",             // ✅ full screen height
+    height: "100vh",
     display: "flex",
     flexDirection: "column",
     backgroundColor: theme.colors.background.default,
-    overflow: "hidden",          // ✅ prevents whole page scrolling
+    overflow: "hidden",
   };
 
   const headerWrapperStyle: CSSProperties = {
-    flexShrink: 0,               // ✅ header never shrinks
+    flexShrink: 0,
   };
 
   const bodyStyle: CSSProperties = {
     display: "flex",
     flex: 1,
-    overflow: "hidden",          // ✅ prevents sidebar+content wrapper scrolling
+    overflow: "hidden",
   };
 
   const sidebarWrapperStyle: CSSProperties = {
-    flexShrink: 0,               // ✅ sidebar fixed width
+    flexShrink: 0,
     height: "100%",
-    overflow: "hidden",          // ✅ sidebar will not scroll
+    overflow: "hidden",
   };
 
   const contentWrapperStyle: CSSProperties = {
     flex: 1,
     height: "100%",
-    overflow: "auto",            // ✅ ONLY content scrolls
+    overflow: "auto",
     padding: "24px",
   };
 
   return (
     <div style={pageStyle}>
-      {/* ✅ Fixed Header */}
+      {/* Fixed Header */}
       <div style={headerWrapperStyle}>
-        <Header userName="John Doe" userRole="Senior Credit Officer" />
+        <Header
+          userName={userName}
+          userRole={userRole}
+        />
       </div>
 
-      {/* ✅ Sidebar fixed + Content scroll */}
+      {/* Sidebar fixed + Content scroll */}
       <div style={bodyStyle}>
         <div style={sidebarWrapperStyle}>
-          <Sidebar activePage={activePage} onNavigate={onNavigate} />
+          <Sidebar
+            activePage={activePage}
+            onNavigate={onNavigate}
+            userType={userType}
+          />
         </div>
 
         <main style={contentWrapperStyle}>{children}</main>

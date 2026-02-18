@@ -11,7 +11,7 @@ const StatCard = ({ title, value, icon, iconBgColor = '#1890ff' }: StatCardProps
   const cardStyle: CSSProperties = {
     backgroundColor: '#ffffff',
     padding: '20px 24px',
-    borderRadius: '8px',
+    borderRadius: '20px',
     border: '1px solid #f0f0f0',
     display: 'flex',
     justifyContent: 'space-between',
@@ -31,6 +31,9 @@ const StatCard = ({ title, value, icon, iconBgColor = '#1890ff' }: StatCardProps
     fontWeight: 500,
     textTransform: 'uppercase',
     letterSpacing: '0.5px',
+    whiteSpace: 'nowrap',
+    overflow: 'hidden',
+    textOverflow: 'ellipsis',
   };
 
   const valueStyle: CSSProperties = {
