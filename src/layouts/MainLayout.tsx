@@ -6,41 +6,56 @@ import { theme } from "../styles/theme";
 interface MainLayoutProps {
   children: ReactNode;
   activePage: string;
-  onNavigate: (page: string) => void;
-  userName: string;
-  userRole: string;
-  userType: 'credit_officer' | 'property_owner';
+  onNavigate: (page: string, projectId?: string) => void;
+  role?: string;
 }
 
-const MainLayout = ({ children, activePage, onNavigate, userName, userRole, userType }: MainLayoutProps) => {
+const getRoleLabel = (role?: string): string => {
+  const roleLabels: Record<string, string> = {
+    "l3-manager": "Senior Valuator",
+    bank: "Bank Credit Officer",
+    owner: "Property Owner",
+    coordinator: "Coordinator",
+    admin: "Administrator",
+    "technical-officer": "Technical Officer",
+  };
+  return roleLabels[role || ""] || "User";
+};
+
+const MainLayout = ({
+  children,
+  activePage,
+  onNavigate,
+  role,
+}: MainLayoutProps) => {
   const pageStyle: CSSProperties = {
-    height: "100vh",
+    height: "100vh", // ✅ full screen height
     display: "flex",
     flexDirection: "column",
     backgroundColor: theme.colors.background.default,
-    overflow: "hidden",
+    overflow: "hidden", // ✅ prevents whole page scrolling
   };
 
   const headerWrapperStyle: CSSProperties = {
-    flexShrink: 0,
+    flexShrink: 0, // ✅ header never shrinks
   };
 
   const bodyStyle: CSSProperties = {
     display: "flex",
     flex: 1,
-    overflow: "hidden",
+    overflow: "hidden", // ✅ prevents sidebar+content wrapper scrolling
   };
 
   const sidebarWrapperStyle: CSSProperties = {
-    flexShrink: 0,
+    flexShrink: 0, // ✅ sidebar fixed width
     height: "100%",
-    overflow: "hidden",
+    overflow: "hidden", // ✅ sidebar will not scroll
   };
 
   const contentWrapperStyle: CSSProperties = {
     flex: 1,
     height: "100%",
-    overflow: "auto",
+    overflow: "auto", // ✅ ONLY content scrolls
     padding: "24px",
   };
 
@@ -48,10 +63,7 @@ const MainLayout = ({ children, activePage, onNavigate, userName, userRole, user
     <div style={pageStyle}>
       {/* Fixed Header */}
       <div style={headerWrapperStyle}>
-        <Header
-          userName={userName}
-          userRole={userRole}
-        />
+        <Header userName="John Doe" userRole={getRoleLabel(role)} />
       </div>
 
       {/* Sidebar fixed + Content scroll */}
@@ -60,7 +72,7 @@ const MainLayout = ({ children, activePage, onNavigate, userName, userRole, user
           <Sidebar
             activePage={activePage}
             onNavigate={onNavigate}
-            userType={userType}
+            role={role}
           />
         </div>
 
