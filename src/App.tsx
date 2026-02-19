@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import MainLayout from './layouts/MainLayout';
 import RoleSelectPage from './pages/RoleSelectPage';
+import TechnicalOfficerDashboard from './features/technical-officer/pages/Dashboard';
 
 // ✅ Your Bank Credit Officer pages
 import BankDashboardPage from './features/bank-credit-officer/pages/Dashboard';
@@ -52,8 +53,12 @@ function App() {
   // ✅ Other roles: show blank pages ONLY (no header/sidebar)
   if (role === 'admin') return <BlankRolePage title="Admin Portal" />;
   if (role === 'coordinator') return <BlankRolePage title="Coordinator Portal" />;
-  if (role === 'technical-officer') return <BlankRolePage title="Technical Officer Portal" />;
   if (role === 'senior-valuator') return <BlankRolePage title="Senior Valuator Portal" />;
+
+  // ✅ Technical Officer: show dashboard
+  if (role === 'technical-officer') {
+    return <TechnicalOfficerDashboard />;
+  }
 
   // ✅ Your roles: show real layout (sidebar + header)
   return (
