@@ -1,7 +1,17 @@
 import { useState } from "react";
 import MainLayout from "./layouts/MainLayout";
 import RoleSelectPage from "./pages/RoleSelectPage";
+
+// ✅ Technical Officer pages 
 import TechnicalOfficerDashboard from "./features/technical-officer/pages/Dashboard";
+import AssignedProject from "./features/technical-officer/pages/AssignedProject";
+import Report from "./features/technical-officer/pages/Report";
+import Documents from "./features/technical-officer/pages/Documents";
+import Attendance from "./features/technical-officer/pages/Attendance"; 
+
+
+
+
 
 // ✅ Bank Credit Officer pages
 import BankDashboardPage from "./features/bank-credit-officer/pages/Dashboard";
@@ -83,9 +93,17 @@ function App() {
     return <BlankRolePage title="Senior Valuator Portal" />;
 
   // ✅ Technical Officer: show dashboard
-  if (role === "technical-officer") {
-    return <TechnicalOfficerDashboard />;
-  }
+ if (role === "technical-officer") {
+  return (
+    <MainLayout activePage={activePage} onNavigate={handleNavigation} role={role}>
+      {activePage === "dashboard" && <TechnicalOfficerDashboard />}
+      {activePage === "projects" && <AssignedProject />}
+      {activePage === "reports" && <Report />}
+      {activePage === "documents" && <Documents />}
+      {activePage === "attendance" && <Attendance />}
+    </MainLayout>
+  );
+}
 
   // ✅ L3 Manager
   if (role === "l3-manager") {
