@@ -1,32 +1,43 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
+import { BrowserRouter as Router, Routes, Route, Navigate, useNavigate } from 'react-router-dom';
 import MainLayout from "./layouts/MainLayout";
 import RoleSelectPage from "./pages/RoleSelectPage";
 
-//  Bank Credit Officer pages
+// Bank Credit Officer pages
 import BankDashboardPage from "./features/bank-credit-officer/pages/Dashboard";
 import BankAllProjectsPage from "./features/bank-credit-officer/pages/AllProjects";
 import BankSettingsPage from "./features/bank-credit-officer/pages/Settings";
 
-//  Property Owner pages
+// Property Owner pages
 import OwnerDashboardPage from "./features/property-owner/pages/Dashboard";
 import OwnerAllProjectsPage from "./features/property-owner/pages/AllProjects";
 import OwnerPaymentPage from "./features/property-owner/pages/Payment";
 import OwnerSettingsPage from "./features/property-owner/pages/Settings";
 
-//   L3 Manager pages
+// L3 Manager pages
 import L3DashboardPage from "./features/l3/pages/Dashboard";
 import L3AllProjectsPage from "./features/l3/pages/AllProjects";
 import L3ApprovalsPage from "./features/l3/pages/Approvals";
 import L3ReportsPage from "./features/l3/pages/Reports";
 import L3DraftReportDetail from "./features/l3/pages/DraftReportDetail";
-import L3EditDraftReport from "./features/l3/pages/EditDraftReport";
-import L3RejectReportDraft from "./features/l3/pages/RejectReportDraft";
-import L3RejectedReports from "./features/l3/pages/RejectedReports";
-import L3VersionHistory from "./features/l3/pages/VersionHistory";
-import L3ApprovedReports from "./features/l3/pages/ApprovedReports";
-import L3AllReports from "./features/l3/pages/AllReports";
-import L3FinalizedReports from "./features/l3/pages/FinalizedReports";
-import L3RequestClarification from "./features/l3/pages/RequestClarification";
+
+// COORDINATOR pages
+import CoordinatorDashboard from "./features/coordinator/pages/Dashboard";
+// Optional - uncomment only if you create these pages
+// import CoordinatorAllProjects from "./features/coordinator/pages/AllProjects";
+// import CoordinatorClients from "./features/coordinator/pages/Clients";
+// import CoordinatorReports from "./features/coordinator/pages/Reports";
+import CoordinatorSettings from "./features/coordinator/pages/Settings";
+
+// COORDINATOR Workflow pages
+import CoordinatorClientSearch from "./features/coordinator/pages/Workflow/ClientSearch";
+import CoordinatorRegisterClient from "./features/coordinator/pages/Workflow/RegisterClient";
+import CoordinatorCreateProject from "./features/coordinator/pages/Workflow/CreateProject";
+import CoordinatorNewValuation from "./features/coordinator/pages/Workflow/NewValuation";
+import CoordinatorAssignTO from "./features/coordinator/pages/Workflow/AssignTO";
+import CoordinatorFleetManagement from "./features/coordinator/pages/FleetManagement";
+import CoordinatorProjectStatus from "./features/coordinator/pages/ProjectStatus";
+import CoordinatorMessages from "./features/coordinator/pages/Messages";
 
 type Role =
   | "bank"
@@ -70,7 +81,7 @@ function App() {
     if (projectId) setSelectedProjectId(projectId);
   };
 
-  // ✅ Role selection first
+  // Role selection first
   if (!role) {
     return (
       <RoleSelectPage
@@ -82,16 +93,14 @@ function App() {
     );
   }
 
-  // ✅ Other roles: blank pages only
+  // Other roles: blank pages only
   if (role === "admin") return <BlankRolePage title="Admin Portal" />;
-  if (role === "coordinator")
-    return <BlankRolePage title="Coordinator Portal" />;
   if (role === "technical-officer")
     return <BlankRolePage title="Technical Officer Portal" />;
   if (role === "senior-valuator")
     return <BlankRolePage title="Senior Valuator Portal" />;
 
-  // ✅ L3 Manager
+  // L3 Manager
   if (role === "l3-manager") {
     return (
       <MainLayout
@@ -105,51 +114,111 @@ function App() {
         {activePage === "projects" && <L3AllProjectsPage />}
         {activePage === "approvals" && <L3ApprovalsPage />}
         {activePage === "reports" && <L3ReportsPage />}
-        {activePage === "approved" && <L3ApprovedReports />}
-        {activePage === "all" && <L3AllReports />}
-        {activePage === "finalized" && <L3FinalizedReports />}
-        {activePage === "rejected" && (
-          <L3RejectedReports onNavigate={handleNavigation} />
-        )}
-        {activePage === "history" && <L3VersionHistory />}
         {activePage === "draft-review" && (
           <L3DraftReportDetail
             projectId={selectedProjectId || "PV-2024-8842"}
             onBack={() => setActivePage("dashboard")}
-            onEditDetails={() => setActivePage("edit-draft")}
-            onRejectDraft={() => setActivePage("reject-report")}
-            onRequestClarification={() =>
-              setActivePage("request-clarification")
-            }
           />
         )}
-        {activePage === "edit-draft" && (
-          <L3EditDraftReport
-            projectId={selectedProjectId || "VAL-2023-004"}
-            onBack={() => setActivePage("draft-review")}
-          />
-        )}
-        {activePage === "reject-report" && (
-          <L3RejectReportDraft
-            projectId={selectedProjectId || "PV-RR0221"}
-            draftId="VAL-2023-004"
-            onBack={() => setActivePage("draft-review")}
-          />
-        )}
-        {activePage === "request-clarification" && (
-          <L3RequestClarification
-            projectName="Harbor View Residential Valuation"
-            projectCode="PRJ-2023-9021"
-            clientName="Apex Global Properties Ltd."
-            createdDate="Oct 24, 2023"
-            onBack={() => setActivePage("draft-review")}
-          />
-        )}
+        {activePage === "settings" && <BlankRolePage title="L3 Settings" />}
       </MainLayout>
     );
   }
 
-  // ✅ For bank/owner show layout
+  // COORDINATOR with nested routes
+  if (role === "coordinator") {
+    return (
+      <Router>
+        <MainLayout
+          activePage={activePage}
+          onNavigate={handleNavigation}
+          role={role}
+        >
+          <Routes>
+            {/* Dashboard */}
+            <Route 
+              path="/coordinator/dashboard" 
+              element={<CoordinatorDashboard />} 
+            />
+            
+            {/* 5-Step Workflow Routes */}
+            <Route 
+              path="/coordinator/workflow/search" 
+              element={<CoordinatorClientSearch />} 
+            />
+            <Route 
+              path="/coordinator/workflow/register" 
+              element={<CoordinatorRegisterClient />} 
+            />
+            <Route 
+              path="/coordinator/workflow/create-project" 
+              element={<CoordinatorCreateProject />} 
+            />
+            <Route 
+              path="/coordinator/workflow/new-valuation" 
+              element={<CoordinatorNewValuation />} 
+            />
+            <Route 
+              path="/coordinator/workflow/assign-to" 
+              element={<CoordinatorAssignTO />} 
+            />
+            
+            {/* Settings - keep this one */}
+            <Route 
+              path="/coordinator/settings" 
+              element={<CoordinatorSettings />} 
+            />
+
+            {/* Placeholder pages for future features */}
+            <Route
+              path="/coordinator/fleet-management"
+              element={<CoordinatorFleetManagement />}
+            />
+            <Route
+              path="/coordinator/projects"
+              element={<CoordinatorProjectStatus />}
+            />
+            <Route
+              path="/coordinator/messages"
+              element={<CoordinatorMessages />}
+            />
+            
+            {/* Optional pages - uncomment only if you create them */}
+            {/* 
+            <Route 
+              path="/coordinator/projects" 
+              element={<CoordinatorAllProjects />} 
+            />
+            <Route 
+              path="/coordinator/clients" 
+              element={<CoordinatorClients />} 
+            />
+            <Route 
+              path="/coordinator/reports" 
+              element={<CoordinatorReports />} 
+            />
+            */}
+            
+            {/* Default redirects */}
+            <Route 
+              path="/coordinator" 
+              element={<Navigate to="/coordinator/dashboard" replace />} 
+            />
+            <Route 
+              path="/coordinator/workflow" 
+              element={<Navigate to="/coordinator/dashboard" replace />} 
+            />
+            <Route 
+              path="*" 
+              element={<Navigate to="/coordinator/dashboard" replace />} 
+            />
+          </Routes>
+        </MainLayout>
+      </Router>
+    );
+  }
+
+  // For bank/owner (no nested routes needed)
   return (
     <MainLayout
       activePage={activePage}
