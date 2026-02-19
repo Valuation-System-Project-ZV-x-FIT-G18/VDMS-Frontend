@@ -2,23 +2,31 @@ import { useState } from "react";
 import MainLayout from "./layouts/MainLayout";
 import RoleSelectPage from "./pages/RoleSelectPage";
 
-// ✅ Bank Credit Officer pages
+//  Bank Credit Officer pages
 import BankDashboardPage from "./features/bank-credit-officer/pages/Dashboard";
 import BankAllProjectsPage from "./features/bank-credit-officer/pages/AllProjects";
 import BankSettingsPage from "./features/bank-credit-officer/pages/Settings";
 
-// ✅ Property Owner pages
+//  Property Owner pages
 import OwnerDashboardPage from "./features/property-owner/pages/Dashboard";
 import OwnerAllProjectsPage from "./features/property-owner/pages/AllProjects";
 import OwnerPaymentPage from "./features/property-owner/pages/Payment";
 import OwnerSettingsPage from "./features/property-owner/pages/Settings";
 
-// ✅ Your L3 Manager pages
+//   L3 Manager pages
 import L3DashboardPage from "./features/l3/pages/Dashboard";
 import L3AllProjectsPage from "./features/l3/pages/AllProjects";
 import L3ApprovalsPage from "./features/l3/pages/Approvals";
 import L3ReportsPage from "./features/l3/pages/Reports";
 import L3DraftReportDetail from "./features/l3/pages/DraftReportDetail";
+import L3EditDraftReport from "./features/l3/pages/EditDraftReport";
+import L3RejectReportDraft from "./features/l3/pages/RejectReportDraft";
+import L3RejectedReports from "./features/l3/pages/RejectedReports";
+import L3VersionHistory from "./features/l3/pages/VersionHistory";
+import L3ApprovedReports from "./features/l3/pages/ApprovedReports";
+import L3AllReports from "./features/l3/pages/AllReports";
+import L3FinalizedReports from "./features/l3/pages/FinalizedReports";
+import L3RequestClarification from "./features/l3/pages/RequestClarification";
 
 type Role =
   | "bank"
@@ -97,10 +105,44 @@ function App() {
         {activePage === "projects" && <L3AllProjectsPage />}
         {activePage === "approvals" && <L3ApprovalsPage />}
         {activePage === "reports" && <L3ReportsPage />}
+        {activePage === "approved" && <L3ApprovedReports />}
+        {activePage === "all" && <L3AllReports />}
+        {activePage === "finalized" && <L3FinalizedReports />}
+        {activePage === "rejected" && (
+          <L3RejectedReports onNavigate={handleNavigation} />
+        )}
+        {activePage === "history" && <L3VersionHistory />}
         {activePage === "draft-review" && (
           <L3DraftReportDetail
             projectId={selectedProjectId || "PV-2024-8842"}
             onBack={() => setActivePage("dashboard")}
+            onEditDetails={() => setActivePage("edit-draft")}
+            onRejectDraft={() => setActivePage("reject-report")}
+            onRequestClarification={() =>
+              setActivePage("request-clarification")
+            }
+          />
+        )}
+        {activePage === "edit-draft" && (
+          <L3EditDraftReport
+            projectId={selectedProjectId || "VAL-2023-004"}
+            onBack={() => setActivePage("draft-review")}
+          />
+        )}
+        {activePage === "reject-report" && (
+          <L3RejectReportDraft
+            projectId={selectedProjectId || "PV-RR0221"}
+            draftId="VAL-2023-004"
+            onBack={() => setActivePage("draft-review")}
+          />
+        )}
+        {activePage === "request-clarification" && (
+          <L3RequestClarification
+            projectName="Harbor View Residential Valuation"
+            projectCode="PRJ-2023-9021"
+            clientName="Apex Global Properties Ltd."
+            createdDate="Oct 24, 2023"
+            onBack={() => setActivePage("draft-review")}
           />
         )}
       </MainLayout>

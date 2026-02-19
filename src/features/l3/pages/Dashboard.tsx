@@ -1,16 +1,34 @@
 import type { CSSProperties } from "react";
-import { useState, useMemo } from "react";
+import { useState, useMemo, useRef, useEffect } from "react";
 import { mockProjects } from "../utils/mockData";
 import { formatDate, getStatusColor } from "../utils/helpers";
 
 interface L3DashboardProps {
   onNavigate?: (page: string, projectId?: string) => void;
+  shouldScrollToPending?: boolean;
 }
 
-const L3Dashboard = ({ onNavigate }: L3DashboardProps) => {
+const L3Dashboard = ({
+  onNavigate,
+  shouldScrollToPending = false,
+}: L3DashboardProps) => {
+  const pendingReviewsRef = useRef<HTMLDivElement>(null);
   const [searchQuery, setSearchQuery] = useState("");
   const [currentPage, setCurrentPage] = useState(1);
   const itemsPerPage = 5;
+
+  // Scroll to pending reviews only when shouldScrollToPending is true
+  useEffect(() => {
+    if (shouldScrollToPending) {
+      const timer = setTimeout(() => {
+        pendingReviewsRef.current?.scrollIntoView({
+          behavior: "smooth",
+          block: "start",
+        });
+      }, 100);
+      return () => clearTimeout(timer);
+    }
+  }, [shouldScrollToPending]);
 
   // Filter for pending reviews only
   const filteredProjects = useMemo(() => {
@@ -307,7 +325,7 @@ const L3Dashboard = ({ onNavigate }: L3DashboardProps) => {
       </div>
 
       {/* Pending Reviews Section */}
-      <div style={sectionStyle}>
+      <div style={sectionStyle} ref={pendingReviewsRef}>
         <h2 style={sectionTitleStyle}>Pending Reviews</h2>
         <p style={sectionDescStyle}>
           Queue of property valuation reports awaiting final approval.

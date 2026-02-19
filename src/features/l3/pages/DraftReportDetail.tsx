@@ -4,11 +4,17 @@ import { useState } from "react";
 interface DraftReportDetailProps {
   projectId?: string;
   onBack?: () => void;
+  onEditDetails?: () => void;
+  onRejectDraft?: () => void;
+  onRequestClarification?: () => void;
 }
 
 const DraftReportDetail = ({
   projectId = "PV-2024-8842",
   onBack,
+  onEditDetails,
+  onRejectDraft,
+  onRequestClarification,
 }: DraftReportDetailProps) => {
   const [comments, setComments] = useState("");
 
@@ -410,7 +416,9 @@ const DraftReportDetail = ({
                 <div style={sectionHeaderStyle}>
                   <span style={sectionIconStyle}>◉</span>
                   <h3 style={sectionTitleStyle}>Project Information</h3>
-                  <a style={editLinkStyle}>Edit Details</a>
+                  <button style={editLinkStyle} onClick={onEditDetails}>
+                    Edit Details
+                  </button>
                 </div>
 
                 <div style={rowStyle}>
@@ -557,19 +565,12 @@ const DraftReportDetail = ({
 
                 <button
                   style={buttonStyle("secondary")}
-                  onClick={() => {
-                    // TODO: Implement request changes functionality
-                  }}
+                  onClick={onRequestClarification}
                 >
                   ⟲ Request Changes
                 </button>
 
-                <button
-                  style={buttonStyle("danger")}
-                  onClick={() => {
-                    // TODO: Implement reject draft functionality
-                  }}
-                >
+                <button style={buttonStyle("danger")} onClick={onRejectDraft}>
                   ✕ Reject Draft
                 </button>
               </div>
