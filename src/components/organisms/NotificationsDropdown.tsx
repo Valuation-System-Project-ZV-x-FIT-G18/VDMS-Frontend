@@ -122,6 +122,7 @@ const NotificationsDropdown = () => {
     width: '380px',
     maxHeight: '500px',
     backgroundColor: 'white',
+    border: '1px solid #000',
     borderRadius: '8px',
     boxShadow: '0 4px 12px rgba(0, 0, 0, 0.15)',
     zIndex: 1000,
@@ -215,6 +216,16 @@ const NotificationsDropdown = () => {
     position: 'relative',
   };
 
+  const allNotificationsModalContentStyle: CSSProperties = {
+    ...modalContentStyle,
+    border: '1px solid #000',
+  };
+
+  const notificationDetailModalContentStyle: CSSProperties = {
+    ...modalContentStyle,
+    border: '1px solid #000',
+  };
+
   const modalHeaderStyle: CSSProperties = {
     display: 'flex',
     justifyContent: 'space-between',
@@ -227,6 +238,22 @@ const NotificationsDropdown = () => {
     fontWeight: 600,
     color: theme.colors.text.primary,
     marginBottom: '8px',
+  };
+
+  const allNotificationsCountBadgeStyle: CSSProperties = {
+    minWidth: '28px',
+    height: '28px',
+    borderRadius: '50%',
+    backgroundColor: theme.colors.background.default,
+    border: '2px solid #000',
+    color: '#000',
+    display: 'inline-flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+    fontSize: '13px',
+    fontWeight: 700,
+    lineHeight: 1,
+    padding: '0 8px',
   };
 
   const closeButtonStyle: CSSProperties = {
@@ -315,17 +342,17 @@ const NotificationsDropdown = () => {
       {/* View All Modal */}
       {showAllModal && (
         <div style={modalOverlayStyle} onClick={() => setShowAllModal(false)}>
-          <div style={modalContentStyle} onClick={(e) => e.stopPropagation()}>
+          <div style={allNotificationsModalContentStyle} onClick={(e) => e.stopPropagation()}>
             <div style={modalHeaderStyle}>
               <div>
-                <h2 style={modalTitleStyle}>All Notifications</h2>
-                <p style={{ fontSize: '14px', color: theme.colors.text.secondary }}>
-                  {notifications.length} total notifications
-                </p>
+                <h2 style={{ ...modalTitleStyle, marginBottom: 0 }}>All Notifications</h2>
               </div>
-              <button style={closeButtonStyle} onClick={() => setShowAllModal(false)}>
-                <CloseOutlined />
-              </button>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                <span style={allNotificationsCountBadgeStyle}>{notifications.length}</span>
+                <button style={closeButtonStyle} onClick={() => setShowAllModal(false)}>
+                  <CloseOutlined />
+                </button>
+              </div>
             </div>
 
             {/* All Notifications List */}
@@ -358,7 +385,7 @@ const NotificationsDropdown = () => {
       {/* Single Notification Detail Modal */}
       {selectedNotification && (
         <div style={modalOverlayStyle} onClick={() => setSelectedNotification(null)}>
-          <div style={modalContentStyle} onClick={(e) => e.stopPropagation()}>
+          <div style={notificationDetailModalContentStyle} onClick={(e) => e.stopPropagation()}>
             <div style={modalHeaderStyle}>
               <div style={{ flex: 1 }}>
                 <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '8px' }}>

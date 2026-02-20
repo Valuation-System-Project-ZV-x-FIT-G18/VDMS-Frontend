@@ -1,4 +1,5 @@
-import { useState } from 'react';
+import { useRef, useState } from 'react';
+import type { ChangeEvent } from 'react';
 import type { CSSProperties } from 'react';
 import {  
   FileTextOutlined,
@@ -17,9 +18,27 @@ interface ValuationJobDetailProps {
   onBack: () => void;
 }
 
+interface JobDocument {
+  id: string;
+  name: string;
+  uploadDate?: string;
+  status: 'submitted' | 'pending';
+  uploadedBy?: string;
+  required: boolean;
+  note?: string;
+}
+
 const ValuationJobDetail = ({ projectId, onBack }: ValuationJobDetailProps) => {
   const [showAllTeam, setShowAllTeam] = useState(false);
   const [uploadingDoc, setUploadingDoc] = useState<string | null>(null);
+  const [selectedUploadDocId, setSelectedUploadDocId] = useState<string | null>(null);
+  const [documents, setDocuments] = useState<JobDocument[]>([
+    { id: '1', name: 'Survey Plan', uploadDate: 'Oct 24, 2023', status: 'submitted', uploadedBy: 'John Doe', required: false },
+    { id: '2', name: 'Local Authority Certificate', uploadDate: 'Oct 23, 2023', status: 'submitted', uploadedBy: 'John Doe', required: false },
+    { id: '3', name: 'Deed Copy (Prior 30 Years)', status: 'pending', required: true, note: 'Required for site verification' },
+    { id: '4', name: 'Building Plan (Approved)', status: 'pending', required: false, note: 'Waiting for client' },
+  ]);
+  const documentUploadInputRef = useRef<HTMLInputElement | null>(null);
 
   const jobData = {
     id: projectId,
@@ -43,12 +62,7 @@ const ValuationJobDetail = ({ projectId, onBack }: ValuationJobDetailProps) => {
       { name: 'David Brown', role: 'Senior Valuator', email: 'david@example.com' },
       { name: 'Emma Wilson', role: 'Technical Officer', email: 'emma@example.com' },
     ],
-    documents: [
-      { id: '1', name: 'Survey Plan', uploadDate: 'Oct 24, 2023', status: 'submitted', uploadedBy: 'John Doe', required: false },
-      { id: '2', name: 'Local Authority Certificate', uploadDate: 'Oct 23, 2023', status: 'submitted', uploadedBy: 'John Doe', required: false },
-      { id: '3', name: 'Deed Copy (Prior 30 Years)', status: 'pending', required: true, note: 'Required for site verification' },
-      { id: '4', name: 'Building Plan (Approved)', status: 'pending', required: false, note: 'Waiting for client' },
-    ],
+    documents,
     stages: [
       { name: 'Docs\nReceived', completed: true, current: false },
       { name: 'Site\nInspected', completed: true, current: false },
@@ -62,11 +76,39 @@ const ValuationJobDetail = ({ projectId, onBack }: ValuationJobDetailProps) => {
   const totalCount = jobData.documents.length;
 
   const handleDocumentUpload = (docId: string) => {
-    setUploadingDoc(docId);
-    setTimeout(() => {
-      alert(`Upload interface for: ${jobData.documents.find(d => d.id === docId)?.name}`);
-      setUploadingDoc(null);
-    }, 500);
+    setSelectedUploadDocId(docId);
+    documentUploadInputRef.current?.click();
+  };
+
+  const handleDocumentFileChange = (event: ChangeEvent<HTMLInputElement>) => {
+    const selectedFile = event.target.files?.[0];
+    if (!selectedFile || !selectedUploadDocId) return;
+
+    setUploadingDoc(selectedUploadDocId);
+
+    const uploadDate = new Date().toLocaleDateString('en-US', {
+      month: 'short',
+      day: '2-digit',
+      year: 'numeric',
+    });
+
+    setDocuments((prev) =>
+      prev.map((doc) =>
+        doc.id === selectedUploadDocId
+          ? {
+              ...doc,
+              status: 'submitted',
+              uploadDate,
+              uploadedBy: 'John Doe',
+              note: undefined,
+            }
+          : doc
+      )
+    );
+
+    setUploadingDoc(null);
+    setSelectedUploadDocId(null);
+    event.target.value = '';
   };
 
   // ── Styles ──────────────────────────────────────────
@@ -78,23 +120,25 @@ const ValuationJobDetail = ({ projectId, onBack }: ValuationJobDetailProps) => {
   };
 
   const backButtonStyle: CSSProperties = {
-    background: 'none',
-    border: 'none',
-    color: theme.colors.primary.main,
+    backgroundColor: '#f5f8ff',
+    border: '1px solid #c9dcff',
+    borderRadius: '6px',
+    color: theme.colors.text.primary,
     fontSize: '14px',
+    fontWeight: 500,
     cursor: 'pointer',
     marginBottom: '16px',
     display: 'flex',
     alignItems: 'center',
-    gap: '6px',
-    padding: 0,
+    padding: '6px 12px',
   };
 
   const headerCardStyle: CSSProperties = {
-    backgroundColor: 'white',
+    backgroundColor: '#f7fbff',
     borderRadius: '8px',
     padding: '24px 28px',
-    border: '1px solid #e8e8e8',
+    border: '2px solid #b7d7ff',
+    boxShadow: '0 6px 16px rgba(24, 144, 255, 0.12)',
     marginBottom: '24px',
   };
 
@@ -124,7 +168,6 @@ const ValuationJobDetail = ({ projectId, onBack }: ValuationJobDetailProps) => {
     backgroundColor: 'white',
     borderRadius: '8px',
     padding: '24px 40px',
-    border: '1px solid #e8e8e8',
     marginBottom: '24px',
   };
 
@@ -159,9 +202,9 @@ const ValuationJobDetail = ({ projectId, onBack }: ValuationJobDetailProps) => {
     width: '44px',
     height: '44px',
     borderRadius: '50%',
-    backgroundColor: completed ? '#52c41a' : current ? '#1890ff' : 'white',
-    border: `2px solid ${completed ? '#52c41a' : current ? '#1890ff' : '#d9d9d9'}`,
-    color: completed ? 'white' : current ? 'white' : '#bfbfbf',
+    backgroundColor: completed ? '#1677ff' : current ? '#b5e7ff' : 'white',
+    border: `2px solid ${completed ? '#1677ff' : current ? '#b5e7ff' : '#d9d9d9'}`,
+    color: completed ? 'white' : current ? '#1677ff' : '#bfbfbf',
     display: 'flex',
     alignItems: 'center',
     justifyContent: 'center',
@@ -170,7 +213,7 @@ const ValuationJobDetail = ({ projectId, onBack }: ValuationJobDetailProps) => {
 
   const stageLabelStyle = (completed: boolean, current: boolean): CSSProperties => ({
     fontSize: '11px',
-    color: current ? '#1890ff' : completed ? theme.colors.text.primary : theme.colors.text.secondary,
+    color: current ? '#1677ff' : completed ? theme.colors.text.primary : theme.colors.text.secondary,
     textAlign: 'center',
     fontWeight: current ? 600 : 400,
     lineHeight: '1.4',
@@ -188,16 +231,23 @@ const ValuationJobDetail = ({ projectId, onBack }: ValuationJobDetailProps) => {
   const cardStyle: CSSProperties = {
     backgroundColor: 'white',
     borderRadius: '8px',
-    border: '1px solid #e8e8e8',
+    border: '1px solid #999',
     overflow: 'hidden',
   };
 
   const cardHeaderStyle: CSSProperties = {
     padding: '14px 20px',
-    borderBottom: '1px solid #f0f0f0',
+    borderBottom: '1px solid #999',
     fontSize: '15px',
     fontWeight: 600,
     color: theme.colors.text.primary,
+  };
+
+  const sectionHeaderTitleStyle: CSSProperties = {
+    fontSize: '16px',
+    fontWeight: 700,
+    color: '#000',
+    letterSpacing: '0.2px',
   };
 
   const cardBodyStyle: CSSProperties = {
@@ -380,43 +430,48 @@ const ValuationJobDetail = ({ projectId, onBack }: ValuationJobDetailProps) => {
     marginBottom: '20px',
   };
 
+  const reportActionButtonStyle: CSSProperties = {
+    display: 'flex',
+    alignItems: 'center',
+    gap: '8px',
+    padding: '10px 20px',
+    borderRadius: '6px',
+    fontSize: '14px',
+    fontWeight: 500,
+    cursor: 'pointer',
+    border: '1px solid #91caff',
+    backgroundColor: '#e6f4ff',
+    color: '#1677ff',
+  };
+
   return (
     <div style={containerStyle}>
 
       {/* Back Button */}
       <button style={backButtonStyle} onClick={onBack}>
-        ← Back
+        Back
       </button>
 
       {/* Header Card */}
       <div style={headerCardStyle}>
-        <div>
-          <h1 style={titleStyle}>{jobData.id}</h1>
-          <div style={addressStyle}>
-            📍 {jobData.address}
-          </div>
+        <h1 style={titleStyle}>{jobData.id}</h1>
+        <div style={addressStyle}>
+          {jobData.address}
+        </div>
+
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: '16px' }}>
           <div style={clientStyle}>
             Client: <strong>{jobData.client}</strong>
           </div>
-        </div>
-        <div style={{ display: 'flex', gap: '12px', alignItems: 'center' }}>
-          <button style={{
-            display: 'flex', alignItems: 'center', gap: '8px',
-            padding: '10px 20px', borderRadius: '6px', fontSize: '14px',
-            fontWeight: 500, cursor: 'pointer', border: 'none',
-            backgroundColor: theme.colors.primary.main, color: 'white',
-          }} onClick={() => alert('Report download feature will be available soon.')}>
-            <DownloadOutlined /> Download Report
-          </button>
-          <button style={{
-            display: 'flex', alignItems: 'center', gap: '8px',
-            padding: '10px 20px', borderRadius: '6px', fontSize: '14px',
-            fontWeight: 500, cursor: 'pointer',
-            border: `1px solid ${theme.colors.border}`,
-            backgroundColor: 'white', color: theme.colors.text.primary,
-          }}>
-            <EyeOutlined /> View Report
-          </button>
+
+          <div style={{ display: 'flex', gap: '12px', alignItems: 'center' }}>
+            <button style={reportActionButtonStyle} onClick={() => alert('Report download feature will be available soon.')}>
+              <DownloadOutlined /> Download Report
+            </button>
+            <button style={reportActionButtonStyle}>
+              <EyeOutlined /> View Report
+            </button>
+          </div>
         </div>
       </div>
 
@@ -450,7 +505,9 @@ const ValuationJobDetail = ({ projectId, onBack }: ValuationJobDetailProps) => {
 
           {/* Project Details Card */}
           <div style={cardStyle}>
-            <div style={cardHeaderStyle}>Project Details</div>
+            <div style={cardHeaderStyle}>
+              <span style={sectionHeaderTitleStyle}>Project Details</span>
+            </div>
             <div style={detailsGridStyle}>
               <div style={detailCellStyle}>
                 <div style={detailLabelStyle}>Project ID</div>
@@ -506,7 +563,7 @@ const ValuationJobDetail = ({ projectId, onBack }: ValuationJobDetailProps) => {
           {/* Document Checklist Card */}
           <div style={cardStyle}>
             <div style={{ ...cardHeaderStyle, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-              <span>Document Checklist</span>
+              <span style={sectionHeaderTitleStyle}>Document Checklist</span>
               <span style={{ fontSize: '13px', fontWeight: 400, color: theme.colors.text.secondary }}>
                 {uploadedCount}/{totalCount} Uploaded
               </span>
@@ -571,7 +628,7 @@ const ValuationJobDetail = ({ projectId, onBack }: ValuationJobDetailProps) => {
         <div>
           <div style={cardStyle}>
             <div style={{ ...cardHeaderStyle, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-              <span>Assigned Team</span>
+              <span style={sectionHeaderTitleStyle}>Assigned Team</span>
             </div>
             <div style={cardBodyStyle}>
               {jobData.assignedTeam.slice(0, 3).map((member, index) => (
@@ -597,6 +654,14 @@ const ValuationJobDetail = ({ projectId, onBack }: ValuationJobDetailProps) => {
           </div>
         </div>
       </div>
+
+      <input
+        ref={documentUploadInputRef}
+        type="file"
+        accept=".pdf,.jpg,.jpeg,.png,.doc,.docx"
+        style={{ display: 'none' }}
+        onChange={handleDocumentFileChange}
+      />
 
       {/* View All Team Modal */}
       {showAllTeam && (
