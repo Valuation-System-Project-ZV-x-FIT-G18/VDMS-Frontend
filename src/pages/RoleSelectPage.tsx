@@ -4,7 +4,9 @@ type Role =
   | "admin"
   | "coordinator"
   | "technical-officer"
-  | "l3-manager";
+  | "l3-manager"
+  | "l2-manager"
+  | "l1-manager";
 
 interface RoleSelectPageProps {
   onSelectRole: (role: Role) => void;
@@ -57,6 +59,12 @@ export default function RoleSelectPage({ onSelectRole }: RoleSelectPageProps) {
         </button>
         <button style={btnStyle} onClick={() => onSelectRole("l3-manager")}>
           L3 Manager →
+        </button>
+        <button style={btnStyle} onClick={() => onSelectRole("l2-manager")}>
+          L2 Manager →
+        </button>
+        <button style={btnStyle} onClick={() => onSelectRole("l1-manager")}>
+          L1 Manager →
         </button>
 
         <hr

@@ -12,7 +12,9 @@ interface MainLayoutProps {
 
 const getRoleLabel = (role?: string): string => {
   const roleLabels: Record<string, string> = {
-    "l3-manager": "Senior Valuator",
+    "l3-manager": "Senior Manager",
+    "l2-manager": "Assistant General Manager",
+    "l1-manager": "Managerial Director",
     bank: "Bank Credit Officer",
     owner: "Property Owner",
     coordinator: "Coordinator",
