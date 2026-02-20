@@ -7,9 +7,10 @@ import RoleSelectPage from "./pages/RoleSelectPage";
 import BankDashboardPage from "./features/bank-credit-officer/pages/Dashboard";
 import BankAllProjectsPage from "./features/bank-credit-officer/pages/AllProjects";
 import BankSettingsPage from "./features/bank-credit-officer/pages/Settings";
-               //below line should remove
+//below line should remove
 import SecureShareTest from "./features/bank-credit-officer/pages/SecureShareTest";
 
+//  Property Owner pages
 
 // Property Owner pages
 import OwnerDashboardPage from "./features/property-owner/pages/Dashboard";
@@ -23,6 +24,49 @@ import L3AllProjectsPage from "./features/l3/pages/AllProjects";
 import L3ApprovalsPage from "./features/l3/pages/Approvals";
 import L3ReportsPage from "./features/l3/pages/Reports";
 import L3DraftReportDetail from "./features/l3/pages/DraftReportDetail";
+import L3EditDraftReport from "./features/l3/pages/EditDraftReport";
+import L3RejectReportDraft from "./features/l3/pages/RejectReportDraft";
+import L3RejectedReports from "./features/l3/pages/RejectedReports";
+import L3VersionHistory from "./features/l3/pages/VersionHistory";
+import L3ApprovedReports from "./features/l3/pages/ApprovedReports";
+import L3AllReports from "./features/l3/pages/AllReports";
+import L3FinalizedReports from "./features/l3/pages/FinalizedReports";
+import L3RequestClarification from "./features/l3/pages/RequestClarification";
+import L3PendingReviews from "./features/l3/pages/PendingReviews";
+
+//   L2 Manager pages
+import L2DashboardPage from "./features/l2/pages/Dashboard";
+import L2AllProjectsPage from "./features/l2/pages/AllProjects";
+import L2ApprovalsPage from "./features/l2/pages/Approvals";
+import L2ReportsPage from "./features/l2/pages/Reports";
+import L2DraftReportDetail from "./features/l2/pages/DraftReportDetail";
+import L2EditDraftReport from "./features/l2/pages/EditDraftReport";
+import L2RejectReportDraft from "./features/l2/pages/RejectReportDraft";
+import L2RejectedReports from "./features/l2/pages/RejectedReports";
+import L2VersionHistory from "./features/l2/pages/VersionHistory";
+import L2ApprovedReports from "./features/l2/pages/ApprovedReports";
+import L2AllReports from "./features/l2/pages/AllReports";
+import L2FinalizedReports from "./features/l2/pages/FinalizedReports";
+import L2RequestClarification from "./features/l2/pages/RequestClarification";
+import L2PendingReviews from "./features/l2/pages/PendingReviews";
+
+//   L1 Manager pages
+import L1DashboardPage from "./features/l1/pages/Dashboard";
+import L1AllProjectsPage from "./features/l1/pages/AllProjects";
+import L1ApprovalsPage from "./features/l1/pages/Approvals";
+import L1ReportsPage from "./features/l1/pages/Reports";
+import L1DraftReportDetail from "./features/l1/pages/DraftReportDetail";
+import L1EditDraftReport from "./features/l1/pages/EditDraftReport";
+import L1RejectReportDraft from "./features/l1/pages/RejectReportDraft";
+import L1RejectedReports from "./features/l1/pages/RejectedReports";
+import L1VersionHistory from "./features/l1/pages/VersionHistory";
+import L1ApprovedReports from "./features/l1/pages/ApprovedReports";
+import L1AllReports from "./features/l1/pages/AllReports";
+import L1FinalizedReports from "./features/l1/pages/FinalizedReports";
+import L1RequestClarification from "./features/l1/pages/RequestClarification";
+import L1PendingReviews from "./features/l1/pages/PendingReviews";
+import L1AllProjectsAndBottlenecks from "./features/l1/pages/AllProjectsAndBottlenecks";
+import L1DailyMorningReport from "./features/l1/pages/DailyMorningReport";
 
 // COORDINATOR pages
 import CoordinatorDashboard from "./features/coordinator/pages/Dashboard";
@@ -46,6 +90,8 @@ type Role =
   | "bank"
   | "owner"
   | "l3-manager"
+  | "l2-manager"
+  | "l1-manager"
   | "admin"
   | "coordinator"
   | "technical-officer"
@@ -99,8 +145,7 @@ function App() {
   // Other roles: blank pages only
   if (role === "admin") return <BlankRolePage title="Admin Portal" />;
   // ✅ Other roles: blank pages only
-  if (role === "admin")
-     return <BlankRolePage title="Admin Portal" />;
+  if (role === "admin") return <BlankRolePage title="Admin Portal" />;
   if (role === "coordinator")
     return <BlankRolePage title="Coordinator Portal" />;
   if (role === "technical-officer")
@@ -119,6 +164,9 @@ function App() {
         {activePage === "dashboard" && (
           <L3DashboardPage onNavigate={handleNavigation} />
         )}
+        {activePage === "pending" && (
+          <L3PendingReviews onNavigate={handleNavigation} />
+        )}
         {activePage === "projects" && <L3AllProjectsPage />}
         {activePage === "approvals" && <L3ApprovalsPage />}
         {activePage === "reports" && <L3ReportsPage />}
@@ -133,6 +181,135 @@ function App() {
     );
   }
 
+  // ✅ L2 Manager
+  if (role === "l2-manager") {
+    return (
+      <MainLayout
+        activePage={activePage}
+        onNavigate={handleNavigation}
+        role={role}
+      >
+        {activePage === "dashboard" && (
+          <L2DashboardPage onNavigate={handleNavigation} />
+        )}
+        {activePage === "pending" && (
+          <L2PendingReviews onNavigate={handleNavigation} />
+        )}
+        {activePage === "projects" && <L2AllProjectsPage />}
+        {activePage === "approvals" && <L2ApprovalsPage />}
+        {activePage === "reports" && <L2ReportsPage />}
+        {activePage === "approved" && <L2ApprovedReports />}
+        {activePage === "all" && <L2AllReports />}
+        {activePage === "finalized" && <L2FinalizedReports />}
+        {activePage === "rejected" && (
+          <L2RejectedReports onNavigate={handleNavigation} />
+        )}
+        {activePage === "history" && <L2VersionHistory />}
+        {activePage === "draft-review" && (
+          <L2DraftReportDetail
+            projectId={selectedProjectId || "PV-2024-8842"}
+            onBack={() => setActivePage("dashboard")}
+            onEditDetails={() => setActivePage("edit-draft")}
+            onRejectDraft={() => setActivePage("reject-report")}
+            onRequestClarification={() =>
+              setActivePage("request-clarification")
+            }
+          />
+        )}
+        {activePage === "edit-draft" && (
+          <L2EditDraftReport
+            projectId={selectedProjectId || "VAL-2023-004"}
+            onBack={() => setActivePage("draft-review")}
+          />
+        )}
+        {activePage === "reject-report" && (
+          <L2RejectReportDraft
+            projectId={selectedProjectId || "PV-RR0221"}
+            draftId="VAL-2023-004"
+            onBack={() => setActivePage("draft-review")}
+          />
+        )}
+        {activePage === "request-clarification" && (
+          <L2RequestClarification
+            projectName="Harbor View Residential Valuation"
+            projectCode="PRJ-2023-9021"
+            clientName="Apex Global Properties Ltd."
+            createdDate="Oct 24, 2023"
+            onBack={() => setActivePage("draft-review")}
+          />
+        )}
+      </MainLayout>
+    );
+  }
+
+  // ✅ L1 Manager
+  if (role === "l1-manager") {
+    return (
+      <MainLayout
+        activePage={activePage}
+        onNavigate={handleNavigation}
+        role={role}
+      >
+        {activePage === "dashboard" && (
+          <L1DashboardPage onNavigate={handleNavigation} />
+        )}
+        {activePage === "pending" && (
+          <L1PendingReviews onNavigate={handleNavigation} />
+        )}
+        {activePage === "projects" && <L1AllProjectsPage />}
+        {activePage === "approvals" && <L1ApprovalsPage />}
+        {activePage === "reports" && <L1ReportsPage />}
+        {activePage === "approved" && <L1ApprovedReports />}
+        {activePage === "all" && <L1AllReports />}
+        {activePage === "finalized" && <L1FinalizedReports />}
+        {activePage === "rejected" && (
+          <L1RejectedReports onNavigate={handleNavigation} />
+        )}
+        {activePage === "history" && <L1VersionHistory />}
+        {activePage === "draft-review" && (
+          <L1DraftReportDetail
+            projectId={selectedProjectId || "PV-2024-8842"}
+            onBack={() => setActivePage("dashboard")}
+            onEditDetails={() => setActivePage("edit-draft")}
+            onRejectDraft={() => setActivePage("reject-report")}
+            onRequestClarification={() =>
+              setActivePage("request-clarification")
+            }
+          />
+        )}
+        {activePage === "edit-draft" && (
+          <L1EditDraftReport
+            projectId={selectedProjectId || "VAL-2023-004"}
+            onBack={() => setActivePage("draft-review")}
+          />
+        )}
+        {activePage === "reject-report" && (
+          <L1RejectReportDraft
+            projectId={selectedProjectId || "PV-RR0221"}
+            draftId="VAL-2023-004"
+            onBack={() => setActivePage("draft-review")}
+          />
+        )}
+        {activePage === "request-clarification" && (
+          <L1RequestClarification
+            projectName="Harbor View Residential Valuation"
+            projectCode="PRJ-2023-9021"
+            clientName="Apex Global Properties Ltd."
+            createdDate="Oct 24, 2023"
+            onBack={() => setActivePage("draft-review")}
+          />
+        )}
+        {activePage === "bottlenecks" && (
+          <L1AllProjectsAndBottlenecks onNavigate={handleNavigation} />
+        )}
+        {activePage === "morning-report" && (
+          <L1DailyMorningReport onNavigate={handleNavigation} />
+        )}
+      </MainLayout>
+    );
+  }
+
+  // ✅ For bank/owner show layout
   // COORDINATOR with nested routes
   if (role === "coordinator") {
     return (
@@ -237,10 +414,10 @@ function App() {
       {role === "bank" && activePage === "dashboard" && <BankDashboardPage />}
       {role === "bank" && activePage === "projects" && <BankAllProjectsPage />}
       {role === "bank" && activePage === "settings" && <BankSettingsPage />}
-                             
-      {role === 'bank' && activePage === "secure-share-test" && <SecureShareTest />} 
 
-      
+      {role === "bank" && activePage === "secure-share-test" && (
+        <SecureShareTest />
+      )}
 
       {/* Property Owner */}
       {role === "owner" && activePage === "dashboard" && <OwnerDashboardPage />}
