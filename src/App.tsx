@@ -7,6 +7,9 @@ import RoleSelectPage from "./pages/RoleSelectPage";
 import BankDashboardPage from "./features/bank-credit-officer/pages/Dashboard";
 import BankAllProjectsPage from "./features/bank-credit-officer/pages/AllProjects";
 import BankSettingsPage from "./features/bank-credit-officer/pages/Settings";
+               //below line should remove
+import SecureShareTest from "./features/bank-credit-officer/pages/SecureShareTest";
+
 
 // Property Owner pages
 import OwnerDashboardPage from "./features/property-owner/pages/Dashboard";
@@ -95,6 +98,11 @@ function App() {
 
   // Other roles: blank pages only
   if (role === "admin") return <BlankRolePage title="Admin Portal" />;
+  // ✅ Other roles: blank pages only
+  if (role === "admin")
+     return <BlankRolePage title="Admin Portal" />;
+  if (role === "coordinator")
+    return <BlankRolePage title="Coordinator Portal" />;
   if (role === "technical-officer")
     return <BlankRolePage title="Technical Officer Portal" />;
   if (role === "senior-valuator")
@@ -229,6 +237,10 @@ function App() {
       {role === "bank" && activePage === "dashboard" && <BankDashboardPage />}
       {role === "bank" && activePage === "projects" && <BankAllProjectsPage />}
       {role === "bank" && activePage === "settings" && <BankSettingsPage />}
+                             
+      {role === 'bank' && activePage === "secure-share-test" && <SecureShareTest />} 
+
+      
 
       {/* Property Owner */}
       {role === "owner" && activePage === "dashboard" && <OwnerDashboardPage />}

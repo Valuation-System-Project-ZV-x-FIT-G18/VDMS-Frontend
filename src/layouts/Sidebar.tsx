@@ -25,10 +25,13 @@ interface SidebarProps {
 }
 
 const Sidebar = ({ activePage, onNavigate, role }: SidebarProps) => {
+  const sidebarBackgroundColor = theme.colors.background.sidebar;
+  const inactiveButtonBorderColor = "#c9dcff";
+
   const sidebarStyle: CSSProperties = {
     width: "180px",
     height: "100%",
-    backgroundColor: "#f3f7ff",
+    backgroundColor: sidebarBackgroundColor,
     padding: "24px 12px",
     display: "flex",
     flexDirection: "column",
@@ -36,9 +39,15 @@ const Sidebar = ({ activePage, onNavigate, role }: SidebarProps) => {
   };
 
   // Bank Credit Officer menu items
+
+ 
+
+
   const bankMenuItems = [
     { id: "dashboard", label: "Dashboard", icon: DashboardOutlined },
     { id: "projects", label: "All projects", icon: FolderOpenOutlined },
+                 //below line should remove
+    { id: "secure-share-test", label: "Secure Share Test", icon: FolderOpenOutlined },
   ];
 
   // Property Owner menu items
@@ -111,6 +120,10 @@ const Sidebar = ({ activePage, onNavigate, role }: SidebarProps) => {
       default: // Bank credit officer
         return bankMenuItems;
     }
+     
+    if (role === "l3-manager") return l3MenuItems;
+    if (role === "owner") return ownerMenuItems;
+    return bankMenuItems; // default for bank and others
   };
 
   const menuItems = getMenuItems();
@@ -133,8 +146,8 @@ const Sidebar = ({ activePage, onNavigate, role }: SidebarProps) => {
     borderRadius: "10px",
     border: isActive
       ? `1px solid ${theme.colors.primary.main}`
-      : "1px solid #e1e6f0",
-    backgroundColor: isActive ? "#e6f0ff" : "#ffffff",
+      : `1px solid ${inactiveButtonBorderColor}`,
+    backgroundColor: isActive ? "#e6f0ff" : sidebarBackgroundColor,
     color: isActive ? theme.colors.primary.main : "#1f2937",
     transition: "all 0.2s ease",
   });

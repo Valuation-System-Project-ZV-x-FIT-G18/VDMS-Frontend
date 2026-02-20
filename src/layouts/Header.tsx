@@ -16,7 +16,7 @@ const Header = ({ userName, userRole }: HeaderProps) => {
   const headerStyle: CSSProperties = {
     height: '64px',
     backgroundColor: '#e6f7ff',
-    borderBottom: `1px solid ${theme.colors.border}`,
+    borderBottom: '1px solid #c9dcff',
     display: 'flex',
     alignItems: 'center',
     justifyContent: 'space-between',

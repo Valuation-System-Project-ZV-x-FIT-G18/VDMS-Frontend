@@ -9,20 +9,39 @@ import {
   CloseOutlined,
   WarningOutlined,
   UserOutlined,
-  CreditCardOutlined,
 } from '@ant-design/icons';
 import { theme } from '../../../styles/theme';
+import InvoiceDetail from './InvoiceDetail';
 
 interface ValuationJobDetailProps {
   projectId: string;
   onBack: () => void;
 }
 
+interface JobDocument {
+  id: string;
+  name: string;
+  uploadDate?: string;
+  status: 'submitted' | 'pending';
+  uploadedBy?: string;
+  required: boolean;
+  note?: string;
+}
+
 const ValuationJobDetail = ({ projectId, onBack }: ValuationJobDetailProps) => {
   const [showAllTeam, setShowAllTeam] = useState(false);
+  const [selectedInvoiceId, setSelectedInvoiceId] = useState<string | null>(null);
   const [uploadingDoc, setUploadingDoc] = useState<string | null>(null);
+  const [selectedUploadDocId, setSelectedUploadDocId] = useState<string | null>(null);
+  const [documents, setDocuments] = useState<JobDocument[]>([
+    { id: '1', name: 'Survey Plan', uploadDate: 'Oct 24, 2023', status: 'submitted', uploadedBy: 'John Doe', required: false, note: '' },
+    { id: '2', name: 'Local Authority Certificate', uploadDate: 'Oct 23, 2023', status: 'submitted', uploadedBy: 'John Doe', required: false, note: '' },
+    { id: '3', name: 'Deed Copy (Prior 30 Years)', status: 'pending', required: true, note: 'Required for site verification', uploadDate: '', uploadedBy: '' },
+    { id: '4', name: 'Building Plan (Approved)', status: 'pending', required: false, note: 'Waiting for client', uploadDate: '', uploadedBy: '' },
+  ]);
   const [paymentProofFileName, setPaymentProofFileName] = useState<string | null>(null);
   const paymentProofInputRef = useRef<HTMLInputElement | null>(null);
+  const documentUploadInputRef = useRef<HTMLInputElement | null>(null);
 
   const jobData = {
     id: projectId,
@@ -51,12 +70,7 @@ const ValuationJobDetail = ({ projectId, onBack }: ValuationJobDetailProps) => {
       { name: 'David Brown', role: 'Senior Valuator', email: 'david@example.com' },
       { name: 'Emma Wilson', role: 'Technical Officer', email: 'emma@example.com' },
     ],
-    documents: [
-      { id: '1', name: 'Survey Plan', uploadDate: 'Oct 24, 2023', status: 'submitted', uploadedBy: 'John Doe', required: false, note: '' },
-      { id: '2', name: 'Local Authority Certificate', uploadDate: 'Oct 23, 2023', status: 'submitted', uploadedBy: 'John Doe', required: false, note: '' },
-      { id: '3', name: 'Deed Copy (Prior 30 Years)', status: 'pending', required: true, note: 'Required for site verification', uploadDate: '', uploadedBy: '' },
-      { id: '4', name: 'Building Plan (Approved)', status: 'pending', required: false, note: 'Waiting for client', uploadDate: '', uploadedBy: '' },
-    ],
+    documents,
     stages: [
       { name: 'Docs\nReceived', completed: true, current: false },
       { name: 'Site\nInspected', completed: true, current: false },
@@ -70,11 +84,39 @@ const ValuationJobDetail = ({ projectId, onBack }: ValuationJobDetailProps) => {
   const totalCount = jobData.documents.length;
 
   const handleDocumentUpload = (docId: string) => {
-    setUploadingDoc(docId);
-    setTimeout(() => {
-      alert(`Upload interface for: ${jobData.documents.find(d => d.id === docId)?.name}`);
-      setUploadingDoc(null);
-    }, 500);
+    setSelectedUploadDocId(docId);
+    documentUploadInputRef.current?.click();
+  };
+
+  const handleDocumentFileChange = (event: ChangeEvent<HTMLInputElement>) => {
+    const selectedFile = event.target.files?.[0];
+    if (!selectedFile || !selectedUploadDocId) return;
+
+    setUploadingDoc(selectedUploadDocId);
+
+    const uploadDate = new Date().toLocaleDateString('en-US', {
+      month: 'short',
+      day: '2-digit',
+      year: 'numeric',
+    });
+
+    setDocuments((prev) =>
+      prev.map((doc) =>
+        doc.id === selectedUploadDocId
+          ? {
+              ...doc,
+              status: 'submitted',
+              uploadDate,
+              uploadedBy: 'John Doe',
+              note: '',
+            }
+          : doc
+      )
+    );
+
+    setUploadingDoc(null);
+    setSelectedUploadDocId(null);
+    event.target.value = '';
   };
 
   const handlePaymentProofUploadClick = () => {
@@ -99,23 +141,25 @@ const ValuationJobDetail = ({ projectId, onBack }: ValuationJobDetailProps) => {
   };
 
   const backButtonStyle: CSSProperties = {
-    background: 'none',
-    border: 'none',
-    color: theme.colors.primary.main,
+    backgroundColor: '#f5f8ff',
+    border: '1px solid #c9dcff',
+    borderRadius: '6px',
+    color: theme.colors.text.primary,
     fontSize: '14px',
+    fontWeight: 500,
     cursor: 'pointer',
     marginBottom: '16px',
     display: 'flex',
     alignItems: 'center',
-    gap: '6px',
-    padding: 0,
+    padding: '6px 12px',
   };
 
   const headerCardStyle: CSSProperties = {
-    backgroundColor: 'white',
+    backgroundColor: '#f7fbff',
     borderRadius: '8px',
     padding: '24px 28px',
-    border: '1px solid #e8e8e8',
+    border: '2px solid #b7d7ff',
+    boxShadow: '0 6px 16px rgba(24, 144, 255, 0.12)',
     marginBottom: '24px',
   };
 
@@ -144,7 +188,6 @@ const ValuationJobDetail = ({ projectId, onBack }: ValuationJobDetailProps) => {
     backgroundColor: 'white',
     borderRadius: '8px',
     padding: '24px 40px',
-    border: '1px solid #e8e8e8',
     marginBottom: '24px',
   };
 
@@ -179,9 +222,9 @@ const ValuationJobDetail = ({ projectId, onBack }: ValuationJobDetailProps) => {
     width: '44px',
     height: '44px',
     borderRadius: '50%',
-    backgroundColor: completed ? '#52c41a' : current ? '#1890ff' : 'white',
-    border: `2px solid ${completed ? '#52c41a' : current ? '#1890ff' : '#d9d9d9'}`,
-    color: completed ? 'white' : current ? 'white' : '#bfbfbf',
+    backgroundColor: completed ? '#1677ff' : current ? '#b5e7ff' : 'white',
+    border: `2px solid ${completed ? '#1677ff' : current ? '#b5e7ff' : '#d9d9d9'}`,
+    color: completed ? 'white' : current ? '#1677ff' : '#bfbfbf',
     display: 'flex',
     alignItems: 'center',
     justifyContent: 'center',
@@ -190,7 +233,7 @@ const ValuationJobDetail = ({ projectId, onBack }: ValuationJobDetailProps) => {
 
   const stageLabelStyle = (completed: boolean, current: boolean): CSSProperties => ({
     fontSize: '11px',
-    color: current ? '#1890ff' : completed ? theme.colors.text.primary : theme.colors.text.secondary,
+    color: current ? '#1677ff' : completed ? theme.colors.text.primary : theme.colors.text.secondary,
     textAlign: 'center',
     fontWeight: current ? 600 : 400,
     lineHeight: '1.4',
@@ -207,19 +250,26 @@ const ValuationJobDetail = ({ projectId, onBack }: ValuationJobDetailProps) => {
   const cardStyle: CSSProperties = {
     backgroundColor: 'white',
     borderRadius: '8px',
-    border: '1px solid #e8e8e8',
+    border: '1px solid #999',
     overflow: 'hidden',
   };
 
   const cardHeaderStyle: CSSProperties = {
     padding: '14px 20px',
-    borderBottom: '1px solid #f0f0f0',
+    borderBottom: '1px solid #999',
     fontSize: '15px',
     fontWeight: 600,
     color: theme.colors.text.primary,
     display: 'flex',
     justifyContent: 'space-between',
     alignItems: 'center',
+  };
+
+  const sectionHeaderTitleStyle: CSSProperties = {
+    fontSize: '16px',
+    fontWeight: 700,
+    color: '#000',
+    letterSpacing: '0.2px',
   };
 
   const cardBodyStyle: CSSProperties = {
@@ -400,12 +450,21 @@ const ValuationJobDetail = ({ projectId, onBack }: ValuationJobDetailProps) => {
     marginBottom: '20px',
   };
 
+  if (selectedInvoiceId) {
+    return (
+      <InvoiceDetail
+        invoiceId={selectedInvoiceId}
+        onBack={() => setSelectedInvoiceId(null)}
+      />
+    );
+  }
+
   return (
     <div style={containerStyle}>
 
       {/* Back Button */}
       <button style={backButtonStyle} onClick={onBack}>
-        ← Back
+        Back
       </button>
 
       {/* Header Card */}
@@ -413,7 +472,7 @@ const ValuationJobDetail = ({ projectId, onBack }: ValuationJobDetailProps) => {
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
           <div>
             <h1 style={titleStyle}>{jobData.id}</h1>
-            <div style={addressStyle}>📍 {jobData.address}</div>
+            <div style={addressStyle}> {jobData.address}</div>
             <div style={clientStyle}>Client: <strong>{jobData.client}</strong></div>
           </div>
         </div>
@@ -450,7 +509,7 @@ const ValuationJobDetail = ({ projectId, onBack }: ValuationJobDetailProps) => {
           {/* Project Details Card */}
           <div style={cardStyle}>
             <div style={cardHeaderStyle}>
-              <span>Project Details</span>
+              <span style={sectionHeaderTitleStyle}>Project Details</span>
             </div>
             <div style={detailsGridStyle}>
               <div style={detailCellStyle}>
@@ -507,7 +566,7 @@ const ValuationJobDetail = ({ projectId, onBack }: ValuationJobDetailProps) => {
           {/* Document Checklist Card */}
           <div style={cardStyle}>
             <div style={cardHeaderStyle}>
-              <span>Document Checklist</span>
+              <span style={sectionHeaderTitleStyle}>Document Checklist</span>
               <span style={{ fontSize: '13px', fontWeight: 400, color: theme.colors.text.secondary }}>
                 {uploadedCount}/{totalCount} Uploaded
               </span>
@@ -569,7 +628,7 @@ const ValuationJobDetail = ({ projectId, onBack }: ValuationJobDetailProps) => {
           {/* Payment Details Card */}
           <div style={cardStyle}>
             <div style={cardHeaderStyle}>
-              <span>Payment Details</span>
+              <span style={sectionHeaderTitleStyle}>Payment Details</span>
               <span style={{
                 padding: '2px 10px', borderRadius: '4px', fontSize: '12px',
                 fontWeight: 500, backgroundColor: '#fff7e6',
@@ -593,20 +652,10 @@ const ValuationJobDetail = ({ projectId, onBack }: ValuationJobDetailProps) => {
               </div>
 
               <button style={{
-                width: '100%', padding: '12px', borderRadius: '6px',
-                fontSize: '14px', fontWeight: 600, cursor: 'pointer',
-                border: 'none', marginBottom: '10px',
-                backgroundColor: theme.colors.primary.main, color: 'white',
-                display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px',
-              }}>
-                <CreditCardOutlined /> Make Payment Now
-              </button>
-
-              <button style={{
                 width: '100%', padding: '10px', borderRadius: '6px',
                 fontSize: '14px', fontWeight: 500, cursor: 'pointer',
-                marginBottom: '10px', border: `1px solid ${theme.colors.border}`,
-                backgroundColor: 'white', color: theme.colors.text.primary,
+                marginBottom: '10px', border: `1px solid #91caff`,
+                backgroundColor: '#e6f4ff', color: '#1677ff',
                 display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px',
               }} onClick={handlePaymentProofUploadClick}>
                 <UploadOutlined /> Upload Payment Proof
@@ -633,10 +682,10 @@ const ValuationJobDetail = ({ projectId, onBack }: ValuationJobDetailProps) => {
               <button style={{
                 width: '100%', padding: '10px', borderRadius: '6px',
                 fontSize: '14px', fontWeight: 500, cursor: 'pointer',
-                border: `1px solid ${theme.colors.border}`,
-                backgroundColor: 'white', color: theme.colors.text.primary,
+                border: `1px solid #91caff`,
+                backgroundColor: '#e6f4ff', color: '#1677ff',
                 display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px',
-              }}>
+              }} onClick={() => setSelectedInvoiceId('INV-2023-004')}>
                 <FileTextOutlined /> View Invoice
               </button>
             </div>
@@ -645,7 +694,7 @@ const ValuationJobDetail = ({ projectId, onBack }: ValuationJobDetailProps) => {
           {/* Assigned Team Card */}
           <div style={cardStyle}>
             <div style={cardHeaderStyle}>
-              <span>Assigned Team</span>
+              <span style={sectionHeaderTitleStyle}>Assigned Team</span>
             </div>
             <div style={cardBodyStyle}>
               {jobData.assignedTeam.slice(0, 3).map((member, index) => (
@@ -674,6 +723,14 @@ const ValuationJobDetail = ({ projectId, onBack }: ValuationJobDetailProps) => {
 
       </div>
       {/* END CONTENT GRID */}
+
+      <input
+        ref={documentUploadInputRef}
+        type="file"
+        accept=".pdf,.jpg,.jpeg,.png,.doc,.docx"
+        style={{ display: 'none' }}
+        onChange={handleDocumentFileChange}
+      />
 
       {/* View All Team Modal */}
       {showAllTeam && (
