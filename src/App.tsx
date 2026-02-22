@@ -1,5 +1,4 @@
-import { useState, useEffect } from "react";
-import { BrowserRouter as Router, Routes, Route, Navigate, useNavigate } from 'react-router-dom';
+import { useState } from "react";
 import MainLayout from "./layouts/MainLayout";
 import RoleSelectPage from "./pages/RoleSelectPage";
 
@@ -7,8 +6,6 @@ import RoleSelectPage from "./pages/RoleSelectPage";
 import BankDashboardPage from "./features/bank-credit-officer/pages/Dashboard";
 import BankAllProjectsPage from "./features/bank-credit-officer/pages/AllProjects";
 import BankSettingsPage from "./features/bank-credit-officer/pages/Settings";
-//below line should remove
-import SecureShareTest from "./features/bank-credit-officer/pages/SecureShareTest";
 
 //  Property Owner pages
 
@@ -20,19 +17,16 @@ import OwnerSettingsPage from "./features/property-owner/pages/Settings";
 
 // L3 Manager pages
 import L3DashboardPage from "./features/l3/pages/Dashboard";
-import L3AllProjectsPage from "./features/l3/pages/AllProjects";
-import L3ApprovalsPage from "./features/l3/pages/Approvals";
-import L3ReportsPage from "./features/l3/pages/Reports";
+import L3PendingReviews from "./features/l3/pages/PendingReviews";
+import L3ApprovedReports from "./features/l3/pages/ApprovedReports";
+import L3RejectedReports from "./features/l3/pages/RejectedReports";
+import L3AllReports from "./features/l3/pages/AllReports";
+import L3FinalizedReports from "./features/l3/pages/FinalizedReports";
+import L3VersionHistory from "./features/l3/pages/VersionHistory";
 import L3DraftReportDetail from "./features/l3/pages/DraftReportDetail";
 import L3EditDraftReport from "./features/l3/pages/EditDraftReport";
 import L3RejectReportDraft from "./features/l3/pages/RejectReportDraft";
-import L3RejectedReports from "./features/l3/pages/RejectedReports";
-import L3VersionHistory from "./features/l3/pages/VersionHistory";
-import L3ApprovedReports from "./features/l3/pages/ApprovedReports";
-import L3AllReports from "./features/l3/pages/AllReports";
-import L3FinalizedReports from "./features/l3/pages/FinalizedReports";
 import L3RequestClarification from "./features/l3/pages/RequestClarification";
-import L3PendingReviews from "./features/l3/pages/PendingReviews";
 
 //   L2 Manager pages
 import L2DashboardPage from "./features/l2/pages/Dashboard";
@@ -144,10 +138,6 @@ function App() {
 
   // Other roles: blank pages only
   if (role === "admin") return <BlankRolePage title="Admin Portal" />;
-  // ✅ Other roles: blank pages only
-  if (role === "admin") return <BlankRolePage title="Admin Portal" />;
-  if (role === "coordinator")
-    return <BlankRolePage title="Coordinator Portal" />;
   if (role === "technical-officer")
     return <BlankRolePage title="Technical Officer Portal" />;
   if (role === "senior-valuator")
@@ -167,13 +157,44 @@ function App() {
         {activePage === "pending" && (
           <L3PendingReviews onNavigate={handleNavigation} />
         )}
-        {activePage === "projects" && <L3AllProjectsPage />}
-        {activePage === "approvals" && <L3ApprovalsPage />}
-        {activePage === "reports" && <L3ReportsPage />}
+        {activePage === "approved" && <L3ApprovedReports />}
+        {activePage === "rejected" && (
+          <L3RejectedReports onNavigate={handleNavigation} />
+        )}
+        {activePage === "all" && <L3AllReports />}
+        {activePage === "finalized" && <L3FinalizedReports />}
+        {activePage === "history" && <L3VersionHistory />}
         {activePage === "draft-review" && (
           <L3DraftReportDetail
             projectId={selectedProjectId || "PV-2024-8842"}
             onBack={() => setActivePage("dashboard")}
+            onEditDetails={() => setActivePage("edit-draft")}
+            onRejectDraft={() => setActivePage("reject-report")}
+            onRequestClarification={() =>
+              setActivePage("request-clarification")
+            }
+          />
+        )}
+        {activePage === "edit-draft" && (
+          <L3EditDraftReport
+            projectId={selectedProjectId || "VAL-2023-004"}
+            onBack={() => setActivePage("draft-review")}
+          />
+        )}
+        {activePage === "reject-report" && (
+          <L3RejectReportDraft
+            projectId={selectedProjectId || "PV-RR0221"}
+            draftId="VAL-2023-004"
+            onBack={() => setActivePage("draft-review")}
+          />
+        )}
+        {activePage === "request-clarification" && (
+          <L3RequestClarification
+            projectName="Harbor View Residential Valuation"
+            projectCode="PRJ-2023-9021"
+            clientName="Apex Global Properties Ltd."
+            createdDate="Oct 24, 2023"
+            onBack={() => setActivePage("draft-review")}
           />
         )}
         {activePage === "settings" && <BlankRolePage title="L3 Settings" />}
@@ -309,97 +330,25 @@ function App() {
     );
   }
 
-  // ✅ For bank/owner show layout
-  // COORDINATOR with nested routes
+  // COORDINATOR - show pages based on activePage state
   if (role === "coordinator") {
     return (
-      <Router>
-        <MainLayout
-          activePage={activePage}
-          onNavigate={handleNavigation}
-          role={role}
-        >
-          <Routes>
-            {/* Dashboard */}
-            <Route 
-              path="/coordinator/dashboard" 
-              element={<CoordinatorDashboard />} 
-            />
-            
-            {/* 5-Step Workflow Routes */}
-            <Route 
-              path="/coordinator/workflow/search" 
-              element={<CoordinatorClientSearch />} 
-            />
-            <Route 
-              path="/coordinator/workflow/register" 
-              element={<CoordinatorRegisterClient />} 
-            />
-            <Route 
-              path="/coordinator/workflow/create-project" 
-              element={<CoordinatorCreateProject />} 
-            />
-            <Route 
-              path="/coordinator/workflow/new-valuation" 
-              element={<CoordinatorNewValuation />} 
-            />
-            <Route 
-              path="/coordinator/workflow/assign-to" 
-              element={<CoordinatorAssignTO />} 
-            />
-            
-            {/* Settings - keep this one */}
-            <Route 
-              path="/coordinator/settings" 
-              element={<CoordinatorSettings />} 
-            />
-
-            {/* Placeholder pages for future features */}
-            <Route
-              path="/coordinator/fleet-management"
-              element={<CoordinatorFleetManagement />}
-            />
-            <Route
-              path="/coordinator/projects"
-              element={<CoordinatorProjectStatus />}
-            />
-            <Route
-              path="/coordinator/messages"
-              element={<CoordinatorMessages />}
-            />
-            
-            {/* Optional pages - uncomment only if you create them */}
-            {/* 
-            <Route 
-              path="/coordinator/projects" 
-              element={<CoordinatorAllProjects />} 
-            />
-            <Route 
-              path="/coordinator/clients" 
-              element={<CoordinatorClients />} 
-            />
-            <Route 
-              path="/coordinator/reports" 
-              element={<CoordinatorReports />} 
-            />
-            */}
-            
-            {/* Default redirects */}
-            <Route 
-              path="/coordinator" 
-              element={<Navigate to="/coordinator/dashboard" replace />} 
-            />
-            <Route 
-              path="/coordinator/workflow" 
-              element={<Navigate to="/coordinator/dashboard" replace />} 
-            />
-            <Route 
-              path="*" 
-              element={<Navigate to="/coordinator/dashboard" replace />} 
-            />
-          </Routes>
-        </MainLayout>
-      </Router>
+      <MainLayout
+        activePage={activePage}
+        onNavigate={handleNavigation}
+        role={role}
+      >
+        {activePage === "dashboard" && <CoordinatorDashboard />}
+        {activePage === "create-project" && <CoordinatorClientSearch />}
+        {activePage === "workflow-register" && <CoordinatorRegisterClient />}
+        {activePage === "workflow-create" && <CoordinatorCreateProject />}
+        {activePage === "workflow-valuation" && <CoordinatorNewValuation />}
+        {activePage === "workflow-assign" && <CoordinatorAssignTO />}
+        {activePage === "settings" && <CoordinatorSettings />}
+        {activePage === "fleet-management" && <CoordinatorFleetManagement />}
+        {activePage === "project-status" && <CoordinatorProjectStatus />}
+        {activePage === "messages" && <CoordinatorMessages />}
+      </MainLayout>
     );
   }
 
@@ -414,10 +363,6 @@ function App() {
       {role === "bank" && activePage === "dashboard" && <BankDashboardPage />}
       {role === "bank" && activePage === "projects" && <BankAllProjectsPage />}
       {role === "bank" && activePage === "settings" && <BankSettingsPage />}
-
-      {role === "bank" && activePage === "secure-share-test" && (
-        <SecureShareTest />
-      )}
 
       {/* Property Owner */}
       {role === "owner" && activePage === "dashboard" && <OwnerDashboardPage />}
