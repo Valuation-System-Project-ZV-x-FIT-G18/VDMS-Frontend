@@ -103,6 +103,14 @@ const Sidebar = ({ activePage, onNavigate, role }: SidebarProps) => {
     { id: "finalized", label: "Finalized Reports", icon: LockOutlined },
     { id: "history", label: "Version History", icon: HistoryOutlined },
   ];
+  const technicalOfficerMenuItems = [
+  { id: "dashboard", label: "Dashboard", icon: DashboardOutlined },
+  { id: "projects", label: "Assigned Projects", icon: FolderOpenOutlined },
+  { id: "reports", label: "Reports", icon: FileTextOutlined },
+  { id: "documents", label: "Documents", icon: FileTextOutlined },
+  { id: "attendance", label: "Attendance", icon: ClockCircleOutlined },
+];
+
 
   // L2 Manager menu items
   const l2MenuItems = [
@@ -128,6 +136,10 @@ const Sidebar = ({ activePage, onNavigate, role }: SidebarProps) => {
 
   // Get menu items based on role
   const getMenuItems = () => {
+    if (role === "l3-manager") return l3MenuItems;
+    if (role === "owner") return ownerMenuItems;
+    if (role === "technical-officer") return technicalOfficerMenuItems;
+    return bankMenuItems; // default for bank and others
     switch (role) {
       case "l3-manager":
         return l3MenuItems;

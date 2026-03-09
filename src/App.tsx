@@ -3,7 +3,18 @@ import { Routes, Route, useNavigate, useLocation } from "react-router-dom";
 import MainLayout from "./layouts/MainLayout";
 import RoleSelectPage from "./pages/RoleSelectPage";
 
-// Bank Credit Officer pages
+// ✅ Technical Officer pages 
+import TechnicalOfficerDashboard from "./features/technical-officer/pages/Dashboard";
+import AssignedProject from "./features/technical-officer/pages/AssignedProject";
+import Report from "./features/technical-officer/pages/Report";
+import Documents from "./features/technical-officer/pages/Documents";
+import Attendance from "./features/technical-officer/pages/Attendance"; 
+
+
+
+
+
+// ✅ Bank Credit Officer pages
 import BankDashboardPage from "./features/bank-credit-officer/pages/Dashboard";
 import BankAllProjectsPage from "./features/bank-credit-officer/pages/AllProjects";
 import BankSettingsPage from "./features/bank-credit-officer/pages/Settings";
@@ -459,6 +470,51 @@ function AppContent() {
     );
   }
 
+  // ✅ Other roles: blank pages only
+  if (role === "admin") return <BlankRolePage title="Admin Portal" />;
+  if (role === "coordinator")
+    return <BlankRolePage title="Coordinator Portal" />;
+  if (role === "senior-valuator")
+    return <BlankRolePage title="Senior Valuator Portal" />;
+
+  // ✅ Technical Officer: show dashboard
+ if (role === "technical-officer") {
+  return (
+    <MainLayout activePage={activePage} onNavigate={handleNavigation} role={role}>
+      {activePage === "dashboard" && <TechnicalOfficerDashboard />}
+      {activePage === "projects" && <AssignedProject />}
+      {activePage === "reports" && <Report />}
+      {activePage === "documents" && <Documents />}
+      {activePage === "attendance" && <Attendance />}
+    </MainLayout>
+  );
+}
+
+  // ✅ L3 Manager
+  if (role === "l3-manager") {
+    return (
+      <MainLayout
+        activePage={activePage}
+        onNavigate={handleNavigation}
+        role={role}
+      >
+        {activePage === "dashboard" && (
+          <L3DashboardPage onNavigate={handleNavigation} />
+        )}
+        {activePage === "projects" && <L3AllProjectsPage />}
+        {activePage === "approvals" && <L3ApprovalsPage />}
+        {activePage === "reports" && <L3ReportsPage />}
+        {activePage === "draft-review" && (
+          <L3DraftReportDetail
+            projectId={selectedProjectId || "PV-2024-8842"}
+            onBack={() => setActivePage("dashboard")}
+          />
+        )}
+      </MainLayout>
+    );
+  }
+
+  // ✅ For bank/owner show layout
   // Route-based rendering
   return (
     <Routes>
