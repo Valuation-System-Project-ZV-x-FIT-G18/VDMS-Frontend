@@ -1,4 +1,5 @@
 import type { CSSProperties } from "react";
+import { useEffect, useState } from "react";
 
 import {
   DashboardOutlined,
@@ -25,17 +26,29 @@ interface SidebarProps {
 }
 
 const Sidebar = ({ activePage, onNavigate, role }: SidebarProps) => {
+  const [isMobile, setIsMobile] = useState(window.innerWidth < 768);
+
+  useEffect(() => {
+    const handleResize = () => {
+      setIsMobile(window.innerWidth < 768);
+    };
+
+    window.addEventListener("resize", handleResize);
+    return () => window.removeEventListener("resize", handleResize);
+  }, []);
+
   const sidebarBackgroundColor = theme.colors.background.sidebar;
 
   const sidebarStyle: CSSProperties = {
     width: "200px",
     height: "100%",
     backgroundColor: sidebarBackgroundColor,
-    padding: "20px 12px",
+    padding: isMobile ? "12px 10px" : "20px 12px",
     display: "flex",
     flexDirection: "column",
-    gap: "8px",
+    gap: isMobile ? "4px" : "8px",
     borderRight: "1px solid #e5e7eb",
+    overflow: "auto",
   };
 
   // Bank Credit Officer menu items
@@ -146,15 +159,15 @@ const Sidebar = ({ activePage, onNavigate, role }: SidebarProps) => {
   ];
 
   const getMenuItemStyle = (isActive: boolean): CSSProperties => ({
-    height: "48px",
+    height: isMobile ? "44px" : "48px",
     display: "flex",
     alignItems: "center",
-    gap: "12px",
-    padding: "0 14px",
+    gap: isMobile ? "10px" : "12px",
+    padding: isMobile ? "0 10px" : "0 14px",
     cursor: "pointer",
-    fontSize: "13px",
+    fontSize: isMobile ? "12px" : "13px",
     fontWeight: isActive ? 600 : 500,
-    borderRadius: "8px",
+    borderRadius: "6px",
     border: "none",
     backgroundColor: isActive ? "#e6f0ff" : "transparent",
     color: isActive ? "#3b82f6" : "#6b7280",
@@ -191,7 +204,13 @@ const Sidebar = ({ activePage, onNavigate, role }: SidebarProps) => {
   return (
     <div style={sidebarStyle}>
       {/* Main Menu */}
-      <div style={{ display: "flex", flexDirection: "column", gap: "4px" }}>
+      <div
+        style={{
+          display: "flex",
+          flexDirection: "column",
+          gap: isMobile ? "4px" : "4px",
+        }}
+      >
         {menuItems.map((item) => {
           const IconComponent = item.icon;
           const isActive = activePage === item.id;
@@ -214,7 +233,7 @@ const Sidebar = ({ activePage, onNavigate, role }: SidebarProps) => {
             >
               <IconComponent
                 style={{
-                  fontSize: "18px",
+                  fontSize: isMobile ? "16px" : "18px",
                   color: isActive ? theme.colors.primary.main : "#1f2937",
                   transition: "all 0.25s cubic-bezier(0.4, 0, 0.2, 1)",
                   flexShrink: 0,
@@ -235,7 +254,7 @@ const Sidebar = ({ activePage, onNavigate, role }: SidebarProps) => {
                 <div
                   style={{
                     width: "3px",
-                    height: "20px",
+                    height: "18px",
                     borderRadius: "2px",
                     backgroundColor: "#3b82f6",
                     marginLeft: "auto",
@@ -254,8 +273,8 @@ const Sidebar = ({ activePage, onNavigate, role }: SidebarProps) => {
           marginTop: "auto",
           display: "flex",
           flexDirection: "column",
-          gap: "4px",
-          paddingTop: "12px",
+          gap: isMobile ? "4px" : "4px",
+          paddingTop: isMobile ? "8px" : "12px",
           borderTop: "1px solid #e5e7eb",
         }}
       >
@@ -281,7 +300,7 @@ const Sidebar = ({ activePage, onNavigate, role }: SidebarProps) => {
             >
               <IconComponent
                 style={{
-                  fontSize: "18px",
+                  fontSize: isMobile ? "16px" : "18px",
                   color: isActive ? theme.colors.primary.main : "#1f2937",
                   transition: "all 0.25s cubic-bezier(0.4, 0, 0.2, 1)",
                   flexShrink: 0,
@@ -302,7 +321,7 @@ const Sidebar = ({ activePage, onNavigate, role }: SidebarProps) => {
                 <div
                   style={{
                     width: "3px",
-                    height: "20px",
+                    height: "18px",
                     borderRadius: "2px",
                     backgroundColor: "#3b82f6",
                     marginLeft: "auto",
