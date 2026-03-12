@@ -755,7 +755,7 @@ const ValuationJobDetail = ({ projectId, onBack }: ValuationJobDetailProps) => {
                 <div>
                   <div style={{ fontSize: '13px', fontWeight: 500 }}>{member.name}</div>
                   <div style={{ fontSize: '12px', color: theme.colors.text.secondary }}>{member.role}</div>
-                  <div style={{ fontSize: '12px', color: theme.colors.primary.main }}>{member.email}</div>
+                   <div style={{ fontSize: '12px', color: theme.colors.primary.main }}>{member.email}</div>
                 </div>
               </div>
             ))}
