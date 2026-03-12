@@ -1,18 +1,20 @@
-import { useState, useEffect } from "react";
-import { Routes, Route, useNavigate, useLocation } from "react-router-dom";
+import {
+  Routes,
+  Route,
+  useNavigate,
+  useLocation,
+  useParams,
+} from "react-router-dom";
 import MainLayout from "./layouts/MainLayout";
 import RoleSelectPage from "./pages/RoleSelectPage";
 
-// ✅ Technical Officer pages 
+// ✅ Technical Officer pages
 import TechnicalOfficerDashboard from "./features/technical-officer/pages/Dashboard";
 import AssignedProject from "./features/technical-officer/pages/AssignedProject";
 import Report from "./features/technical-officer/pages/Report";
 import Documents from "./features/technical-officer/pages/Documents";
-import Attendance from "./features/technical-officer/pages/Attendance"; 
-
-
-
-
+import Attendance from "./features/technical-officer/pages/Attendance";
+import TechnicalOfficerSettingsPage from "./features/technical-officer/pages/Settings.tsx";
 
 // ✅ Bank Credit Officer pages
 import BankDashboardPage from "./features/bank-credit-officer/pages/Dashboard";
@@ -37,6 +39,7 @@ import L3DraftReportDetail from "./features/l3/pages/DraftReportDetail";
 import L3EditDraftReport from "./features/l3/pages/EditDraftReport";
 import L3RejectReportDraft from "./features/l3/pages/RejectReportDraft";
 import L3RequestClarification from "./features/l3/pages/RequestClarification";
+import L3SettingsPage from "./features/l3/pages/Settings.tsx";
 
 // L2 Manager pages
 import L2DashboardPage from "./features/l2/pages/Dashboard";
@@ -49,6 +52,11 @@ import L2ApprovedReports from "./features/l2/pages/ApprovedReports";
 import L2AllReports from "./features/l2/pages/AllReports";
 import L2FinalizedReports from "./features/l2/pages/FinalizedReports";
 import L2PendingReviews from "./features/l2/pages/PendingReviews";
+import L2SettingsPage from "./features/l2/pages/Settings.tsx";
+import L2DraftReportDetail from "./features/l2/pages/DraftReportDetail";
+import L2EditDraftReport from "./features/l2/pages/EditDraftReport";
+import L2RejectReportDraft from "./features/l2/pages/RejectReportDraft";
+import L2RequestClarification from "./features/l2/pages/RequestClarification";
 
 // L1 Manager pages
 import L1DashboardPage from "./features/l1/pages/Dashboard";
@@ -63,6 +71,11 @@ import L1FinalizedReports from "./features/l1/pages/FinalizedReports";
 import L1PendingReviews from "./features/l1/pages/PendingReviews";
 import L1AllProjectsAndBottlenecks from "./features/l1/pages/AllProjectsAndBottlenecks";
 import L1DailyMorningReport from "./features/l1/pages/DailyMorningReport";
+import L1SettingsPage from "./features/l1/pages/Settings.tsx";
+import L1DraftReportDetail from "./features/l1/pages/DraftReportDetail";
+import L1EditDraftReport from "./features/l1/pages/EditDraftReport";
+import L1RejectReportDraft from "./features/l1/pages/RejectReportDraft";
+import L1RequestClarification from "./features/l1/pages/RequestClarification";
 
 // COORDINATOR pages
 import CoordinatorDashboard from "./features/coordinator/pages/Dashboard";
@@ -107,6 +120,55 @@ function BlankRolePage({ title }: { title: string }) {
         </p>
       </div>
     </div>
+  );
+}
+
+// Wrapper components to extract projectId from URL and pass to DraftReportDetail
+function L3DraftReportDetailPage() {
+  const { projectId } = useParams<{ projectId: string }>();
+  const navigate = useNavigate();
+  return (
+    <L3DraftReportDetail
+      projectId={projectId || "PV-2024-8842"}
+      onBack={() => navigate("/l3-manager/dashboard")}
+      onEditDetails={() => navigate("/l3-manager/edit-draft")}
+      onRejectDraft={() => navigate("/l3-manager/reject-report")}
+      onRequestClarification={() =>
+        navigate("/l3-manager/request-clarification")
+      }
+    />
+  );
+}
+
+function L2DraftReportDetailPage() {
+  const { projectId } = useParams<{ projectId: string }>();
+  const navigate = useNavigate();
+  return (
+    <L2DraftReportDetail
+      projectId={projectId || "PV-2024-8842"}
+      onBack={() => navigate("/l2-manager/dashboard")}
+      onEditDetails={() => navigate("/l2-manager/edit-draft")}
+      onRejectDraft={() => navigate("/l2-manager/reject-report")}
+      onRequestClarification={() =>
+        navigate("/l2-manager/request-clarification")
+      }
+    />
+  );
+}
+
+function L1DraftReportDetailPage() {
+  const { projectId } = useParams<{ projectId: string }>();
+  const navigate = useNavigate();
+  return (
+    <L1DraftReportDetail
+      projectId={projectId || "PV-2024-8842"}
+      onBack={() => navigate("/l1-manager/dashboard")}
+      onEditDetails={() => navigate("/l1-manager/edit-draft")}
+      onRejectDraft={() => navigate("/l1-manager/reject-report")}
+      onRequestClarification={() =>
+        navigate("/l1-manager/request-clarification")
+      }
+    />
   );
 }
 
@@ -221,17 +283,7 @@ function L3Manager() {
         <Route path="/history" element={<L3VersionHistory />} />
         <Route
           path="/draft-review/:projectId"
-          element={
-            <L3DraftReportDetail
-              projectId=""
-              onBack={() => navigate("/l3-manager/dashboard")}
-              onEditDetails={() => navigate("/l3-manager/edit-draft")}
-              onRejectDraft={() => navigate("/l3-manager/reject-report")}
-              onRequestClarification={() =>
-                navigate("/l3-manager/request-clarification")
-              }
-            />
-          }
+          element={<L3DraftReportDetailPage />}
         />
         <Route
           path="/edit-draft"
@@ -264,10 +316,7 @@ function L3Manager() {
             />
           }
         />
-        <Route
-          path="/settings"
-          element={<BlankRolePage title="L3 Settings" />}
-        />
+        <Route path="/settings" element={<L3SettingsPage />} />
       </Routes>
     </MainLayout>
   );
@@ -282,8 +331,12 @@ function L2Manager() {
     return path || "dashboard";
   };
 
-  const handleNavigation = (page: string) => {
-    navigate(`/l2-manager/${page}`);
+  const handleNavigation = (page: string, projectId?: string) => {
+    if (projectId) {
+      navigate(`/l2-manager/${page}/${projectId}`);
+    } else {
+      navigate(`/l2-manager/${page}`);
+    }
   };
 
   const activePage = getCurrentPage();
@@ -318,6 +371,42 @@ function L2Manager() {
           element={<L2RejectedReports onNavigate={handleNavigation} />}
         />
         <Route path="/history" element={<L2VersionHistory />} />
+        <Route
+          path="/draft-review/:projectId"
+          element={<L2DraftReportDetailPage />}
+        />
+        <Route
+          path="/edit-draft"
+          element={
+            <L2EditDraftReport
+              projectId=""
+              onBack={() => navigate("/l2-manager/dashboard")}
+            />
+          }
+        />
+        <Route
+          path="/reject-report"
+          element={
+            <L2RejectReportDraft
+              projectId=""
+              draftId=""
+              onBack={() => navigate("/l2-manager/dashboard")}
+            />
+          }
+        />
+        <Route
+          path="/request-clarification"
+          element={
+            <L2RequestClarification
+              projectName=""
+              projectCode=""
+              clientName=""
+              createdDate=""
+              onBack={() => navigate("/l2-manager/dashboard")}
+            />
+          }
+        />
+        <Route path="/settings" element={<L2SettingsPage />} />
       </Routes>
     </MainLayout>
   );
@@ -332,8 +421,12 @@ function L1Manager() {
     return path || "dashboard";
   };
 
-  const handleNavigation = (page: string) => {
-    navigate(`/l1-manager/${page}`);
+  const handleNavigation = (page: string, projectId?: string) => {
+    if (projectId) {
+      navigate(`/l1-manager/${page}/${projectId}`);
+    } else {
+      navigate(`/l1-manager/${page}`);
+    }
   };
 
   const activePage = getCurrentPage();
@@ -378,6 +471,42 @@ function L1Manager() {
           path="/morning-report"
           element={<L1DailyMorningReport onNavigate={handleNavigation} />}
         />
+        <Route
+          path="/draft-review/:projectId"
+          element={<L1DraftReportDetailPage />}
+        />
+        <Route
+          path="/edit-draft"
+          element={
+            <L1EditDraftReport
+              projectId=""
+              onBack={() => navigate("/l1-manager/dashboard")}
+            />
+          }
+        />
+        <Route
+          path="/reject-report"
+          element={
+            <L1RejectReportDraft
+              projectId=""
+              draftId=""
+              onBack={() => navigate("/l1-manager/dashboard")}
+            />
+          }
+        />
+        <Route
+          path="/request-clarification"
+          element={
+            <L1RequestClarification
+              projectName=""
+              projectCode=""
+              clientName=""
+              createdDate=""
+              onBack={() => navigate("/l1-manager/dashboard")}
+            />
+          }
+        />
+        <Route path="/settings" element={<L1SettingsPage />} />
       </Routes>
     </MainLayout>
   );
@@ -388,8 +517,17 @@ function Coordinator() {
   const location = useLocation();
 
   const getCurrentPage = () => {
-    const path = location.pathname.split("/").pop();
-    return path || "dashboard";
+    const pathSegments = location.pathname.split("/").filter(Boolean);
+    const coordinatorSubPath = pathSegments[1] || "dashboard";
+
+    if (
+      coordinatorSubPath === "create-project" ||
+      coordinatorSubPath.startsWith("workflow")
+    ) {
+      return "create-project";
+    }
+
+    return coordinatorSubPath;
   };
 
   const handleNavigation = (page: string) => {
@@ -408,16 +546,30 @@ function Coordinator() {
         <Route path="/" element={<CoordinatorDashboard />} />
         <Route path="/dashboard" element={<CoordinatorDashboard />} />
         <Route path="/create-project" element={<CoordinatorClientSearch />} />
+        <Route path="/workflow/search" element={<CoordinatorClientSearch />} />
         <Route
           path="/workflow-register"
           element={<CoordinatorRegisterClient />}
         />
+        <Route
+          path="/workflow/register"
+          element={<CoordinatorRegisterClient />}
+        />
         <Route path="/workflow-create" element={<CoordinatorCreateProject />} />
+        <Route
+          path="/workflow/create-project"
+          element={<CoordinatorCreateProject />}
+        />
         <Route
           path="/workflow-valuation"
           element={<CoordinatorNewValuation />}
         />
+        <Route
+          path="/workflow/new-valuation"
+          element={<CoordinatorNewValuation />}
+        />
         <Route path="/workflow-assign" element={<CoordinatorAssignTO />} />
+        <Route path="/workflow/assign-to" element={<CoordinatorAssignTO />} />
         <Route path="/settings" element={<CoordinatorSettings />} />
         <Route
           path="/fleet-management"
@@ -430,87 +582,68 @@ function Coordinator() {
   );
 }
 
-function AppContent() {
-  const [role, setRole] = useState<Role | null>(null);
+function TechnicalOfficer() {
   const navigate = useNavigate();
   const location = useLocation();
 
-  // Extract role from URL path on mount and route changes
-  useEffect(() => {
-    const pathSegments = location.pathname.split("/").filter(Boolean);
-    if (pathSegments.length > 0) {
-      const potentialRole = pathSegments[0] as Role;
-      const validRoles: Role[] = [
-        "bank",
-        "owner",
-        "l3-manager",
-        "l2-manager",
-        "l1-manager",
-        "admin",
-        "coordinator",
-        "technical-officer",
-        "senior-valuator",
-      ];
+  const getCurrentPage = () => {
+    const path = location.pathname.split("/").pop();
+    return path || "dashboard";
+  };
 
-      if (validRoles.includes(potentialRole)) {
-        setRole(potentialRole);
-      }
-    }
-  }, [location]);
+  const handleNavigation = (page: string) => {
+    navigate(`/technical-officer/${page}`);
+  };
+
+  const activePage = getCurrentPage();
+
+  return (
+    <MainLayout
+      role="technical-officer"
+      onNavigate={handleNavigation}
+      activePage={activePage}
+    >
+      <Routes>
+        <Route path="/" element={<TechnicalOfficerDashboard />} />
+        <Route path="/dashboard" element={<TechnicalOfficerDashboard />} />
+        <Route path="/projects" element={<AssignedProject />} />
+        <Route path="/reports" element={<Report />} />
+        <Route path="/documents" element={<Documents />} />
+        <Route path="/attendance" element={<Attendance />} />
+        <Route path="/settings" element={<TechnicalOfficerSettingsPage />} />
+      </Routes>
+    </MainLayout>
+  );
+}
+
+function AppContent() {
+  const navigate = useNavigate();
+  const location = useLocation();
+  const validRoles: Role[] = [
+    "bank",
+    "owner",
+    "l3-manager",
+    "l2-manager",
+    "l1-manager",
+    "admin",
+    "coordinator",
+    "technical-officer",
+    "senior-valuator",
+  ];
+  const pathSegments = location.pathname.split("/").filter(Boolean);
+  const potentialRole = pathSegments[0] as Role | undefined;
+  const role = potentialRole && validRoles.includes(potentialRole)
+    ? potentialRole
+    : null;
 
   // Role selection page
   if (!role) {
     return (
       <RoleSelectPage
         onSelectRole={(selectedRole) => {
-          setRole(selectedRole);
           navigate(`/${selectedRole}/dashboard`);
         }}
       />
-    );
-  }
-
-  // ✅ Other roles: blank pages only
-  if (role === "admin") return <BlankRolePage title="Admin Portal" />;
-  if (role === "coordinator")
-    return <BlankRolePage title="Coordinator Portal" />;
-  if (role === "senior-valuator")
-    return <BlankRolePage title="Senior Valuator Portal" />;
-
-  // ✅ Technical Officer: show dashboard
- if (role === "technical-officer") {
-  return (
-    <MainLayout activePage={activePage} onNavigate={handleNavigation} role={role}>
-      {activePage === "dashboard" && <TechnicalOfficerDashboard />}
-      {activePage === "projects" && <AssignedProject />}
-      {activePage === "reports" && <Report />}
-      {activePage === "documents" && <Documents />}
-      {activePage === "attendance" && <Attendance />}
-    </MainLayout>
-  );
-}
-
-  // ✅ L3 Manager
-  if (role === "l3-manager") {
-    return (
-      <MainLayout
-        activePage={activePage}
-        onNavigate={handleNavigation}
-        role={role}
-      >
-        {activePage === "dashboard" && (
-          <L3DashboardPage onNavigate={handleNavigation} />
-        )}
-        {activePage === "projects" && <L3AllProjectsPage />}
-        {activePage === "approvals" && <L3ApprovalsPage />}
-        {activePage === "reports" && <L3ReportsPage />}
-        {activePage === "draft-review" && (
-          <L3DraftReportDetail
-            projectId={selectedProjectId || "PV-2024-8842"}
-            onBack={() => setActivePage("dashboard")}
-          />
-        )}
-      </MainLayout>
     );
   }
 
@@ -524,11 +657,8 @@ function AppContent() {
       <Route path="/l2-manager/*" element={<L2Manager />} />
       <Route path="/l1-manager/*" element={<L1Manager />} />
       <Route path="/coordinator/*" element={<Coordinator />} />
+      <Route path="/technical-officer/*" element={<TechnicalOfficer />} />
       <Route path="/admin" element={<BlankRolePage title="Admin Portal" />} />
-      <Route
-        path="/technical-officer"
-        element={<BlankRolePage title="Technical Officer Portal" />}
-      />
       <Route
         path="/senior-valuator"
         element={<BlankRolePage title="Senior Valuator Portal" />}
