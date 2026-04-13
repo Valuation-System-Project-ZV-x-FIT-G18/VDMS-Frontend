@@ -12,8 +12,8 @@
   "dependencies": {
     "@ant-design/icons": "^6.1.0",
     "@reduxjs/toolkit": "^2.11.2",
-    "antd": "^6.3.0",
-    "axios": "^1.13.5",
+    "antd": "^6.3.2",
+    "axios": "^1.13.6",
     "date-fns": "^4.1.0",
     "leaflet": "^1.9.4",
     "react": "^19.2.0",

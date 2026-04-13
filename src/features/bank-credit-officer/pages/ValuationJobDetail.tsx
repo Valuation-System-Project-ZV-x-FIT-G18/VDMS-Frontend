@@ -1,4 +1,4 @@
-import { useRef, useState } from 'react';
+import { useRef, useState, useEffect } from 'react';
 import type { ChangeEvent } from 'react';
 import type { CSSProperties } from 'react';
 import {  
@@ -12,9 +12,16 @@ import {
   DownloadOutlined,
 } from '@ant-design/icons';
 import { theme } from '../../../styles/theme';
+import { projectService } from '../../../services/projectService';
+import type { ProjectDetails } from '../../../services/projectService';
+import { documentService } from '../../../services/documentService';
+import { teamService } from '../../../services/teamService';
+import type { TeamMember as TeamType } from '../../../services/teamService';
+import type { Project } from '../types';
 
 interface ValuationJobDetailProps {
   projectId: string;
+  initialProject?: Project | null;
   onBack: () => void;
 }
 
@@ -28,52 +35,85 @@ interface JobDocument {
   note?: string;
 }
 
-const ValuationJobDetail = ({ projectId, onBack }: ValuationJobDetailProps) => {
+const ValuationJobDetail = ({ projectId, initialProject, onBack }: ValuationJobDetailProps) => {
   const [showAllTeam, setShowAllTeam] = useState(false);
   const [uploadingDoc, setUploadingDoc] = useState<string | null>(null);
   const [selectedUploadDocId, setSelectedUploadDocId] = useState<string | null>(null);
-  const [documents, setDocuments] = useState<JobDocument[]>([
-    { id: '1', name: 'Survey Plan', uploadDate: 'Oct 24, 2023', status: 'submitted', uploadedBy: 'John Doe', required: false },
-    { id: '2', name: 'Local Authority Certificate', uploadDate: 'Oct 23, 2023', status: 'submitted', uploadedBy: 'John Doe', required: false },
-    { id: '3', name: 'Deed Copy (Prior 30 Years)', status: 'pending', required: true, note: 'Required for site verification' },
-    { id: '4', name: 'Building Plan (Approved)', status: 'pending', required: false, note: 'Waiting for client' },
-  ]);
   const documentUploadInputRef = useRef<HTMLInputElement | null>(null);
 
-  const jobData = {
-    id: projectId,
-    address: '123 Galle Road, Colombo 03, Western Province',
-    client: 'Abeywickrama Holdings Pvt Ltd',
-    projectId: '#PROJ-1234',
-    propertyType: 'Residential Land & House',
-    valuationType: 'Market Valuation',
-    bankBranch: 'Colombo 07 - Main',
-    creditOfficer: 'You (John Doe)',
-    applicant: 'Mr. S. Perera',
-    applicantContact: '+94 77 123 4567',
-    requestedDate: 'Oct 20, 2023',
-    expectedCompletion: 'Nov 05, 2023',
-    daysRemaining: 5,
-    currentStage: 'Report Prepared',
-    assignedTeam: [
-      { name: 'Alice Freeman', role: 'coordinator', email: 'alice@example.com' },
-      { name: 'Marcus Johnson', role: 'Technical officer', email: 'marcus@example.com' },
-      { name: 'Sarah Jenkins', role: 'Manager', email: 'sarah@example.com' },
-      { name: 'David Brown', role: 'Senior Valuator', email: 'david@example.com' },
-      { name: 'Emma Wilson', role: 'Technical Officer', email: 'emma@example.com' },
-    ],
-    documents,
-    stages: [
-      { name: 'Docs\nReceived', completed: true, current: false },
-      { name: 'Site\nInspected', completed: true, current: false },
-      { name: 'Report\nPrepared', completed: false, current: true },
-      { name: 'Report\nSent', completed: false, current: false },
-      { name: 'Comple\nted', completed: false, current: false },
-    ],
-  };
+  // ✅ NEW: State for API data
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+  const [project, setProject] = useState<ProjectDetails | null>(null);
+  const [documents, setDocuments] = useState<JobDocument[]>([]);
+  const [teamMembers, setTeamMembers] = useState<TeamType[]>([]);
 
-  const uploadedCount = jobData.documents.filter(d => d.status === 'submitted').length;
-  const totalCount = jobData.documents.length;
+  // ✅ NEW: Fetch project details from backend
+  useEffect(() => {
+    const fetchProjectDetails = async () => {
+      try {
+        setLoading(true);
+        setError(null);
+
+        // Prefer the selected row data so the page opens even if the
+        // project-by-id endpoint is failing in the running backend process.
+        let projectData: ProjectDetails;
+        if (initialProject) {
+          projectData = initialProject as ProjectDetails;
+        } else {
+          try {
+            projectData = await projectService.getById(projectId);
+          } catch {
+            const allProjects = await projectService.getAll({ search: projectId });
+            const matchedProject = allProjects.find((p) => p.projectId === projectId);
+            if (!matchedProject) {
+              throw new Error('Project not found');
+            }
+            projectData = matchedProject as ProjectDetails;
+          }
+        }
+
+        setProject(projectData);
+
+        const resolvedId = projectData.id || projectId;
+
+        // Load related data independently so a single endpoint failure
+        // does not block the detail page from rendering.
+        const [docsResult, teamResult] = await Promise.allSettled([
+          documentService.getByProject(resolvedId),
+          teamService.getByProject(resolvedId),
+        ]);
+
+        const docsData = docsResult.status === 'fulfilled' ? docsResult.value : [];
+        const teamData = teamResult.status === 'fulfilled' ? teamResult.value : [];
+        
+        // Transform documents to match component interface
+        const transformedDocs: JobDocument[] = docsData.map(doc => ({
+          id: doc.id,
+          name: doc.name,
+          uploadDate: doc.uploadDate ? new Date(doc.uploadDate).toLocaleDateString('en-US', {
+            month: 'short',
+            day: '2-digit',
+            year: 'numeric',
+          }) : undefined,
+          status: (doc.status === 'submitted' || doc.status === 'approved') ? 'submitted' : 'pending',
+          uploadedBy: doc.uploadedBy || undefined,
+          required: doc.required,
+          note: doc.note || undefined,
+        }));
+        
+        setDocuments(transformedDocs);
+        setTeamMembers(teamData);
+      } catch (err) {
+        setError('Failed to load project details');
+        console.error('Error:', err);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchProjectDetails();
+  }, [projectId, initialProject]);
 
   const handleDocumentUpload = (docId: string) => {
     setSelectedUploadDocId(docId);
@@ -109,6 +149,106 @@ const ValuationJobDetail = ({ projectId, onBack }: ValuationJobDetailProps) => {
     setUploadingDoc(null);
     setSelectedUploadDocId(null);
     event.target.value = '';
+  };
+
+  // ✅ Loading state
+  if (loading) {
+    return (
+      <div style={{
+        display: 'flex',
+        justifyContent: 'center',
+        alignItems: 'center',
+        minHeight: '400px',
+      }}>
+        <div style={{ fontSize: '16px', color: theme.colors.text.secondary }}>
+          Loading project details...
+        </div>
+      </div>
+    );
+  }
+
+  // ✅ Error state
+  if (error || !project) {
+    return (
+      <div style={{
+        display: 'flex',
+        justifyContent: 'center',
+        alignItems: 'center',
+        minHeight: '400px',
+        flexDirection: 'column',
+        gap: '16px',
+      }}>
+        <div style={{ color: '#ff4d4f', fontSize: '16px' }}>
+          {error || 'Project not found'}
+        </div>
+        <button
+          onClick={onBack}
+          style={{
+            padding: '8px 16px',
+            backgroundColor: theme.colors.primary.main,
+            color: 'white',
+            border: 'none',
+            borderRadius: '6px',
+            cursor: 'pointer',
+            fontSize: '14px',
+          }}
+        >
+          Go Back
+        </button>
+      </div>
+    );
+  }
+
+  // ✅ Transform backend data to match UI
+  const uploadedCount = documents.filter(d => d.status === 'submitted').length;
+  const totalCount = documents.length;
+
+  // Calculate days remaining
+  const expectedDate = new Date(project.expectedCompletion);
+  const today = new Date();
+  const diffTime = expectedDate.getTime() - today.getTime();
+  const daysRemaining = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+
+  // Map project status to stages
+  const getStages = (status: string) => {
+    const stageOrder = ['Awaiting Docs', 'Site Inspected', 'Report Prepared', 'Payment Pending', 'Completed'];
+    const currentIndex = stageOrder.indexOf(status);
+    
+    return [
+      { name: 'Docs\nReceived', completed: currentIndex > 0, current: currentIndex === 0 },
+      { name: 'Site\nInspected', completed: currentIndex > 1, current: currentIndex === 1 },
+      { name: 'Report\nPrepared', completed: currentIndex > 2, current: currentIndex === 2 },
+      { name: 'Report\nSent', completed: currentIndex > 3, current: currentIndex === 3 },
+      { name: 'Comple\nted', completed: currentIndex > 4, current: currentIndex === 4 },
+    ];
+  };
+
+  const jobData = {
+    id: project.projectId,
+    address: project.propertyAddress,
+    client: 'Abeywickrama Holdings Pvt Ltd', // TODO: Get from backend when client table exists
+    projectId: project.projectId,
+    propertyType: 'Residential Land & House', // TODO: Add to project entity
+    valuationType: 'Market Valuation', // TODO: Add to project entity
+    bankBranch: 'Colombo 07 - Main', // TODO: Add to project entity
+    creditOfficer: 'You (John Doe)', // TODO: Get from auth
+    applicant: project.applicants && project.applicants.length > 0 ? project.applicants[0] : 'N/A',
+    applicantContact: '+94 77 123 4567', // TODO: Add to project entity
+    requestedDate: new Date(project.requestedDate).toLocaleDateString('en-US', {
+      month: 'short',
+      day: '2-digit',
+      year: 'numeric',
+    }),
+    expectedCompletion: new Date(project.expectedCompletion).toLocaleDateString('en-US', {
+      month: 'short',
+      day: '2-digit',
+      year: 'numeric',
+    }),
+    daysRemaining,
+    currentStage: project.status,
+    assignedTeam: teamMembers,
+    documents,
+    stages: getStages(project.status),
   };
 
   // ── Styles ──────────────────────────────────────────
@@ -163,7 +303,6 @@ const ValuationJobDetail = ({ projectId, onBack }: ValuationJobDetailProps) => {
     color: theme.colors.text.secondary,
   };
 
-  // Progress stages
   const stageWrapperStyle: CSSProperties = {
     backgroundColor: 'white',
     borderRadius: '8px',
@@ -220,7 +359,6 @@ const ValuationJobDetail = ({ projectId, onBack }: ValuationJobDetailProps) => {
     whiteSpace: 'pre-line' as const,
   });
 
-  // Main grid
   const contentGridStyle: CSSProperties = {
     display: 'grid',
     gridTemplateColumns: '1.4fr 1fr',
@@ -254,7 +392,6 @@ const ValuationJobDetail = ({ projectId, onBack }: ValuationJobDetailProps) => {
     padding: '20px',
   };
 
-  // Project details grid
   const detailsGridStyle: CSSProperties = {
     display: 'grid',
     gridTemplateColumns: '1fr 1fr',
@@ -284,12 +421,11 @@ const ValuationJobDetail = ({ projectId, onBack }: ValuationJobDetailProps) => {
     borderRadius: '4px',
     fontSize: '12px',
     fontWeight: 500,
-    backgroundColor: '#fff7e6',
-    color: '#fa8c16',
-    border: '1px solid #ffd591',
+    backgroundColor: daysRemaining < 0 ? '#fff1f0' : '#fff7e6',
+    color: daysRemaining < 0 ? '#ff4d4f' : '#fa8c16',
+    border: daysRemaining < 0 ? '1px solid #ffa39e' : '1px solid #ffd591',
   };
 
-  // Document checklist
   const docItemStyle = (): CSSProperties => ({
     display: 'flex',
     alignItems: 'center',
@@ -377,7 +513,6 @@ const ValuationJobDetail = ({ projectId, onBack }: ValuationJobDetailProps) => {
     cursor: 'pointer',
   };
 
-  // Team styles
   const teamAvatarStyle: CSSProperties = {
     width: '38px',
     height: '38px',
@@ -403,7 +538,6 @@ const ValuationJobDetail = ({ projectId, onBack }: ValuationJobDetailProps) => {
     color: theme.colors.text.primary,
   };
 
-  // Modal styles
   const modalOverlayStyle: CSSProperties = {
     position: 'fixed',
     top: 0, left: 0, right: 0, bottom: 0,
@@ -536,7 +670,9 @@ const ValuationJobDetail = ({ projectId, onBack }: ValuationJobDetailProps) => {
               <div style={detailCellStyle}>
                 <div style={detailLabelStyle}>Days Remaining</div>
                 <div style={detailValueStyle}>
-                  <span style={daysBadgeStyle}>{jobData.daysRemaining} Days</span>
+                  <span style={daysBadgeStyle}>
+                    {daysRemaining < 0 ? `${Math.abs(daysRemaining)} Days Overdue` : `${daysRemaining} Days`}
+                  </span>
                 </div>
               </div>
               <div style={detailCellStyle}>
@@ -648,7 +784,7 @@ const ValuationJobDetail = ({ projectId, onBack }: ValuationJobDetailProps) => {
               ))}
 
               <button style={viewAllBtnStyle} onClick={() => setShowAllTeam(true)}>
-                View All
+                View All ({jobData.assignedTeam.length})
               </button>
             </div>
           </div>
