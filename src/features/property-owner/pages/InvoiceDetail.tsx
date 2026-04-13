@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import type { CSSProperties } from 'react';
 import {
   BankOutlined,
@@ -7,80 +7,104 @@ import {
   CloudUploadOutlined,
   DownloadOutlined,
   BellOutlined,
-  CloseOutlined,
   CopyOutlined,
   InfoCircleOutlined,
   CheckCircleOutlined,
 } from '@ant-design/icons';
 import { theme } from '../../../styles/theme';
+import { invoiceService } from '../../../services/invoiceService';
+import type { Invoice } from '../../../services/invoiceService';
 
 interface InvoiceDetailProps {
   invoiceId: string;
   onBack: () => void;
 }
 
+const bankTransfer = {
+  accountName: 'ZaVolt Valuations Pvt Ltd',
+  bank: 'Sampath Bank',
+  branch: 'Colombo Super Branch',
+  accountNumber: '1000-234-567',
+};
+
 const InvoiceDetail = ({ invoiceId, onBack }: InvoiceDetailProps) => {
-  const [uploadedFile, setUploadedFile] = useState<File | null>(null);
+  const [invoice, setInvoice] = useState<Invoice | null>(null);
   const [isDragging, setIsDragging] = useState(false);
   const [isUploading, setIsUploading] = useState(false);
-  const [uploadStatus, setUploadStatus] = useState<'idle' | 'awaiting' | 'verified'>('awaiting');
   const [copiedAccount, setCopiedAccount] = useState(false);
   const [notifySuccess, setNotifySuccess] = useState(false);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
-  // Mock data - will come from API/database later
-  const invoiceData = {
-    invoiceId,
-    valuationFee: 45000.00,
-    dueDate: 'Oct 25, 2023',
-    daysRemaining: 3,
-    paymentStatus: 'Pending' as 'Pending' | 'Paid' | 'Overdue',
-    projectInfo: {
-      propertyAddress: '123 Galle Rd, Colombo 03',
-      bankName: 'Commercial Bank',
-      applicantName: 'Mr. Perera',
-      valuationType: 'Land & Building',
-      reportStatus: 'Prepared (Ready for Release upon Payment)',
-    },
-    bankTransfer: {
-      accountName: 'ZaVolt Valuations Pvt Ltd',
-      bank: 'Sampath Bank',
-      branch: 'Colombo Super Branch',
-      accountNumber: '1000-234-567',
-    },
-    projectReference: 'VAL-2023-889',
-    uploadedFile: {
-      name: 'Transfer_Slip_Oct24.jpg',
-      status: 'Awaiting verification',
-    },
-  };
+  useEffect(() => {
+    const loadInvoice = async () => {
+      try {
+        setLoading(true);
+        setError(null);
+        const data = await invoiceService.getById(invoiceId);
+        setInvoice(data);
+      } catch (err) {
+        console.error('Error loading invoice:', err);
+        setError('Failed to load invoice details');
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    loadInvoice();
+  }, [invoiceId]);
 
   const getPaymentStatusColor = () => {
+    const status = invoice?.status || 'Pending';
     const colors = {
       Pending: '#fa8c16',
       Paid: '#52c41a',
       Overdue: '#ff4d4f',
     };
-    return colors[invoiceData.paymentStatus];
+    return colors[status];
   };
 
-  // Handle file upload
-  const handleFileUpload = (file: File) => {
-    setUploadedFile(file);
-    setIsUploading(true);
-    setUploadStatus('idle');
+  const formatAmount = (amount: string | number) => {
+    const value = typeof amount === 'string' ? Number(amount) : amount;
+    return value.toLocaleString('en-US', { minimumFractionDigits: 2 });
+  };
 
-    setTimeout(() => {
+  const formatDate = (date: string) =>
+    new Date(date).toLocaleDateString('en-US', {
+      month: 'short',
+      day: '2-digit',
+      year: 'numeric',
+    });
+
+  const getDaysRemaining = (dueDate: string) => {
+    const due = new Date(dueDate);
+    const now = new Date();
+    const diff = Math.ceil((due.getTime() - now.getTime()) / (1000 * 60 * 60 * 24));
+    return diff;
+  };
+
+  const handleFileUpload = async (file: File) => {
+    if (!invoice) return;
+
+    try {
+      setIsUploading(true);
+      const updated = await invoiceService.uploadPaymentProof(invoice.id, file.name);
+      setInvoice(updated);
+    } catch (err) {
+      console.error('Error uploading payment proof:', err);
+      setError('Failed to upload payment proof');
+    } finally {
       setIsUploading(false);
-      setUploadStatus('awaiting');
-      alert(`File "${file.name}" uploaded successfully! Awaiting verification.`);
-    }, 1500);
+    }
   };
 
   const handleDrop = (e: React.DragEvent) => {
     e.preventDefault();
     setIsDragging(false);
     const file = e.dataTransfer.files[0];
-    if (file) handleFileUpload(file);
+    if (file) {
+      void handleFileUpload(file);
+    }
   };
 
   const handleDragOver = (e: React.DragEvent) => {
@@ -98,31 +122,54 @@ const InvoiceDetail = ({ invoiceId, onBack }: InvoiceDetailProps) => {
     input.accept = 'image/*,.pdf';
     input.onchange = (e) => {
       const file = (e.target as HTMLInputElement).files?.[0];
-      if (file) handleFileUpload(file);
+      if (file) {
+        void handleFileUpload(file);
+      }
     };
     input.click();
   };
 
-  // Copy account number
   const handleCopyAccount = () => {
-    navigator.clipboard.writeText(invoiceData.bankTransfer.accountNumber);
+    navigator.clipboard.writeText(bankTransfer.accountNumber);
     setCopiedAccount(true);
     setTimeout(() => setCopiedAccount(false), 2000);
   };
 
-  // Download invoice (mock)
   const handleDownloadInvoice = () => {
-    alert('Invoice download started!\n\nTODO: Generate and download PDF invoice from backend.');
+    if (!invoice) return;
+
+    const amount = formatAmount(invoice.amount);
+    const text = [
+      `Invoice: ${invoice.invoiceId}`,
+      `Project: ${invoice.project?.projectId || '-'}`,
+      `Amount: LKR ${amount}`,
+      `Due Date: ${formatDate(invoice.dueDate)}`,
+      `Status: ${invoice.status}`,
+    ].join('\n');
+
+    const blob = new Blob([text], { type: 'text/plain;charset=utf-8' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `${invoice.invoiceId}.txt`;
+    a.click();
+    URL.revokeObjectURL(url);
   };
 
-  // Notify coordinator (mock)
-  const handleNotifyCoordinator = () => {
-    setNotifySuccess(true);
-    setTimeout(() => setNotifySuccess(false), 3000);
-    alert('Coordinator has been notified!\n\nTODO: Send notification to coordinator via backend.');
+  const handleNotifyCoordinator = async () => {
+    if (!invoice) return;
+
+    try {
+      const updated = await invoiceService.notifyCoordinator(invoice.id);
+      setInvoice(updated);
+      setNotifySuccess(true);
+      setTimeout(() => setNotifySuccess(false), 3000);
+    } catch (err) {
+      console.error('Error notifying coordinator:', err);
+      setError('Failed to notify coordinator');
+    }
   };
 
-  // Styles
   const containerStyle: CSSProperties = {
     maxWidth: '1100px',
     margin: '0 auto',
@@ -363,93 +410,105 @@ const InvoiceDetail = ({ invoiceId, onBack }: InvoiceDetailProps) => {
     marginBottom: '12px',
   };
 
+  if (loading) {
+    return (
+      <div style={containerStyle}>
+        <button style={backButtonStyle} onClick={onBack}>← Back</button>
+        <div style={{ textAlign: 'center', padding: '32px', color: theme.colors.text.secondary }}>
+          Loading invoice details...
+        </div>
+      </div>
+    );
+  }
+
+  if (error || !invoice) {
+    return (
+      <div style={containerStyle}>
+        <button style={backButtonStyle} onClick={onBack}>← Back</button>
+        <div style={{ textAlign: 'center', padding: '32px', color: '#dc2626' }}>
+          {error || 'Invoice not found'}
+        </div>
+      </div>
+    );
+  }
+
+  const daysRemaining = getDaysRemaining(invoice.dueDate);
+  const actionText = invoice.status === 'Paid' ? 'Completed' : 'Action Required';
+
   return (
     <div style={containerStyle}>
-      {/* Back Button */}
       <button style={backButtonStyle} onClick={onBack}>
         ← Back
       </button>
 
-      {/* Top 3 Cards */}
       <div style={topCardsStyle}>
-        {/* Valuation Fee */}
         <div style={cardStyle}>
           <div style={cardLabelStyle}>
             <span style={{ fontSize: '16px' }}>💳</span>
             Valuation Fee (LKR)
           </div>
-          <div style={feeValueStyle}>
-            {invoiceData.valuationFee.toLocaleString('en-US', { minimumFractionDigits: 2 })}
-          </div>
+          <div style={feeValueStyle}>{formatAmount(invoice.amount)}</div>
         </div>
 
-        {/* Due Date */}
         <div style={cardStyle}>
           <div style={cardLabelStyle}>
             <CalendarOutlined />
             Due Date
           </div>
-          <div style={dueDateStyle}>{invoiceData.dueDate}</div>
+          <div style={dueDateStyle}>{formatDate(invoice.dueDate)}</div>
           <div style={daysRemainingStyle}>
             <ClockCircleOutlined />
-            {invoiceData.daysRemaining} Days Remaining
+            {daysRemaining >= 0 ? `${daysRemaining} Days Remaining` : `${Math.abs(daysRemaining)} Days Overdue`}
           </div>
         </div>
 
-        {/* Payment Status */}
         <div style={pendingCardStyle}>
           <div style={cardLabelStyle}>
             <span style={{ color: getPaymentStatusColor(), fontSize: '16px' }}>●</span>
             Payment Status
           </div>
-          <div style={paymentStatusStyle}>{invoiceData.paymentStatus}</div>
-          <span style={actionRequiredStyle}>Action Required</span>
+          <div style={paymentStatusStyle}>{invoice.status}</div>
+          <span style={actionRequiredStyle}>{actionText}</span>
         </div>
       </div>
 
-      {/* Content Grid */}
       <div style={contentGridStyle}>
-        {/* Left Column */}
         <div>
-          {/* Project Information */}
           <div style={sectionCardStyle}>
             <div style={sectionHeaderStyle}>Project Information</div>
             <div style={sectionBodyStyle}>
               <div style={infoGridStyle}>
                 <div style={infoItemStyle}>
                   <span style={infoLabelStyle}>Property Address</span>
-                  <span style={infoValueStyle}>{invoiceData.projectInfo.propertyAddress}</span>
+                  <span style={infoValueStyle}>{invoice.project?.propertyAddress || '-'}</span>
                 </div>
                 <div style={infoItemStyle}>
                   <span style={infoLabelStyle}>Bank Name</span>
-                  <span style={infoValueStyle}>{invoiceData.projectInfo.bankName}</span>
+                  <span style={infoValueStyle}>-</span>
                 </div>
                 <div style={infoItemStyle}>
                   <span style={infoLabelStyle}>Applicant Name</span>
-                  <span style={infoValueStyle}>{invoiceData.projectInfo.applicantName}</span>
+                  <span style={infoValueStyle}>{invoice.project?.applicant || '-'}</span>
                 </div>
                 <div style={infoItemStyle}>
                   <span style={infoLabelStyle}>Valuation Type</span>
-                  <span style={infoValueStyle}>{invoiceData.projectInfo.valuationType}</span>
+                  <span style={infoValueStyle}>Market Valuation</span>
                 </div>
               </div>
 
-              {/* Report Status */}
               <div style={reportStatusStyle}>
                 <div style={infoLabelStyle}>Report Status</div>
                 <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginTop: '4px' }}>
                   <span style={{ color: '#52c41a', fontSize: '10px' }}>●</span>
-                  <span style={infoValueStyle}>{invoiceData.projectInfo.reportStatus}</span>
+                  <span style={infoValueStyle}>Prepared (Ready for Release upon Payment)</span>
                 </div>
               </div>
             </div>
           </div>
 
-          {/* Payment Methods */}
           <div style={paymentMethodCardStyle}>
             <div style={{ ...sectionHeaderStyle, textAlign: 'left' }}>Payment Methods</div>
 
-            {/* Bank Transfer */}
             <div style={bankTransferStyle}>
               <div style={bankIconStyle}>
                 <BankOutlined />
@@ -462,24 +521,23 @@ const InvoiceDetail = ({ invoiceId, onBack }: InvoiceDetailProps) => {
               </div>
             </div>
 
-            {/* Bank Details Grid */}
             <div style={bankDetailsGridStyle}>
               <div style={infoItemStyle}>
                 <span style={infoLabelStyle}>Account Name</span>
-                <span style={infoValueStyle}>{invoiceData.bankTransfer.accountName}</span>
+                <span style={infoValueStyle}>{bankTransfer.accountName}</span>
               </div>
               <div style={infoItemStyle}>
                 <span style={infoLabelStyle}>Bank</span>
-                <span style={infoValueStyle}>{invoiceData.bankTransfer.bank}</span>
+                <span style={infoValueStyle}>{bankTransfer.bank}</span>
               </div>
               <div style={infoItemStyle}>
                 <span style={infoLabelStyle}>Branch</span>
-                <span style={infoValueStyle}>{invoiceData.bankTransfer.branch}</span>
+                <span style={infoValueStyle}>{bankTransfer.branch}</span>
               </div>
               <div style={infoItemStyle}>
                 <span style={infoLabelStyle}>Account Number</span>
                 <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                  <span style={infoValueStyle}>{invoiceData.bankTransfer.accountNumber}</span>
+                  <span style={infoValueStyle}>{bankTransfer.accountNumber}</span>
                   <button
                     onClick={handleCopyAccount}
                     style={{ background: 'none', border: 'none', cursor: 'pointer', color: theme.colors.primary.main }}
@@ -491,23 +549,19 @@ const InvoiceDetail = ({ invoiceId, onBack }: InvoiceDetailProps) => {
               </div>
             </div>
 
-            {/* Reference Box */}
             <div style={referenceBoxStyle}>
               <InfoCircleOutlined style={{ color: '#fa8c16' }} />
               <span>
                 Please use Project ID{' '}
-                <strong style={{ color: '#fa8c16' }}>{invoiceData.projectReference}</strong>
+                <strong style={{ color: '#fa8c16' }}>{invoice.project?.projectId || '-'}</strong>
                 {' '}as the reference.
               </span>
             </div>
           </div>
         </div>
 
-        {/* Right Column */}
         <div>
-          {/* Upload Section */}
           <div style={{ ...sectionCardStyle, padding: '24px' }}>
-            {/* Drop Zone */}
             <div
               style={dropZoneStyle}
               onDrop={handleDrop}
@@ -517,61 +571,43 @@ const InvoiceDetail = ({ invoiceId, onBack }: InvoiceDetailProps) => {
             >
               <CloudUploadOutlined style={{ fontSize: '36px', color: '#8c8c8c', marginBottom: '8px' }} />
               <div style={{ fontSize: '14px', color: theme.colors.text.secondary }}>
-                Drag & drop or{' '}
-                <span style={{ color: theme.colors.primary.main, cursor: 'pointer' }}>browse</span>
+                Drag & drop or <span style={{ color: theme.colors.primary.main, cursor: 'pointer' }}>browse</span>
               </div>
             </div>
 
-            {/* Uploaded File */}
-            {(uploadedFile || uploadStatus === 'awaiting') && (
+            {invoice.paymentProofFileName && (
               <div style={uploadedFileStyle}>
                 <span style={{ fontSize: '20px' }}>📄</span>
                 <div style={{ flex: 1 }}>
-                  <div style={{ fontSize: '14px', fontWeight: 500 }}>
-                    {uploadedFile ? uploadedFile.name : invoiceData.uploadedFile.name}
-                  </div>
+                  <div style={{ fontSize: '14px', fontWeight: 500 }}>{invoice.paymentProofFileName}</div>
                   <div style={{ fontSize: '12px', color: '#fa8c16' }}>
-                    ● {isUploading ? 'Uploading...' : invoiceData.uploadedFile.status}
+                    ● {invoice.paymentProofUploadedAt ? 'Awaiting verification' : 'Uploaded'}
                   </div>
                 </div>
-                <button
-                  onClick={() => { setUploadedFile(null); setUploadStatus('idle'); }}
-                  style={{ background: 'none', border: 'none', cursor: 'pointer', color: theme.colors.text.secondary }}
-                >
-                  <CloseOutlined />
-                </button>
               </div>
             )}
 
-            {/* Upload Button */}
-            <button
-              style={uploadButtonStyle}
-              onClick={handleBrowseFile}
-              disabled={isUploading}
-            >
+            <button style={uploadButtonStyle} onClick={handleBrowseFile} disabled={isUploading}>
               <CloudUploadOutlined />
               {isUploading ? 'Uploading...' : 'Upload Payment Proof'}
             </button>
 
-            {/* Download Invoice */}
             <button style={outlineButtonStyle} onClick={handleDownloadInvoice}>
               <DownloadOutlined />
               Download Invoice
             </button>
 
-            {/* Notify Coordinator */}
             <button
               style={{
                 ...outlineButtonStyle,
                 color: notifySuccess ? '#52c41a' : theme.colors.text.primary,
                 borderColor: notifySuccess ? '#52c41a' : theme.colors.border,
               }}
-              onClick={handleNotifyCoordinator}
+              onClick={() => {
+                void handleNotifyCoordinator();
+              }}
             >
-              {notifySuccess
-                ? <><CheckCircleOutlined /> Coordinator Notified!</>
-                : <><BellOutlined /> Notify Coordinator</>
-              }
+              {notifySuccess ? <><CheckCircleOutlined /> Coordinator Notified!</> : <><BellOutlined /> Notify Coordinator</>}
             </button>
           </div>
         </div>

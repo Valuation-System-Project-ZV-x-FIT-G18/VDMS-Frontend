@@ -1,32 +1,59 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import type { CSSProperties } from 'react';
 import ProjectsTable from '../../../components/organisms/ProjectsTable';
 import ValuationJobDetail from './ValuationJobDetail';
-import { mockProjects } from '../../bank-credit-officer/utils/mockData';
+import { projectService } from '../../../services/projectService';
+import type { Project } from '../../../services/projectService';
 import { theme } from '../../../styles/theme';
+
+const DEFAULT_OWNER_CLIENT_ID = 'client-001';
 
 const AllProjectsPage = () => {
   const [statusFilter, setStatusFilter] = useState<string>('All');
   const [paymentFilter, setPaymentFilter] = useState<string>('All');
+  const [searchQuery, setSearchQuery] = useState<string>('');
   const [dateFormat, setDateFormat] = useState<string>('mm/dd/yy');
-  const [selectedProjectId, setSelectedProjectId] = useState<string | null>(null);
+  const [selectedProject, setSelectedProject] = useState<Project | null>(null);
+  const [projects, setProjects] = useState<Project[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    const fetchOwnerProjects = async () => {
+      try {
+        setLoading(true);
+        setError(null);
+
+        const clientId = localStorage.getItem('ownerClientId') || DEFAULT_OWNER_CLIENT_ID;
+        const ownerProjects = await projectService.getAll({
+          status: statusFilter !== 'All' ? statusFilter : undefined,
+          paymentStatus: paymentFilter !== 'All' ? paymentFilter : undefined,
+          search: searchQuery || undefined,
+          clientId,
+        });
+
+        setProjects(ownerProjects);
+      } catch (err) {
+        setError('Failed to load projects');
+        console.error('Owner projects error:', err);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchOwnerProjects();
+  }, [statusFilter, paymentFilter, searchQuery]);
 
   // Show detail page when project clicked
-  if (selectedProjectId) {
+  if (selectedProject) {
     return (
       <ValuationJobDetail
-        projectId={selectedProjectId}
-        onBack={() => setSelectedProjectId(null)}
+        projectId={selectedProject.id}
+        initialProject={selectedProject}
+        onBack={() => setSelectedProject(null)}
       />
     );
   }
-
-  // Filter projects based on selected filters
-  const filteredProjects = mockProjects.filter((project) => {
-    const matchesStatus = statusFilter === 'All' || project.status === statusFilter;
-    const matchesPayment = paymentFilter === 'All' || project.paymentStatus === paymentFilter;
-    return matchesStatus && matchesPayment;
-  });
 
   const containerStyle: CSSProperties = {
     maxWidth: '1400px',
@@ -108,6 +135,8 @@ const AllProjectsPage = () => {
             type="text"
             placeholder="Search by project id or location"
             style={searchInputStyle}
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
           />
         </div>
 
@@ -147,11 +176,52 @@ const AllProjectsPage = () => {
       </div>
 
       {/* Projects Table */}
-      <ProjectsTable
-        projects={filteredProjects}
-        showSearch={false}
-        onProjectClick={(projectId) => setSelectedProjectId(projectId)}
-      />
+      {loading && (
+        <div style={{ textAlign: 'center', padding: '40px', color: theme.colors.text.secondary }}>
+          Loading projects...
+        </div>
+      )}
+
+      {error && (
+        <div style={{ textAlign: 'center', padding: '40px', color: '#dc2626' }}>
+          <p>{error}</p>
+          <button
+            onClick={() => window.location.reload()}
+            style={{
+              marginTop: '16px',
+              padding: '8px 16px',
+              backgroundColor: theme.colors.primary.main,
+              color: 'white',
+              border: 'none',
+              borderRadius: '6px',
+              cursor: 'pointer',
+            }}
+          >
+            Retry
+          </button>
+        </div>
+      )}
+
+      {!loading && !error && projects.length > 0 && (
+        <ProjectsTable
+          projects={projects}
+          showSearch={false}
+          onProjectClick={(projectId) => {
+            const selected = projects.find(
+              (project) => project.id === projectId || project.projectId === projectId,
+            );
+            if (selected) {
+              setSelectedProject(selected);
+            }
+          }}
+        />
+      )}
+
+      {!loading && !error && projects.length === 0 && (
+        <div style={{ textAlign: 'center', padding: '40px', color: theme.colors.text.secondary }}>
+          No projects found.
+        </div>
+      )}
     </div>
   );
 };
