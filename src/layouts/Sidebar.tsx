@@ -17,6 +17,7 @@ import {
   BarChartOutlined,
   PlusOutlined,
 } from "@ant-design/icons";
+import { useNavigate } from "react-router-dom";
 import { theme } from "../styles/theme";
 
 interface SidebarProps {
@@ -26,6 +27,7 @@ interface SidebarProps {
 }
 
 const Sidebar = ({ activePage, onNavigate, role }: SidebarProps) => {
+  const navigate = useNavigate();
   const [isMobile, setIsMobile] = useState(window.innerWidth < 768);
 
   useEffect(() => {
@@ -82,8 +84,10 @@ const Sidebar = ({ activePage, onNavigate, role }: SidebarProps) => {
   // Technical Officer menu items
   const technicalOfficerMenuItems = [
     { id: "dashboard", label: "Dashboard", icon: DashboardOutlined },
-    { id: "assignments", label: "My Assignments", icon: FolderOpenOutlined },
-    { id: "schedule", label: "Schedule", icon: ClockCircleOutlined },
+    { id: "projects", label: "Assigned Projects", icon: FolderOpenOutlined },
+    { id: "reports", label: "Reports", icon: FileTextOutlined },
+    { id: "documents", label: "Documents", icon: FileTextOutlined },
+    { id: "attendance", label: "Attendance", icon: ClockCircleOutlined },
   ];
 
   // Senior Valuator menu items
@@ -107,6 +111,9 @@ const Sidebar = ({ activePage, onNavigate, role }: SidebarProps) => {
   // L2 Manager menu items
   const l2MenuItems = [
     { id: "dashboard", label: "Dashboard", icon: DashboardOutlined },
+    { id: "projects", label: "All Projects", icon: FolderOpenOutlined },
+    { id: "approvals", label: "Approvals", icon: CheckCircleOutlined },
+    { id: "reports", label: "Reports", icon: FileTextOutlined },
     { id: "pending", label: "Pending Reviews", icon: ClockCircleOutlined },
     { id: "approved", label: "Approved Reports", icon: CheckCircleOutlined },
     { id: "rejected", label: "Rejected Reports", icon: CloseCircleOutlined },
@@ -118,12 +125,17 @@ const Sidebar = ({ activePage, onNavigate, role }: SidebarProps) => {
   // L1 Manager menu items
   const l1MenuItems = [
     { id: "dashboard", label: "Dashboard", icon: DashboardOutlined },
+    { id: "projects", label: "All Projects", icon: FolderOpenOutlined },
+    { id: "approvals", label: "Approvals", icon: CheckCircleOutlined },
+    { id: "reports", label: "Reports", icon: FileTextOutlined },
     { id: "pending", label: "Pending Reviews", icon: ClockCircleOutlined },
     { id: "approved", label: "Approved Reports", icon: CheckCircleOutlined },
     { id: "rejected", label: "Rejected Reports", icon: CloseCircleOutlined },
     { id: "all", label: "All Reports", icon: FileTextOutlined },
     { id: "finalized", label: "Finalized Reports", icon: LockOutlined },
     { id: "history", label: "Version History", icon: HistoryOutlined },
+    { id: "bottlenecks", label: "Bottlenecks", icon: BarChartOutlined },
+    { id: "morning-report", label: "Morning Report", icon: ClockCircleOutlined },
   ];
 
   // Get menu items based on role
@@ -187,7 +199,7 @@ const Sidebar = ({ activePage, onNavigate, role }: SidebarProps) => {
     if (itemId === "logout") {
       localStorage.clear();
       sessionStorage.clear();
-      window.location.href = "/login";
+      navigate("/");
     } else if (itemId === "create-project") {
       onNavigate("create-project");
     } else if (itemId === "fleet-management") {
