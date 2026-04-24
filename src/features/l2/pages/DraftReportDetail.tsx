@@ -7,6 +7,7 @@ interface DraftReportDetailProps {
   onEditDetails?: () => void;
   onRejectDraft?: () => void;
   onRequestClarification?: () => void;
+  onApproveDraft?: () => void;
 }
 
 const DraftReportDetail = ({
@@ -15,6 +16,7 @@ const DraftReportDetail = ({
   onEditDetails,
   onRejectDraft,
   onRequestClarification,
+  onApproveDraft,
 }: DraftReportDetailProps) => {
   const [comments, setComments] = useState("");
 
@@ -556,9 +558,7 @@ const DraftReportDetail = ({
               <div style={reviewButtonsContainerStyle}>
                 <button
                   style={buttonStyle("primary")}
-                  onClick={() => {
-                    // TODO: Implement approve draft functionality
-                  }}
+                  onClick={onApproveDraft}
                 >
                   ✓ Approve Draft
                 </button>
