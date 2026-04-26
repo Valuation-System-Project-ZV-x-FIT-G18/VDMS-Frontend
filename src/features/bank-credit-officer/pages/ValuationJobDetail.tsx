@@ -18,6 +18,8 @@ import { documentService } from '../../../services/documentService';
 import { teamService } from '../../../services/teamService';
 import type { TeamMember as TeamType } from '../../../services/teamService';
 import type { Project } from '../types';
+import TeamMemberChatPopup from '../../../components/organisms/TeamMemberChatPopup';
+import { getChatIdentity } from '../../../services/chatIdentity';
 
 interface ValuationJobDetailProps {
   projectId: string;
@@ -37,9 +39,11 @@ interface JobDocument {
 
 const ValuationJobDetail = ({ projectId, initialProject, onBack }: ValuationJobDetailProps) => {
   const [showAllTeam, setShowAllTeam] = useState(false);
+  const [selectedTeamMember, setSelectedTeamMember] = useState<TeamType | null>(null);
   const [uploadingDoc, setUploadingDoc] = useState<string | null>(null);
   const [selectedUploadDocId, setSelectedUploadDocId] = useState<string | null>(null);
   const documentUploadInputRef = useRef<HTMLInputElement | null>(null);
+  const chatIdentity = getChatIdentity('bank', 'Bank Credit Officer');
 
   // ✅ NEW: State for API data
   const [loading, setLoading] = useState(true);
@@ -161,7 +165,7 @@ const ValuationJobDetail = ({ projectId, initialProject, onBack }: ValuationJobD
         minHeight: '400px',
       }}>
         <div style={{ fontSize: '16px', color: theme.colors.text.secondary }}>
-          Loading project details...
+          Loading valuation job details...
         </div>
       </div>
     );
@@ -179,7 +183,7 @@ const ValuationJobDetail = ({ projectId, initialProject, onBack }: ValuationJobD
         gap: '16px',
       }}>
         <div style={{ color: '#ff4d4f', fontSize: '16px' }}>
-          {error || 'Project not found'}
+          {error || 'Valuation job not found'}
         </div>
         <button
           onClick={onBack}
@@ -227,7 +231,7 @@ const ValuationJobDetail = ({ projectId, initialProject, onBack }: ValuationJobD
     id: project.projectId,
     address: project.propertyAddress,
     client: 'Abeywickrama Holdings Pvt Ltd', // TODO: Get from backend when client table exists
-    projectId: project.projectId,
+    valuationJobId: project.valuationJobId ?? project.projectId,
     propertyType: 'Residential Land & House', // TODO: Add to project entity
     valuationType: 'Market Valuation', // TODO: Add to project entity
     bankBranch: 'Colombo 07 - Main', // TODO: Add to project entity
@@ -637,15 +641,15 @@ const ValuationJobDetail = ({ projectId, initialProject, onBack }: ValuationJobD
         {/* LEFT COLUMN */}
         <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
 
-          {/* Project Details Card */}
+          {/* Valuation Job Details Card */}
           <div style={cardStyle}>
             <div style={cardHeaderStyle}>
-              <span style={sectionHeaderTitleStyle}>Project Details</span>
+              <span style={sectionHeaderTitleStyle}>Valuation Job Details</span>
             </div>
             <div style={detailsGridStyle}>
               <div style={detailCellStyle}>
-                <div style={detailLabelStyle}>Project ID</div>
-                <div style={detailValueStyle}>{jobData.projectId}</div>
+                <div style={detailLabelStyle}>Valuation Job ID</div>
+                <div style={detailValueStyle}>{jobData.valuationJobId}</div>
               </div>
               <div style={detailCellStyle}>
                 <div style={detailLabelStyle}>Property Type</div>
@@ -773,7 +777,11 @@ const ValuationJobDetail = ({ projectId, initialProject, onBack }: ValuationJobD
                     <UserOutlined />
                   </div>
                   <div>
-                    <div style={{ fontSize: '13px', fontWeight: 500, color: theme.colors.text.primary }}>
+                    <div
+                      style={{ fontSize: '13px', fontWeight: 500, color: theme.colors.primary.main, cursor: 'pointer' }}
+                      onClick={() => setSelectedTeamMember(member)}
+                      title="Open chat"
+                    >
                       {member.name}
                     </div>
                     <div style={{ fontSize: '12px', color: theme.colors.text.secondary }}>
@@ -821,7 +829,16 @@ const ValuationJobDetail = ({ projectId, initialProject, onBack }: ValuationJobD
                   <UserOutlined />
                 </div>
                 <div>
-                  <div style={{ fontSize: '13px', fontWeight: 500 }}>{member.name}</div>
+                  <div
+                    style={{ fontSize: '13px', fontWeight: 500, color: theme.colors.primary.main, cursor: 'pointer' }}
+                    onClick={() => {
+                      setSelectedTeamMember(member);
+                      setShowAllTeam(false);
+                    }}
+                    title="Open chat"
+                  >
+                    {member.name}
+                  </div>
                   <div style={{ fontSize: '12px', color: theme.colors.text.secondary }}>{member.role}</div>
                   <div style={{ fontSize: '12px', color: theme.colors.primary.main }}>{member.email}</div>
                 </div>
@@ -830,6 +847,18 @@ const ValuationJobDetail = ({ projectId, initialProject, onBack }: ValuationJobD
           </div>
         </div>
       )}
+
+      <TeamMemberChatPopup
+        open={Boolean(selectedTeamMember)}
+        valuationJobId={project?.valuationJobId ?? project?.projectId ?? projectId}
+        currentUserId={chatIdentity.id}
+        currentUserName={chatIdentity.name}
+        currentUserRole={chatIdentity.role}
+        recipientId={selectedTeamMember?.id || ''}
+        recipientName={selectedTeamMember?.name || ''}
+        recipientRole={selectedTeamMember?.role || ''}
+        onClose={() => setSelectedTeamMember(null)}
+      />
     </div>
   );
 };

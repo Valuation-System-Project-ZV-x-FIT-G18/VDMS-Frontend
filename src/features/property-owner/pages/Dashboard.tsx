@@ -17,8 +17,8 @@ import { theme } from '../../../styles/theme';
 const DEFAULT_OWNER_CLIENT_ID = 'client-001';
 
 const DashboardPage = () => {
-  const [selectedProject, setSelectedProject] = useState<Project | null>(null);
-  const [projects, setProjects] = useState<Project[]>([]);
+  const [selectedValuationJob, setSelectedValuationJob] = useState<Project | null>(null);
+  const [valuationJobs, setValuationJobs] = useState<Project[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
@@ -29,8 +29,8 @@ const DashboardPage = () => {
         setError(null);
 
         const clientId = localStorage.getItem('ownerClientId') || DEFAULT_OWNER_CLIENT_ID;
-        const ownerProjects = await projectService.getAll({ clientId });
-        setProjects(ownerProjects);
+        const ownerValuationJobs = await projectService.getAll({ clientId });
+        setValuationJobs(ownerValuationJobs);
       } catch (err) {
         setError('Failed to load dashboard data');
         console.error('Owner dashboard error:', err);
@@ -42,30 +42,30 @@ const DashboardPage = () => {
     fetchOwnerDashboardData();
   }, []);
 
-  if (selectedProject) {
+  if (selectedValuationJob) {
     return (
       <ValuationJobDetail
-        projectId={selectedProject.id}
-        initialProject={selectedProject}
-        onBack={() => setSelectedProject(null)}
+        projectId={selectedValuationJob.id}
+        initialProject={selectedValuationJob}
+        onBack={() => setSelectedValuationJob(null)}
       />
     );
   }
 
   const stats = {
-    totalProjects: projects.length,
-    completedProjects: projects.filter((p) => p.status === 'Completed').length,
-    activeProjects: projects.filter(
+    totalValuationJobs: valuationJobs.length,
+    completedValuationJobs: valuationJobs.filter((p) => p.status === 'Completed').length,
+    activeValuationJobs: valuationJobs.filter(
       (p) =>
         p.status === 'In Progress' ||
         p.status === 'Site Inspected' ||
         p.status === 'Report Prepared',
     ).length,
-    pendingPayment: projects.filter((p) => p.paymentStatus === 'Pending').length,
-    pendingDocuments: projects.filter((p) => p.status === 'Awaiting Docs').length,
+    pendingPayment: valuationJobs.filter((p) => p.paymentStatus === 'Pending').length,
+    pendingDocuments: valuationJobs.filter((p) => p.status === 'Awaiting Docs').length,
   };
 
-  const recentProjects = projects.slice(0, 5);
+  const recentValuationJobs = valuationJobs.slice(0, 5);
 
   const containerStyle: CSSProperties = {
     maxWidth: '1400px',
@@ -146,26 +146,26 @@ const DashboardPage = () => {
       <div style={headerStyle}>
         <h1 style={titleStyle}>Dashboard Overview</h1>
         <p style={subtitleStyle}>
-          welcome back, here's what's happening with your valuation job today
+          Welcome back, here's what's happening with your valuation jobs today.
         </p>
       </div>
 
       <div style={statsGridStyle}>
         <StatCard
-          title="Total Project"
-          value={stats.totalProjects}
+          title="Total Valuation Jobs"
+          value={stats.totalValuationJobs}
           icon={<FolderOutlined />}
           iconBgColor="#1890ff"
         />
         <StatCard
-          title="Completed Project"
-          value={stats.completedProjects}
+          title="Completed Valuation Jobs"
+          value={stats.completedValuationJobs}
           icon={<CheckCircleOutlined />}
           iconBgColor="#52c41a"
         />
         <StatCard
-          title="Active Project"
-          value={stats.activeProjects}
+          title="Active Valuation Jobs"
+          value={stats.activeValuationJobs}
           icon={<FileTextOutlined />}
           iconBgColor="#13c2c2"
         />
@@ -184,14 +184,20 @@ const DashboardPage = () => {
       </div>
 
       <ProjectsTable
-        projects={recentProjects}
+        projects={recentValuationJobs}
         showSearch
-        onProjectClick={(projectId) => {
-          const selected = recentProjects.find(
-            (project) => project.id === projectId || project.projectId === projectId,
+        title="Recent valuation jobs"
+        idLabel="Valuation Job ID"
+        searchPlaceholder="Search valuation jobs..."
+        onProjectClick={(valuationJobId) => {
+          const selected = recentValuationJobs.find(
+            (valuationJob) =>
+              valuationJob.id === valuationJobId ||
+              valuationJob.valuationJobId === valuationJobId ||
+              valuationJob.projectId === valuationJobId,
           );
           if (selected) {
-            setSelectedProject(selected);
+            setSelectedValuationJob(selected);
           }
         }}
       />

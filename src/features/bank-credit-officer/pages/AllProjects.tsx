@@ -11,16 +11,16 @@ const AllProjectsPage = () => {
   const [paymentFilter, setPaymentFilter] = useState<string>('All');
   const [searchQuery, setSearchQuery] = useState<string>('');
   const [dateFormat, setDateFormat] = useState<string>('mm/dd/yy');
-  const [selectedProject, setSelectedProject] = useState<Project | null>(null);
+  const [selectedValuationJob, setSelectedValuationJob] = useState<Project | null>(null);
   
   // ✅ NEW: State for API data
-  const [projects, setProjects] = useState<Project[]>([]);
+  const [valuationJobs, setValuationJobs] = useState<Project[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  // ✅ NEW: Fetch projects from backend
+  // ✅ NEW: Fetch valuation jobs from backend
   useEffect(() => {
-    const fetchProjects = async () => {
+    const fetchValuationJobs = async () => {
       try {
         setLoading(true);
         setError(null);
@@ -31,24 +31,24 @@ const AllProjectsPage = () => {
           search: searchQuery || undefined,
         });
         
-        setProjects(data);
+        setValuationJobs(data);
       } catch (err) {
-        setError('Failed to load projects');
+        setError('Failed to load valuation jobs');
         console.error('Error:', err);
       } finally {
         setLoading(false);
       }
     };
 
-    fetchProjects();
+    fetchValuationJobs();
   }, [statusFilter, paymentFilter, searchQuery]);
 
-  if (selectedProject) {
+  if (selectedValuationJob) {
     return (
       <ValuationJobDetail
-        projectId={selectedProject.id}
-        initialProject={selectedProject}
-        onBack={() => setSelectedProject(null)}
+        projectId={selectedValuationJob.id}
+        initialProject={selectedValuationJob}
+        onBack={() => setSelectedValuationJob(null)}
       />
     );
   }
@@ -144,7 +144,7 @@ const AllProjectsPage = () => {
       <div style={headerStyle}>
         <h1 style={titleStyle}>Valuation Jobs</h1>
         <p style={subtitleStyle}>
-          Manage and track your valuation requests
+          Manage and track your valuation jobs
         </p>
       </div>
 
@@ -153,7 +153,7 @@ const AllProjectsPage = () => {
         <div style={searchWrapperStyle}>
           <input
             type="text"
-            placeholder="search by project id or location"
+            placeholder="search by valuation job id or location"
             style={searchInputStyle}
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
@@ -197,7 +197,7 @@ const AllProjectsPage = () => {
 
       {/* ✅ Loading State */}
       {loading && (
-        <div style={loadingStyle}>Loading projects...</div>
+        <div style={loadingStyle}>Loading valuation jobs...</div>
       )}
 
       {/* ✅ Error State */}
@@ -222,24 +222,26 @@ const AllProjectsPage = () => {
       )}
 
       {/* ✅ Projects Table - Using REAL data */}
-      {!loading && !error && projects.length > 0 && (
+      {!loading && !error && valuationJobs.length > 0 && (
         <ProjectsTable
-          projects={projects}
+          projects={valuationJobs}
           showSearch={false}
-          onProjectClick={(projectId) => {
-            const selected = projects.find(
-              (project) => project.id === projectId || project.projectId === projectId,
+          title="Recent valuation jobs"
+          idLabel="Valuation Job ID"
+          onProjectClick={(valuationJobId) => {
+            const selected = valuationJobs.find(
+              (valuationJob) => valuationJob.id === valuationJobId || valuationJob.projectId === valuationJobId,
             );
             if (selected) {
-              setSelectedProject(selected);
+              setSelectedValuationJob(selected);
             }
           }}
         />
       )}
 
       {/* ✅ Empty State */}
-      {!loading && !error && projects.length === 0 && (
-        <div style={emptyStyle}>No projects found.</div>
+      {!loading && !error && valuationJobs.length === 0 && (
+        <div style={emptyStyle}>No valuation jobs found.</div>
       )}
     </div>
   );

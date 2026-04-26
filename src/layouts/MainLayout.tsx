@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+﻿import { useState, useEffect } from "react";
 import type { CSSProperties, ReactNode } from "react";
 import Sidebar from "./Sidebar";
 import Header from "./Header";
@@ -142,6 +142,8 @@ const MainLayout = ({
 
         <main style={contentWrapperStyle}>{children}</main>
       </div>
+
+      <FloatingChatWidget role={role} userNameHint="John Doe" />
     </div>
   );
 };

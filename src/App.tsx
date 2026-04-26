@@ -1,4 +1,4 @@
-﻿import { useState } from "react";
+﻿ï»¿import { useState } from "react";
 
 import {
 
@@ -22,7 +22,7 @@ import RoleSelectPage from "./pages/RoleSelectPage";
 
 
 
-// âœ… Technical Officer pages
+// Ã¢Å“â€¦ Technical Officer pages
 
 import TechnicalOfficerDashboard from "./features/technical-officer/pages/Dashboard";
 
@@ -38,7 +38,7 @@ import TechnicalOfficerSettingsPage from "./features/technical-officer/pages/Set
 
 
 
-// âœ… Bank Credit Officer pages
+// Ã¢Å“â€¦ Bank Credit Officer pages
 
 import BankDashboardPage from "./features/bank-credit-officer/pages/Dashboard";
 
@@ -457,7 +457,7 @@ function L3ApproveFinalReportPage() {
 
         >
 
-          <div style={{ color: "#16a34a" }}>âœ“ Step 1: L3 Approval</div>
+          <div style={{ color: "#16a34a" }}>Ã¢Å“â€œ Step 1: L3 Approval</div>
 
           <div style={{ color: "#d4d4d4" }}>Step 2: L2 Review</div>
 
@@ -467,7 +467,7 @@ function L3ApproveFinalReportPage() {
 
         <h1 style={{ color: "#16a34a", marginBottom: "16px" }}>
 
-          âœ“ Step 1 of 3 - Approved
+          Ã¢Å“â€œ Step 1 of 3 - Approved
 
         </h1>
 
@@ -589,9 +589,9 @@ function L2ApproveFinalReportPage() {
 
         >
 
-          <div style={{ color: "#16a34a" }}>âœ“ Step 1: L3 Approval</div>
+          <div style={{ color: "#16a34a" }}>Ã¢Å“â€œ Step 1: L3 Approval</div>
 
-          <div style={{ color: "#16a34a" }}>âœ“ Step 2: L2 Approval</div>
+          <div style={{ color: "#16a34a" }}>Ã¢Å“â€œ Step 2: L2 Approval</div>
 
           <div style={{ color: "#d4d4d4" }}>Step 3: L1 Final Decision</div>
 
@@ -599,7 +599,7 @@ function L2ApproveFinalReportPage() {
 
         <h1 style={{ color: "#16a34a", marginBottom: "16px" }}>
 
-          âœ“ Step 2 of 3 - Approved
+          Ã¢Å“â€œ Step 2 of 3 - Approved
 
         </h1>
 
@@ -721,7 +721,7 @@ function L1ApproveFinalReportPage() {
 
           >
 
-            ðŸ”’ REPORT LOCKED
+            Ã°Å¸â€â€™ REPORT LOCKED
 
           </h1>
 
@@ -811,7 +811,7 @@ function L1ApproveFinalReportPage() {
 
           <h1 style={{ color: "#16a34a", marginBottom: "16px" }}>
 
-            âœ“ Report Approved
+            Ã¢Å“â€œ Report Approved
 
           </h1>
 
@@ -899,7 +899,7 @@ function L1ApproveFinalReportPage() {
 
             >
 
-              ðŸ”’ Lock Final Report
+              Ã°Å¸â€â€™ Lock Final Report
 
             </button>
 
