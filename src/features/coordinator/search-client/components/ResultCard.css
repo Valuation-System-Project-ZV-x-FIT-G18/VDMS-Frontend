@@ -1,0 +1,40 @@
+/* Styles for the ResultCard component */
+.result-card {
+  background: #e8f0f7;
+  border: 1px solid #b8cadc;
+  border-radius: 12px;
+  padding: 1.5rem 2rem;
+  color: #183a57;
+  max-width: 420px;
+  width: 100%;
+  text-align: left;
+  box-shadow: 0 10px 24px rgba(29, 67, 102, 0.14);
+}
+
+.result-title {
+  color: #2f8f5b;
+  margin-bottom: 1rem;
+  font-size: 1.25rem;
+}
+
+.result-card p {
+  margin: 0.4rem 0;              /* compact spacing between fields */
+  font-size: 0.95rem;
+}
+
+.valuation-btn {
+  margin-top: 1.25rem;
+  padding: 10px 28px;
+  border: none;
+  border-radius: 8px;
+  background: linear-gradient(180deg, #3a82c5 0%, #2b6ea8 100%);
+  color: #fff;
+  font-size: 1rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.2s;
+}
+
+.valuation-btn:hover {
+  background: #255f92;
+}

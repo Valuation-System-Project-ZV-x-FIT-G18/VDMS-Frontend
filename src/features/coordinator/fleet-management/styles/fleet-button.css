@@ -1,0 +1,50 @@
+.fleet-button {
+  background: #e8f0f7;
+  border: 1px solid #b8cadc;
+  border-radius: 16px;
+  padding: 40px 30px;
+  cursor: pointer;
+  transition: all 0.22s ease;
+  box-shadow: 0 10px 24px rgba(29, 67, 102, 0.14);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 20px;
+  color: #183a57;
+  font-weight: 700;
+  position: relative;
+  overflow: hidden;
+}
+
+.fleet-button::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: linear-gradient(180deg, #3a82c5 0%, #2b6ea8 100%);
+  opacity: 0;
+  transition: opacity 0.4s ease;
+  z-index: -1;
+}
+
+.fleet-button:hover {
+  transform: translateY(-6px);
+  box-shadow: 0 16px 36px rgba(43, 110, 168, 0.28);
+  border-color: #2f73b3;
+  color: white;
+}
+
+.fleet-button:hover::before {
+  opacity: 1;
+}
+
+.fleet-button:active {
+  transform: translateY(-2px);
+}
+
+.fleet-button-icon {
+  font-size: 56px;
+  transition: transform 0.3s ease;
+}

@@ -1,0 +1,56 @@
+.onleave-table {
+  width: 100%;
+  border-collapse: collapse;
+  margin-top: 30px;
+  box-shadow: 0 10px 28px rgba(29, 67, 102, 0.14);
+  border-radius: 8px;
+  overflow: hidden;
+  background: white;
+}
+
+.onleave-table thead {
+  background: linear-gradient(180deg, #3a82c5 0%, #2b6ea8 100%);
+  color: white;
+}
+
+.onleave-table th {
+  padding: 18px 16px;
+  text-align: left;
+  font-weight: 700;
+  font-size: 14px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.onleave-table td {
+  padding: 16px;
+  border-bottom: 1px solid #e8eef5;
+  font-size: 14px;
+  color: #333;
+}
+
+.onleave-table tbody tr {
+  transition: all 0.3s ease;
+}
+
+.onleave-table tbody tr:nth-child(even) {
+  background-color: #f8fafb;
+}
+
+.onleave-table tbody tr:hover {
+  background-color: #edf4fb;
+  box-shadow: inset 0 2px 8px rgba(58, 130, 197, 0.12);
+}
+
+.loading, .no-data {
+  padding: 40px 20px;
+  text-align: center;
+  background: white;
+  border-radius: 8px;
+  margin-top: 30px;
+}
+
+.no-data {
+  color: #e74c3c;
+  font-weight: 600;
+}
