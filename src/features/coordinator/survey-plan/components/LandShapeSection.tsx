@@ -4,12 +4,13 @@ import './LandShapeSection.css';
 interface Props {
   value: string;                                          // current selection
   onChange: (name: string, value: string) => void;        // change handler
+  error?: string;
 }
 
 const shapes = ['Square', 'Rectangle', 'Circle', 'Irregular']; // land shape options
 
 /* SHAPE OF LAND section — radio buttons for land shape */
-const LandShapeSection = ({ value, onChange }: Props) => (
+const LandShapeSection = ({ value, onChange, error }: Props) => (
   <div className="land-shape-section">
     <SectionHeader icon="🔷" title="Shape of land" />
     <div className="shape-options">
@@ -22,6 +23,7 @@ const LandShapeSection = ({ value, onChange }: Props) => (
         </label>
       ))}
     </div>
+    {error && <span className="field-error">{error}</span>}
   </div>
 );
 

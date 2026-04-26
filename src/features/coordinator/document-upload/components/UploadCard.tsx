@@ -8,10 +8,11 @@ interface Props {
   file: StoredDocument | null;                             // selected/stored file metadata
   onFile: (file: File | null) => void;                     // callback when file changes
   required?: boolean;                                      // whether required
+  error?: string;
 }
 
 /* Reusable upload card — dashed area with icon, title, file picker */
-const UploadCard = ({ icon, title, file, onFile, required }: Props) => (
+const UploadCard = ({ icon, title, file, onFile, required, error }: Props) => (
   <div className="upload-card">
     <SectionHeader icon={icon} title={title} />
     <label className="upload-drop-area">
@@ -23,6 +24,7 @@ const UploadCard = ({ icon, title, file, onFile, required }: Props) => (
         {file ? file.name : 'Click to upload PDF or image'}
       </span>
     </label>
+    {error && <span className="field-error">{error}</span>}
   </div>
 );
 

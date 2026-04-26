@@ -8,10 +8,20 @@ interface Props {
   options: string[];           // list of option strings
   placeholder: string;         // e.g. "Select bank"
   required?: boolean;
+  error?: string;
 }
 
 /* A dropdown select field — reusable for bank name and branch */
-const SelectField = ({ label, name, value, onChange, options, placeholder, required }: Props) => (
+const SelectField = ({
+  label,
+  name,
+  value,
+  onChange,
+  options,
+  placeholder,
+  required,
+  error,
+}: Props) => (
   <div className="select-field">
     <label className="select-label">
       {label} {required && <span className="required">*</span>}
@@ -27,6 +37,7 @@ const SelectField = ({ label, name, value, onChange, options, placeholder, requi
         <option key={opt} value={opt}>{opt}</option>   /* one option per item */
       ))}
     </select>
+    {error && <span className="select-error">{error}</span>}
   </div>
 );
 

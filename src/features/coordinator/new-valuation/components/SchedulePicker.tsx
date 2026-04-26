@@ -3,10 +3,19 @@ interface Props {
   time: string;                                            // selected time value (HH:MM)
   onDateChange: (val: string) => void;                    // callback when date changes
   onTimeChange: (val: string) => void;                    // callback when time changes
+  dateError?: string;
+  timeError?: string;
 }
 
 /* Date and time picker for scheduling the valuation visit */
-const SchedulePicker = ({ date, time, onDateChange, onTimeChange }: Props) => (
+const SchedulePicker = ({
+  date,
+  time,
+  onDateChange,
+  onTimeChange,
+  dateError,
+  timeError,
+}: Props) => (
   <div className="nv-section">
     <h3 className="nv-section-title">Schedule date & time</h3>
     <div className="nv-schedule-row">
@@ -25,6 +34,8 @@ const SchedulePicker = ({ date, time, onDateChange, onTimeChange }: Props) => (
         required
       />
     </div>
+    {dateError && <span className="field-error">{dateError}</span>}
+    {timeError && <span className="field-error">{timeError}</span>}
   </div>
 );
 

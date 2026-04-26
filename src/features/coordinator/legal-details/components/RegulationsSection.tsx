@@ -4,6 +4,7 @@ import './RegulationsSection.css';
 interface Props {
   selected: string[];                                     // currently checked items
   onToggle: (regulation: string) => void;                 // toggle a regulation on/off
+  error?: string;
 }
 
 const regulations = [
@@ -14,7 +15,7 @@ const regulations = [
 ];
 
 /* USAGE REGULATIONS section — checkboxes for restrictions */
-const RegulationsSection = ({ selected, onToggle }: Props) => (
+const RegulationsSection = ({ selected, onToggle, error }: Props) => (
   <div className="regulations-section">
     <SectionHeader icon="⚖️" title="Usage regulations" />
     <div className="regulation-list">
@@ -26,6 +27,7 @@ const RegulationsSection = ({ selected, onToggle }: Props) => (
         </label>
       ))}
     </div>
+    {error && <span className="field-error">{error}</span>}
   </div>
 );
 

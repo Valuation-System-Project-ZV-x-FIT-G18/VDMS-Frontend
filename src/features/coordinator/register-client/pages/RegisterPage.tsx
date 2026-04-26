@@ -9,6 +9,8 @@ import IdentitySection from '../components/IdentitySection';
 import AddressSection from '../components/AddressSection';
 import FormActions from '../components/FormActions';
 import ConfirmModal from '../components/ConfirmModal';  // red warning modal
+import { validateRegisterClientForm } from '../../validation/register-client.validation';
+import type { FieldErrors } from '../../validation/shared';
 import './RegisterPage.css';
 
 const empty: RegisterFormData = {
@@ -24,8 +26,16 @@ const RegisterPage = () => {
   const [form, setForm] = usePersistedState<RegisterFormData>('register-client', empty);
   const [loading, setLoading] = useState(false);
   const [showConfirm, setShowConfirm] = useState(false); // controls warning modal
+  const [errors, setErrors] = useState<FieldErrors>({});
 
   const handleChange = useCallback((name: string, value: string) => {
+    setErrors((prev) => {
+      if (!prev[name]) return prev;
+      const next = { ...prev };
+      delete next[name];
+      return next;
+    });
+
     setForm(prev => {
       const next = { ...prev, [name]: value };
       if (name === 'fullName') {                         // auto-derive name fields
@@ -39,6 +49,13 @@ const RegisterPage = () => {
   /* Show confirmation modal instead of submitting directly */
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
+
+    const validation = validateRegisterClientForm(form);
+    setErrors(validation.errors);
+    if (!validation.valid) {
+      return;
+    }
+
     setShowConfirm(true);                              // open the warning modal
   };
 
@@ -61,10 +78,10 @@ const RegisterPage = () => {
       <div className="register-card">
         <h1 className="register-heading">Register loan applicant</h1>
         <p className="register-sub">Enter personal information to create a new applicant account</p>
-        <form onSubmit={handleSubmit}>
-          <NameSection form={form} onChange={handleChange} />
-          <IdentitySection form={form} onChange={handleChange} />
-          <AddressSection form={form} onChange={handleChange} />
+        <form onSubmit={handleSubmit} noValidate>
+          <NameSection form={form} onChange={handleChange} errors={errors} />
+          <IdentitySection form={form} onChange={handleChange} errors={errors} />
+          <AddressSection form={form} onChange={handleChange} errors={errors} />
           <FormActions onCancel={() => navigate(-1)} loading={loading} />
         </form>
       </div>

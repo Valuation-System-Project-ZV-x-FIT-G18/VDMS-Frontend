@@ -9,3 +9,10 @@ body {
   font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; /* clean system font */
   -webkit-font-smoothing: antialiased;    /* smoother text on WebKit browsers */
 }
+
+.field-error {
+  display: block;
+  margin-top: 0.25rem;
+  font-size: 0.78rem;
+  color: #c0392b;
+}

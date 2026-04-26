@@ -4,10 +4,11 @@ import './DeedUploadSection.css';
 interface Props {
   file: File | null;                                       // currently selected file
   onFile: (file: File | null) => void;                     // callback when file changes
+  error?: string;
 }
 
 /* UPLOAD section — file input for deed copy */
-const DeedUploadSection = ({ file, onFile }: Props) => (
+const DeedUploadSection = ({ file, onFile, error }: Props) => (
   <div className="deed-upload-section">
     <SectionHeader icon="📎" title="Copy of deed" />
     <label className="deed-upload-area">
@@ -18,6 +19,7 @@ const DeedUploadSection = ({ file, onFile }: Props) => (
         {file ? file.name : 'Click to upload PDF or image'}
       </span>
     </label>
+    {error && <span className="field-error">{error}</span>}
   </div>
 );
 

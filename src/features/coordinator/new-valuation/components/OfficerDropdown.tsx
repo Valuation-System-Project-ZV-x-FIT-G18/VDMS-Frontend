@@ -4,10 +4,11 @@ interface Props {
   officers: FreeOfficerItem[];                             // list of available officers
   value: string;                                           // currently selected officer ID
   onChange: (toId: string) => void;                        // callback on selection change
+  error?: string;
 }
 
 /* Dropdown to pick a technical officer from the FREE table */
-const OfficerDropdown = ({ officers, value, onChange }: Props) => (
+const OfficerDropdown = ({ officers, value, onChange, error }: Props) => (
   <div className="nv-section">
     <h3 className="nv-section-title">Assign technical officer</h3>
     <select
@@ -23,6 +24,7 @@ const OfficerDropdown = ({ officers, value, onChange }: Props) => (
         </option>
       ))}
     </select>
+    {error && <span className="field-error">{error}</span>}
   </div>
 );
 

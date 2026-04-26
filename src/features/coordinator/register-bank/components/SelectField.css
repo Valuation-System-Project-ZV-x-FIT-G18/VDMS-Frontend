@@ -21,3 +21,7 @@
   appearance: auto;            /* keep native dropdown arrow */
 }
 .select-input:focus { border-color: #7c6f5b; }
+.select-error {
+  font-size: 0.78rem;
+  color: #c0392b;
+}

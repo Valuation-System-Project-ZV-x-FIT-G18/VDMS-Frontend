@@ -5,10 +5,11 @@ import './NotarySection.css';
 interface Props {
   form: LegalFormData;
   onChange: (name: string, value: string) => void;
+  error?: string;
 }
 
 /* NOTARY section — textarea for notary name and details */
-const NotarySection = ({ form, onChange }: Props) => (
+const NotarySection = ({ form, onChange, error }: Props) => (
   <div className="notary-section">
     <SectionHeader icon="🖊️" title="Notary details" />
     <label className="notary-label">
@@ -21,8 +22,8 @@ const NotarySection = ({ form, onChange }: Props) => (
       onChange={(e) => onChange('notaryDetails', e.target.value)} // notify parent
       placeholder="e.g. Mr. A.B. Perera, Notary Public, Colombo"
       rows={3}
-      required
     />
+    {error && <span className="field-error">{error}</span>}
   </div>
 );
 

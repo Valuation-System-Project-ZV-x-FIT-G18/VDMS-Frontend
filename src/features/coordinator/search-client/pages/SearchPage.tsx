@@ -8,6 +8,7 @@ import NotFoundCard from '../components/NotFoundCard'; // not-found card
 import { searchLoanApplicant } from '../api/search';   // API call helper
 import type { SearchResult } from '../types/search';   // result type
 import './SearchPage.css';                             // page styles
+import '../responsive/search.responsive.css';
 
 /* Coordinator search page — search by NIC or Project ID */
 const SearchPage = () => {

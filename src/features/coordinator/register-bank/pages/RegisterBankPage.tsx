@@ -9,6 +9,8 @@ import OfficerContactSection from '../components/OfficerContactSection';
 import BankDetailsSection from '../components/BankDetailsSection';
 import BankFormActions from '../components/BankFormActions';
 import ConfirmModal from '../components/ConfirmModal';  // red warning modal (local copy)
+import { validateRegisterBankForm } from '../../validation/register-bank.validation';
+import type { FieldErrors } from '../../validation/shared';
 import './RegisterBankPage.css';
 
 const empty: BankOfficerFormData = {
@@ -23,8 +25,16 @@ const RegisterBankPage = () => {
   const [form, setForm] = usePersistedState<BankOfficerFormData>('register-bank', empty);
   const [loading, setLoading] = useState(false);
   const [showConfirm, setShowConfirm] = useState(false); // controls warning modal
+  const [errors, setErrors] = useState<FieldErrors>({});
 
   const handleChange = useCallback((name: string, value: string) => {
+    setErrors((prev) => {
+      if (!prev[name]) return prev;
+      const next = { ...prev };
+      delete next[name];
+      return next;
+    });
+
     setForm(prev => {
       const next = { ...prev, [name]: value };
       if (name === 'fullName') Object.assign(next, deriveNames(value)); // auto-derive
@@ -35,6 +45,13 @@ const RegisterBankPage = () => {
   /* Show confirmation modal instead of submitting directly */
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
+
+    const validation = validateRegisterBankForm(form);
+    setErrors(validation.errors);
+    if (!validation.valid) {
+      return;
+    }
+
     setShowConfirm(true);                              // open the warning modal
   };
 
@@ -57,10 +74,10 @@ const RegisterBankPage = () => {
       <div className="register-bank-card">
         <h1 className="bank-heading">Register bank &amp; officer</h1>
         <p className="bank-sub">Enter bank officer details for the valuation</p>
-        <form onSubmit={handleSubmit}>
-          <OfficerNameSection form={form} onChange={handleChange} />
-          <OfficerContactSection form={form} onChange={handleChange} />
-          <BankDetailsSection form={form} onChange={handleChange} />
+        <form onSubmit={handleSubmit} noValidate>
+          <OfficerNameSection form={form} onChange={handleChange} errors={errors} />
+          <OfficerContactSection form={form} onChange={handleChange} errors={errors} />
+          <BankDetailsSection form={form} onChange={handleChange} errors={errors} />
           <BankFormActions onBack={() => navigate(-1)} loading={loading} />
         </form>
       </div>

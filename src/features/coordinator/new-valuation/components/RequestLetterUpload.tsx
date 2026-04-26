@@ -3,10 +3,11 @@ import type { StoredFile } from '../types/new-valuation';
 interface Props {
   value: StoredFile | null;                                // stored file reference (or null)
   onChange: (file: StoredFile | null) => void;             // callback when file is picked
+  error?: string;
 }
 
 /* Upload field for the request letter document */
-const RequestLetterUpload = ({ value, onChange }: Props) => (
+const RequestLetterUpload = ({ value, onChange, error }: Props) => (
   <div className="nv-section">
     <h3 className="nv-section-title">Request letter</h3>  {/* section heading */}
     <input
@@ -18,6 +19,7 @@ const RequestLetterUpload = ({ value, onChange }: Props) => (
       }}
     />
     {value && <p className="nv-file-name">{value.name}</p>} {/* show filename if selected */}
+    {error && <span className="field-error">{error}</span>}
   </div>
 );
 

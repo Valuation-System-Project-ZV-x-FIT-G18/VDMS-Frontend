@@ -5,6 +5,7 @@ import '../styles/assigned-page.css';
 
 interface Assignment {
   id: number;
+  valuation_id: number | null;
   officer: { name: string; email: string; phone: string; nic: string };
   time_date: string;
   project_id: string;

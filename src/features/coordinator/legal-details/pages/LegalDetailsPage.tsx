@@ -10,6 +10,8 @@ import RegulationsSection from '../components/RegulationsSection';
 import DeedUploadSection from '../components/DeedUploadSection';
 import LegalFormActions from '../components/LegalFormActions';
 import ConfirmModal from '../components/ConfirmModal'; // red warning modal
+import { validateLegalDetailsForm } from '../../validation/legal-details.validation';
+import type { FieldErrors } from '../../validation/shared';
 import './LegalDetailsPage.css';
 
 const empty: LegalFormData = {
@@ -23,12 +25,27 @@ const LegalDetailsPage = () => {
   const [form, setForm] = usePersistedState<LegalFormData>('legal-details', empty);
   const [loading, setLoading] = useState(false);
   const [showConfirm, setShowConfirm] = useState(false); // controls warning modal
+  const [errors, setErrors] = useState<FieldErrors>({});
 
   const handleChange = useCallback((name: string, value: string) => {
+    setErrors((prev) => {
+      if (!prev[name]) return prev;
+      const next = { ...prev };
+      delete next[name];
+      return next;
+    });
+
     setForm(prev => ({ ...prev, [name]: value }));                 // update field by name
   }, []);
 
   const handleToggle = useCallback((reg: string) => {              // toggle regulation checkbox
+    setErrors((prev) => {
+      if (!prev.usageRegulations) return prev;
+      const next = { ...prev };
+      delete next.usageRegulations;
+      return next;
+    });
+
     setForm(prev => {
       const regs = prev.usageRegulations.includes(reg)
         ? prev.usageRegulations.filter(r => r !== reg)             // remove if checked
@@ -38,11 +55,25 @@ const LegalDetailsPage = () => {
   }, []);
 
   const handleFile = useCallback((file: File | null) => {
+    setErrors((prev) => {
+      if (!prev.file) return prev;
+      const next = { ...prev };
+      delete next.file;
+      return next;
+    });
+
     setForm(prev => ({ ...prev, file }));
   }, []);
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
+
+    const validation = validateLegalDetailsForm(form);
+    setErrors(validation.errors);
+    if (!validation.valid) {
+      return;
+    }
+
     setShowConfirm(true); // open warning modal
   };
 
@@ -64,12 +95,12 @@ const LegalDetailsPage = () => {
       <div className="legal-details-card">
         <h1 className="legal-heading">Legal details</h1>
         <p className="legal-sub">Enter deed and legal information</p>
-        <form onSubmit={handleSubmit}>
-          <DeedInfoSection form={form} onChange={handleChange} />
-          <NotarySection form={form} onChange={handleChange} />
-          <OwnershipSection value={form.ownershipType} onChange={handleChange} />
-          <RegulationsSection selected={form.usageRegulations} onToggle={handleToggle} />
-          <DeedUploadSection file={form.file} onFile={handleFile} />
+        <form onSubmit={handleSubmit} noValidate>
+          <DeedInfoSection form={form} onChange={handleChange} errors={errors} />
+          <NotarySection form={form} onChange={handleChange} error={errors.notaryDetails} />
+          <OwnershipSection value={form.ownershipType} onChange={handleChange} error={errors.ownershipType} />
+          <RegulationsSection selected={form.usageRegulations} onToggle={handleToggle} error={errors.usageRegulations} />
+          <DeedUploadSection file={form.file} onFile={handleFile} error={errors.file} />
           <LegalFormActions onBack={() => navigate(-1)} loading={loading} />
         </form>
       </div>

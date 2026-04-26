@@ -4,6 +4,7 @@ import '../styles/assigned-table.css';
 
 interface Assignment {
   id: number;
+  valuation_id: number | null;
   officer: { name: string; email: string; phone: string; nic: string };
   time_date: string;
   project_id: string;
@@ -20,7 +21,16 @@ const AssignedTable: React.FC<AssignedTableProps> = ({ assignments, loading }) =
   if (!assignments.length) return <div className="no-data">No assigned officers found</div>;
 
   const rows = assignments.map((a, idx) => (
-    <OfficerRow key={a.id} id={idx + 1} email={a.officer?.email || '-'} phone={a.officer?.phone || '-'} assignmentDate={a.time_date} projectId={a.project_id} propertyAddress={a.property_address} />
+    <OfficerRow
+      key={a.id}
+      id={idx + 1}
+      valuationId={a.valuation_id}
+      email={a.officer?.email || '-'}
+      phone={a.officer?.phone || '-'}
+      assignmentDate={a.time_date}
+      projectId={a.project_id}
+      propertyAddress={a.property_address}
+    />
   ));
 
   return (
@@ -29,6 +39,7 @@ const AssignedTable: React.FC<AssignedTableProps> = ({ assignments, loading }) =
         <tr>
           <th>Email</th>
           <th>Phone</th>
+          <th>Valuation ID</th>
           <th>Project ID</th>
           <th>Assignment Date</th>
           <th>Property Address</th>

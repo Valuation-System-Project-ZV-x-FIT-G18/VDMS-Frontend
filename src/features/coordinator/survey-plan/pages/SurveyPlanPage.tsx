@@ -9,6 +9,8 @@ import LandShapeSection from '../components/LandShapeSection';
 import FileUploadSection from '../components/FileUploadSection';
 import SurveyFormActions from '../components/SurveyFormActions';
 import ConfirmModal from '../components/ConfirmModal';             // red warning modal
+import { validateSurveyPlanForm } from '../../validation/survey-plan.validation';
+import type { FieldErrors } from '../../validation/shared';
 import './SurveyPlanPage.css';
 
 const empty: SurveyFormData = {
@@ -22,18 +24,40 @@ const SurveyPlanPage = () => {
   const [form, setForm] = usePersistedState<SurveyFormData>('survey-plan', empty);
   const [loading, setLoading] = useState(false);
   const [showConfirm, setShowConfirm] = useState(false);           // controls warning modal
+  const [errors, setErrors] = useState<FieldErrors>({});
 
   const handleChange = useCallback((name: string, value: string) => {
+    setErrors((prev) => {
+      if (!prev[name]) return prev;
+      const next = { ...prev };
+      delete next[name];
+      return next;
+    });
+
     setForm(prev => ({ ...prev, [name]: value }));                 // update field by name
   }, []);
 
   const handleFile = useCallback((file: File | null) => {
+    setErrors((prev) => {
+      if (!prev.file) return prev;
+      const next = { ...prev };
+      delete next.file;
+      return next;
+    });
+
     setForm(prev => ({ ...prev, file }));                          // store selected file
   }, []);
 
   /* Show confirmation modal instead of saving directly */
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
+
+    const validation = validateSurveyPlanForm(form);
+    setErrors(validation.errors);
+    if (!validation.valid) {
+      return;
+    }
+
     setShowConfirm(true);                                          // open warning modal
   };
 
@@ -53,11 +77,11 @@ const SurveyPlanPage = () => {
       <div className="survey-plan-card">
         <h1 className="survey-heading">Survey plan & details</h1>
         <p className="survey-sub">Enter survey plan information</p>
-        <form onSubmit={handleSubmit}>
-          <PlanDetailsSection form={form} onChange={handleChange} />
-          <BoundarySection form={form} onChange={handleChange} />
-          <LandShapeSection value={form.landShape} onChange={handleChange} />
-          <FileUploadSection file={form.file} onFile={handleFile} />
+        <form onSubmit={handleSubmit} noValidate>
+          <PlanDetailsSection form={form} onChange={handleChange} errors={errors} />
+          <BoundarySection form={form} onChange={handleChange} error={errors.boundaryDetails} />
+          <LandShapeSection value={form.landShape} onChange={handleChange} error={errors.landShape} />
+          <FileUploadSection file={form.file} onFile={handleFile} error={errors.file} />
           <SurveyFormActions onBack={() => navigate(-1)} loading={loading} />
         </form>
       </div>

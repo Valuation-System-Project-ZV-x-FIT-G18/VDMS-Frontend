@@ -7,9 +7,12 @@ import PageHeader from '../../available-to/components/PageHeader';
 
 interface Officer {
   to_id: string;
+  name: string;
   name_with_initials: string;
   email: string;
   phone: string;
+  nic: string;
+  city?: string;
 }
 
 const AllToPage: React.FC = () => {

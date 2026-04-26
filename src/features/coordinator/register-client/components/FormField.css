@@ -24,3 +24,7 @@
   font-size: 0.78rem;
   color: #999;
 }
+.field-error {
+  font-size: 0.78rem;
+  color: #c0392b;
+}

@@ -43,7 +43,7 @@
   align-items: center;
   gap: 0.75rem;                    /* space between toggle and bar */
   width: 100%;
-  max-width: 560px;                /* constrain card width */
+  max-width: 700px;                /* allow longer input row */
   box-shadow: 0 10px 24px rgba(29, 67, 102, 0.16);
 }
 

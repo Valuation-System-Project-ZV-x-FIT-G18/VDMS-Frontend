@@ -1,10 +1,11 @@
 interface Props {
   value: string;                                           // current textarea value
   onChange: (val: string) => void;                         // callback on text change
+  error?: string;
 }
 
 /* Text area for entering the purpose/reason of the valuation */
-const PurposeInput = ({ value, onChange }: Props) => (
+const PurposeInput = ({ value, onChange, error }: Props) => (
   <div className="nv-section">
     <h3 className="nv-section-title">Purpose of valuation</h3>
     <textarea
@@ -15,6 +16,7 @@ const PurposeInput = ({ value, onChange }: Props) => (
       onChange={e => onChange(e.target.value)}              // pass new text up
       required                                             // must not be empty
     />
+    {error && <span className="field-error">{error}</span>}
   </div>
 );
 

@@ -11,6 +11,8 @@ import DocFormActions from '../components/DocFormActions';
 import ConfirmModal from '../components/ConfirmModal'; // red warning modal
 import './DocumentUploadPage.css';
 import usePersistedState from '../../hooks/usePersistedState'; // persist form on refresh
+import { validateDocumentUploadForm } from '../../validation/document-upload.validation';
+import type { FieldErrors } from '../../validation/shared';
 
 const empty: DocumentFiles = {
   nicCopy: null, taxReceipts: null, utilityBills: null, otherDocs: null,
@@ -26,6 +28,7 @@ const DocumentUploadPage = () => {
   });
   const [loading, setLoading] = useState(false);
   const [showConfirm, setShowConfirm] = useState(false); // controls warning modal
+  const [errors, setErrors] = useState<FieldErrors>({});
 
   // Fetch uploaded documents on mount
   useEffect(() => {
@@ -44,6 +47,13 @@ const DocumentUploadPage = () => {
   }, [setFiles]);
 
   const handleFile = useCallback((key: keyof DocumentFiles, file: File | null) => {
+    setErrors((prev) => {
+      if (!prev[key]) return prev;
+      const next = { ...prev };
+      delete next[key];
+      return next;
+    });
+
     setRawFiles(prev => ({ ...prev, [key]: file }));
     setFiles(prev => ({
       ...prev,
@@ -53,6 +63,13 @@ const DocumentUploadPage = () => {
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
+
+    const validation = validateDocumentUploadForm(files);
+    setErrors(validation.errors);
+    if (!validation.valid) {
+      return;
+    }
+
     setShowConfirm(true); // open warning modal
   };
 
@@ -74,11 +91,11 @@ const DocumentUploadPage = () => {
       <div className="doc-upload-card">
         <h1 className="doc-heading">Document upload</h1>
         <p className="doc-sub">Upload required documents to complete the valuation</p>
-        <form onSubmit={handleSubmit}>
-          <NicUpload files={files} onFile={handleFile} />
-          <TaxUpload files={files} onFile={handleFile} />
-          <UtilityUpload files={files} onFile={handleFile} />
-          <OtherUpload files={files} onFile={handleFile} />
+        <form onSubmit={handleSubmit} noValidate>
+          <NicUpload files={files} onFile={handleFile} error={errors.nicCopy} />
+          <TaxUpload files={files} onFile={handleFile} error={errors.taxReceipts} />
+          <UtilityUpload files={files} onFile={handleFile} error={errors.utilityBills} />
+          <OtherUpload files={files} onFile={handleFile} error={errors.otherDocs} />
           <DocFormActions onBack={() => navigate(-1)} loading={loading} />
         </form>
       </div>

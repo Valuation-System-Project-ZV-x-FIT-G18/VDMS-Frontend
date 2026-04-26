@@ -4,12 +4,13 @@ import './OwnershipSection.css';
 interface Props {
   value: string;                                          // current selection
   onChange: (name: string, value: string) => void;        // change handler
+  error?: string;
 }
 
 const types = ['Single Owner', 'Joint Ownership'];        // ownership categories
 
 /* OWNERSHIP section — radio buttons for ownership type */
-const OwnershipSection = ({ value, onChange }: Props) => (
+const OwnershipSection = ({ value, onChange, error }: Props) => (
   <div className="ownership-section">
     <SectionHeader icon="👤" title="Ownership type" />
     <div className="ownership-options">
@@ -22,6 +23,7 @@ const OwnershipSection = ({ value, onChange }: Props) => (
         </label>
       ))}
     </div>
+    {error && <span className="field-error">{error}</span>}
   </div>
 );
 
