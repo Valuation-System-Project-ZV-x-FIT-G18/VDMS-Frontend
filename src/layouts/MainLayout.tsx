@@ -3,6 +3,7 @@ import type { CSSProperties, ReactNode } from "react";
 import Sidebar from "./Sidebar";
 import Header from "./Header";
 import { theme } from "../styles/theme";
+import "./AppLayout.css";
 
 interface MainLayoutProps {
   children: ReactNode;
@@ -69,6 +70,7 @@ const MainLayout = ({
 
   const sidebarWrapperStyle: CSSProperties = {
     flexShrink: 0,
+    width: isMobile ? "200px" : "240px",
     height: "100%",
     overflow: "hidden",
     transition: "transform 0.3s ease",
@@ -85,10 +87,10 @@ const MainLayout = ({
 
   const contentWrapperStyle: CSSProperties = {
     flex: 1,
+    minWidth: 0,
     height: "100%",
     overflow: "auto",
-    padding: isMobile ? "16px" : "24px",
-    width: "100%",
+    padding: 0,
   };
 
   const mobileOverlayStyle: CSSProperties = {

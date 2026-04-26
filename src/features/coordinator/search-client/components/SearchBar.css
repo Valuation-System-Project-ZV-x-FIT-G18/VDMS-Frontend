@@ -1,0 +1,39 @@
+/* Styles for the SearchBar component */
+.search-bar {
+  display: flex;                    /* input + button side-by-side */
+  gap: 0.75rem;                    /* space between input and button */
+  width: 100%;
+  max-width: 520px;                /* constrain width */
+}
+
+.search-input {
+  flex: 1;                         /* fill remaining space */
+  padding: 12px 16px;
+  border: 1px solid #9fb8ce;
+  border-radius: 8px;
+  background: #f1f6fb;
+  color: #1c3f5f;
+  font-size: 1rem;
+  outline: none;                   /* remove default focus ring */
+}
+
+.search-input:focus {
+  border-color: #2f73b3;
+  box-shadow: 0 0 0 3px rgba(47, 115, 179, 0.2);
+}
+
+.search-btn {
+  padding: 12px 24px;
+  border: none;
+  border-radius: 8px;
+  background: linear-gradient(180deg, #3a82c5 0%, #2b6ea8 100%);
+  color: #fff;
+  font-size: 1rem;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.search-btn:disabled {
+  opacity: 0.6;                    /* dimmed when loading */
+  cursor: not-allowed;
+}

@@ -1,0 +1,45 @@
+.assigned-page {
+  width: 100%;
+  min-height: 100vh;
+  background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+  padding: 40px 20px;
+}
+
+.assigned-page h1 {
+  color: #2c3e50;
+  font-size: 40px;
+  margin-bottom: 10px;
+  text-align: center;
+  font-weight: 800;
+  letter-spacing: -1px;
+}
+
+.assigned-page h1::after {
+  content: '';
+  display: block;
+  height: 4px;
+  width: 80px;
+  background: linear-gradient(90deg, #667eea, #764ba2);
+  margin: 15px auto 0;
+  border-radius: 2px;
+}
+
+.assigned-container {
+  max-width: 1300px;
+  margin: 0 auto;
+  background: white;
+  border-radius: 12px;
+  padding: 40px;
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.12);
+}
+
+.error-message {
+  color: #c0392b;
+  background-color: #fadbd8;
+  padding: 16px 12px;
+  border-radius: 6px;
+  margin-bottom: 20px;
+  border-left: 5px solid #e74c3c;
+  font-weight: 500;
+  box-shadow: 0 2px 8px rgba(231, 76, 60, 0.1);
+}

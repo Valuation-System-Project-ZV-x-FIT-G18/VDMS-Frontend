@@ -1,0 +1,52 @@
+/* Styles for the SearchPage */
+.search-page {
+  min-height: 100vh;
+  width: 100%;
+  box-sizing: border-box;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  background: linear-gradient(180deg, #d7e3ef 0%, #c9d9e8 100%);
+  padding: 2rem;
+}
+
+.back-btn {
+  align-self: flex-start;          /* pin to top-left */
+  background: transparent;
+  border: 1px solid #555;
+  color: #ccc;
+  padding: 8px 16px;
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 0.9rem;
+  margin-bottom: 1.5rem;
+}
+
+.back-btn:hover {
+  background: rgba(255, 255, 255, 0.1);
+}
+
+.search-title {
+  color: #173550;
+  font-size: 1.8rem;
+  margin-bottom: 1.5rem;
+}
+
+/* Card that wraps the radio toggle + search bar */
+.search-card {
+  background: #e8f0f7;
+  border: 1px solid #b8cadc;
+  border-radius: 14px;            /* rounded corners */
+  padding: 2rem 2.5rem;           /* inner spacing */
+  display: flex;
+  flex-direction: column;          /* stack toggle above search bar */
+  align-items: center;
+  gap: 0.75rem;                    /* space between toggle and bar */
+  width: 100%;
+  max-width: 560px;                /* constrain card width */
+  box-shadow: 0 10px 24px rgba(29, 67, 102, 0.16);
+}
+
+.search-results {
+  margin-top: 2rem;                /* gap between search bar and result card */
+}
