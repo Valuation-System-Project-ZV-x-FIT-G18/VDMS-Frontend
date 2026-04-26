@@ -76,6 +76,83 @@ const DailyMorningReport = ({ onNavigate: _ }: DailyMorningReportProps) => {
     lineHeight: "1.4",
   };
 
+  const gridStyle: CSSProperties = {
+    display: "grid",
+    gridTemplateColumns: "repeat(2, 1fr)",
+    gap: "24px",
+    marginBottom: "40px",
+  };
+
+  const cardStyle: CSSProperties = {
+    backgroundColor: "#f9fafb",
+    padding: "24px",
+    borderRadius: "8px",
+    border: "1px solid #e5e7eb",
+  };
+
+  const cardTitleStyle: CSSProperties = {
+    fontSize: "14px",
+    fontWeight: 600,
+    color: "#1f2937",
+    marginBottom: "16px",
+    margin: "0 0 16px 0",
+  };
+
+  const issueCardStyle: CSSProperties = {
+    backgroundColor: "#ffffff",
+    padding: "12px",
+    borderRadius: "6px",
+    border: "1px solid #e5e7eb",
+    marginBottom: "8px",
+  };
+
+  const severityBadgeStyle = (
+    severity: "High" | "Med" | "Low",
+  ): CSSProperties => {
+    let bgColor = "#fecaca";
+    let textColor = "#991b1b";
+    if (severity === "Med") {
+      bgColor = "#fed7aa";
+      textColor = "#92400e";
+    }
+    if (severity === "Low") {
+      bgColor = "#bbf7d0";
+      textColor = "#065f46";
+    }
+
+    return {
+      display: "inline-block",
+      padding: "2px 8px",
+      borderRadius: "4px",
+      fontSize: "10px",
+      fontWeight: 600,
+      backgroundColor: bgColor,
+      color: textColor,
+    };
+  };
+
+  const issueTitleStyle: CSSProperties = {
+    fontSize: "13px",
+    fontWeight: 600,
+    color: "#1f2937",
+    marginBottom: "4px",
+  };
+
+  const issueDescStyle: CSSProperties = {
+    fontSize: "11px",
+    color: "#6b7280",
+    marginBottom: "8px",
+  };
+
+  const linkStyle: CSSProperties = {
+    color: "#3b82f6",
+    fontSize: "11px",
+    fontWeight: 600,
+    cursor: "pointer",
+    marginRight: "12px",
+    textDecoration: "none",
+  };
+
   const secureShareSectionStyle: CSSProperties = {
     backgroundColor: "#f0f9ff",
     padding: "24px",

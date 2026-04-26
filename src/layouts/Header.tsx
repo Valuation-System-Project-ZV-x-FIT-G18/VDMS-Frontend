@@ -8,6 +8,7 @@ import {
 } from "@ant-design/icons";
 import NotificationsDropdown from "../components/organisms/NotificationsDropdown";
 import MessagingSystem from "../components/organisms/MessagingSystem";
+import { theme } from "../styles/theme";
 
 interface HeaderProps {
   userName: string;
@@ -28,8 +29,8 @@ const Header = ({
 
   const headerStyle: CSSProperties = {
     height: "64px",
-    backgroundColor: "#d7e6f1",
-    borderBottom: "1px solid #b9cfdf",
+    backgroundColor: "#e6f7ff",
+    borderBottom: "1px solid #c9dcff",
     display: "flex",
     alignItems: "center",
     justifyContent: "space-between",
@@ -52,18 +53,18 @@ const Header = ({
     width: "40px",
     height: "40px",
     borderRadius: "50%",
-    backgroundColor: "#ffffff",
-    border: "1px solid #c6d8e7",
+    backgroundColor: "white",
+    border: "none",
     cursor: "pointer",
     fontSize: "18px",
-    color: "#1f6fbf",
+    color: theme.colors.primary.main,
   };
 
   const brandIconStyle: CSSProperties = {
     width: isMobile ? "28px" : "34px",
     height: isMobile ? "28px" : "34px",
     borderRadius: "10px",
-    backgroundColor: "#2b83da",
+    backgroundColor: theme.colors.primary.main,
     display: "flex",
     alignItems: "center",
     justifyContent: "center",
@@ -75,7 +76,7 @@ const Header = ({
   const brandTextStyle: CSSProperties = {
     fontSize: isMobile ? "12px" : "14px",
     fontWeight: 700,
-    color: "#1d74c7",
+    color: theme.colors.primary.main,
     whiteSpace: "nowrap",
   };
 
@@ -90,8 +91,8 @@ const Header = ({
     width: "40px",
     height: "40px",
     borderRadius: "50%",
-    backgroundColor: "#ffffff",
-    border: "1px solid #c6d8e7",
+    backgroundColor: "white",
+    border: "none",
     cursor: "pointer",
     display: "flex",
     alignItems: "center",
@@ -110,16 +111,27 @@ const Header = ({
   const userNameStyle: CSSProperties = {
     fontSize: "14px",
     fontWeight: 600,
-    color: "#1f3348",
+    color: theme.colors.text.primary,
   };
 
   const userRoleStyle: CSSProperties = {
     fontSize: "12px",
-    color: "#48637c",
+    color: theme.colors.text.secondary,
   };
 
   const getAvatarColor = () => {
-    return "#2b83da";
+    const colors = [
+      "#1890ff",
+      "#52c41a",
+      "#722ed1",
+      "#fa8c16",
+      "#eb2f96",
+      "#13c2c2",
+      "#f5222d",
+      "#faad14",
+    ];
+    const index = userName.charCodeAt(0) % colors.length;
+    return colors[index];
   };
 
   const avatarStyle: CSSProperties = {
