@@ -16,7 +16,7 @@ import type { Project } from '../types';
 import { theme } from '../../../styles/theme';
 
 const DashboardPage = () => {
-  const [selectedProject, setSelectedProject] = useState<Project | null>(null);
+  const [selectedValuationJob, setSelectedValuationJob] = useState<Project | null>(null);
   
   // ✅ NEW: State for API data
   const [stats, setStats] = useState<DashboardStats>({
@@ -26,7 +26,7 @@ const DashboardPage = () => {
     pendingPayments: 0,
     pendingDocuments: 0,
   });
-  const [recentProjects, setRecentProjects] = useState<Project[]>([]);
+  const [recentValuationJobs, setRecentValuationJobs] = useState<Project[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
@@ -37,13 +37,13 @@ const DashboardPage = () => {
         setLoading(true);
         setError(null);
 
-        const [statsData, projectsData] = await Promise.all([
+        const [statsData, valuationJobsData] = await Promise.all([
           dashboardService.getStats(),
           dashboardService.getRecentProjects(5),
         ]);
 
         setStats(statsData);
-        setRecentProjects(projectsData);
+        setRecentValuationJobs(valuationJobsData);
       } catch (err) {
         setError('Failed to load dashboard data');
         console.error('Dashboard error:', err);
@@ -55,12 +55,12 @@ const DashboardPage = () => {
     fetchDashboardData();
   }, []);
 
-  if (selectedProject) {
+  if (selectedValuationJob) {
     return (
       <ValuationJobDetail 
-        projectId={selectedProject.id} 
-        initialProject={selectedProject}
-        onBack={() => setSelectedProject(null)} 
+        projectId={selectedValuationJob.id} 
+        initialProject={selectedValuationJob}
+        onBack={() => setSelectedValuationJob(null)} 
       />
     );
   }
@@ -147,26 +147,26 @@ const DashboardPage = () => {
       <div style={headerStyle}>
         <h1 style={titleStyle}>Dashboard Overview</h1>
         <p style={subtitleStyle}>
-          welcome back, here's what's happening with your valuation job today
+          Welcome back, here's what's happening with your valuation jobs today.
         </p>
       </div>
 
       {/* Stats Cards - ✅ Using REAL data from backend */}
       <div style={statsGridStyle}>
         <StatCard
-          title="Total Project"
+          title="Total Valuation Jobs"
           value={stats.totalProjects}
           icon={<FolderOutlined />}
           iconBgColor="#1890ff"
         />
         <StatCard
-          title="Completed Project"
+          title="Completed Valuation Jobs"
           value={stats.completedProjects}
           icon={<CheckCircleOutlined />}
           iconBgColor="#52c41a"
         />
         <StatCard
-          title="Active Project"
+          title="Active Valuation Jobs"
           value={stats.activeProjects}
           icon={<FileTextOutlined />}
           iconBgColor="#13c2c2"
@@ -178,23 +178,29 @@ const DashboardPage = () => {
           iconBgColor="#722ed1"
         />
         <StatCard
-          title="Pending Document"
+          title="Pending Documents"
           value={stats.pendingDocuments}
           icon={<FileOutlined />}
           iconBgColor="#fa8c16"
         />
       </div>
 
-      {/* Projects Table - ✅ Using REAL data from backend */}
+      {/* Valuation Jobs Table - ✅ Using REAL data from backend */}
       <ProjectsTable 
-        projects={recentProjects} 
+        projects={recentValuationJobs} 
         showSearch 
-        onProjectClick={(projectId) => {
-          const selected = recentProjects.find(
-            (project) => project.id === projectId || project.projectId === projectId,
+        title="Recent valuation jobs"
+        idLabel="Valuation Job ID"
+        searchPlaceholder="Search valuation jobs..."
+        onProjectClick={(valuationJobId) => {
+          const selected = recentValuationJobs.find(
+            (valuationJob) =>
+              valuationJob.id === valuationJobId ||
+              valuationJob.valuationJobId === valuationJobId ||
+              valuationJob.projectId === valuationJobId,
           );
           if (selected) {
-            setSelectedProject(selected);
+            setSelectedValuationJob(selected);
           }
         }}
       />
