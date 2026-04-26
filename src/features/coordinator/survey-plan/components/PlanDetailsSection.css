@@ -1,0 +1,14 @@
+.plan-details-section {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+/* side-by-side row for surveyor name + lot number */
+.plan-row {
+  display: flex;
+  gap: 1rem;
+}
+.plan-row > * {
+  flex: 1;
+}
