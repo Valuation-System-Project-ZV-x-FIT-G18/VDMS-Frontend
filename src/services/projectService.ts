@@ -6,6 +6,7 @@ import type { TeamMember } from './teamService';
 // Type definitions
 interface ApiProject {
   id: string;
+  valuationJobId?: string;
   projectId: string;
   propertyAddress: string;
   applicant?: string | null;
@@ -21,6 +22,7 @@ interface ApiProject {
 
 export interface Project {
   id: string;
+  valuationJobId?: string;
   projectId: string;
   propertyAddress: string;
   applicants?: string[];
@@ -65,6 +67,8 @@ const isPaymentStatus = (value: string): value is PaymentStatus =>
 
 const toProject = (project: ApiProject): Project => ({
   ...project,
+  valuationJobId: project.valuationJobId ?? project.projectId,
+  projectId: project.projectId ?? project.valuationJobId ?? '',
   applicants: project.applicants ?? (project.applicant ? [project.applicant] : []),
   status: isProjectStatus(project.status) ? project.status : 'In Progress',
   paymentStatus: isPaymentStatus(project.paymentStatus) ? project.paymentStatus : 'Pending',

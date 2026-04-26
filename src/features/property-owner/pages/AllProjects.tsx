@@ -13,44 +13,44 @@ const AllProjectsPage = () => {
   const [paymentFilter, setPaymentFilter] = useState<string>('All');
   const [searchQuery, setSearchQuery] = useState<string>('');
   const [dateFormat, setDateFormat] = useState<string>('mm/dd/yy');
-  const [selectedProject, setSelectedProject] = useState<Project | null>(null);
-  const [projects, setProjects] = useState<Project[]>([]);
+  const [selectedValuationJob, setSelectedValuationJob] = useState<Project | null>(null);
+  const [valuationJobs, setValuationJobs] = useState<Project[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    const fetchOwnerProjects = async () => {
+    const fetchOwnerValuationJobs = async () => {
       try {
         setLoading(true);
         setError(null);
 
         const clientId = localStorage.getItem('ownerClientId') || DEFAULT_OWNER_CLIENT_ID;
-        const ownerProjects = await projectService.getAll({
+        const ownerValuationJobs = await projectService.getAll({
           status: statusFilter !== 'All' ? statusFilter : undefined,
           paymentStatus: paymentFilter !== 'All' ? paymentFilter : undefined,
           search: searchQuery || undefined,
           clientId,
         });
 
-        setProjects(ownerProjects);
+        setValuationJobs(ownerValuationJobs);
       } catch (err) {
-        setError('Failed to load projects');
-        console.error('Owner projects error:', err);
+        setError('Failed to load valuation jobs');
+        console.error('Owner valuation jobs error:', err);
       } finally {
         setLoading(false);
       }
     };
 
-    fetchOwnerProjects();
+    fetchOwnerValuationJobs();
   }, [statusFilter, paymentFilter, searchQuery]);
 
-  // Show detail page when project clicked
-  if (selectedProject) {
+  // Show detail page when valuation job clicked
+  if (selectedValuationJob) {
     return (
       <ValuationJobDetail
-        projectId={selectedProject.id}
-        initialProject={selectedProject}
-        onBack={() => setSelectedProject(null)}
+        projectId={selectedValuationJob.id}
+        initialProject={selectedValuationJob}
+        onBack={() => setSelectedValuationJob(null)}
       />
     );
   }
@@ -125,7 +125,7 @@ const AllProjectsPage = () => {
       {/* Header */}
       <div style={headerStyle}>
         <h1 style={titleStyle}>Valuation Jobs</h1>
-        <p style={subtitleStyle}>Manage and track your valuation requests</p>
+        <p style={subtitleStyle}>Manage and track your valuation jobs</p>
       </div>
 
       {/* Filters */}
@@ -133,7 +133,7 @@ const AllProjectsPage = () => {
         <div style={searchWrapperStyle}>
           <input
             type="text"
-            placeholder="Search by project id or location"
+            placeholder="Search by valuation job id or location"
             style={searchInputStyle}
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
@@ -175,10 +175,10 @@ const AllProjectsPage = () => {
         </select>
       </div>
 
-      {/* Projects Table */}
+      {/* Valuation Jobs Table */}
       {loading && (
         <div style={{ textAlign: 'center', padding: '40px', color: theme.colors.text.secondary }}>
-          Loading projects...
+          Loading valuation jobs...
         </div>
       )}
 
@@ -202,24 +202,29 @@ const AllProjectsPage = () => {
         </div>
       )}
 
-      {!loading && !error && projects.length > 0 && (
+      {!loading && !error && valuationJobs.length > 0 && (
         <ProjectsTable
-          projects={projects}
+          projects={valuationJobs}
           showSearch={false}
-          onProjectClick={(projectId) => {
-            const selected = projects.find(
-              (project) => project.id === projectId || project.projectId === projectId,
+          title="Recent valuation jobs"
+          idLabel="Valuation Job ID"
+          onProjectClick={(valuationJobId) => {
+            const selected = valuationJobs.find(
+              (valuationJob) =>
+                valuationJob.id === valuationJobId ||
+                valuationJob.valuationJobId === valuationJobId ||
+                valuationJob.projectId === valuationJobId,
             );
             if (selected) {
-              setSelectedProject(selected);
+              setSelectedValuationJob(selected);
             }
           }}
         />
       )}
 
-      {!loading && !error && projects.length === 0 && (
+      {!loading && !error && valuationJobs.length === 0 && (
         <div style={{ textAlign: 'center', padding: '40px', color: theme.colors.text.secondary }}>
-          No projects found.
+          No valuation jobs found.
         </div>
       )}
     </div>
