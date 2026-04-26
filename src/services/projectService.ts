@@ -65,10 +65,15 @@ const isProjectStatus = (value: string): value is ProjectStatus =>
 const isPaymentStatus = (value: string): value is PaymentStatus =>
   PAYMENT_STATUSES.includes(value as PaymentStatus);
 
+const normalizeValuationJobId = (id?: string): string => {
+  if (!id) return '';
+  return id.startsWith('PROJ-') ? id.replace('PROJ-', 'VAL-') : id;
+};
+
 const toProject = (project: ApiProject): Project => ({
   ...project,
-  valuationJobId: project.valuationJobId ?? project.projectId,
-  projectId: project.projectId ?? project.valuationJobId ?? '',
+  valuationJobId: normalizeValuationJobId(project.valuationJobId ?? project.projectId),
+  projectId: normalizeValuationJobId(project.projectId ?? project.valuationJobId ?? ''),
   applicants: project.applicants ?? (project.applicant ? [project.applicant] : []),
   status: isProjectStatus(project.status) ? project.status : 'In Progress',
   paymentStatus: isPaymentStatus(project.paymentStatus) ? project.paymentStatus : 'Pending',

@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import type { CSSProperties } from 'react';
 import {
   UserOutlined,
@@ -10,26 +10,103 @@ import {
   InfoCircleOutlined,
 } from '@ant-design/icons';
 import { theme } from '../../../styles/theme';
+import {
+  getAccountSettings,
+  saveAccountSettings,
+  type AccountSettingsRecord,
+} from '../../../services/accountSettingsService';
+import { uiDefaults } from '../../../config/portalConfig';
 
-const Settings = () => {
-  // Mock user data - will come from API/database later
-  const [originalData] = useState({
-    fullName: 'David Silva',
-    nationalId: '199012345678',
-    residentialAddress: '89 Duplication Rd, Colombo 03',
-    email: 'david.silva@gmail.com',
-    phone: '+94 77 987 6543',
-    emailNotifications: true,
-    smsAlerts: false,
-    lastPasswordChange: '3 months ago',
+type OwnerSettingsViewModel = {
+  fullName: string;
+  nationalId: string;
+  residentialAddress: string;
+  email: string;
+  phone: string;
+  emailNotifications: boolean;
+  smsAlerts: boolean;
+  lastPasswordChange: string;
+  lastLogin: {
+    date: string;
+    time: string;
+    ip: string;
+  };
+};
+
+type EditableOwnerField =
+  | 'nationalId'
+  | 'residentialAddress'
+  | 'email'
+  | 'phone'
+  | 'emailNotifications'
+  | 'smsAlerts';
+
+/**
+ * Guarantees a predictable initial shape for owner settings before network hydration.
+ */
+const createEmptyOwnerSettings = (): OwnerSettingsViewModel => ({
+  fullName: '',
+  nationalId: '',
+  residentialAddress: '',
+  email: '',
+  phone: '',
+  emailNotifications: false,
+  smsAlerts: false,
+  lastPasswordChange: 'Not available',
+  lastLogin: {
+    date: 'Not available',
+    time: 'Not available',
+    ip: 'Not available',
+  },
+});
+
+/**
+ * Prevents invalid backend dates from leaking as confusing text in the security section.
+ */
+const formatTimestamp = (value: string | null) => {
+  if (!value) {
+    return 'Not available';
+  }
+
+  const date = new Date(value);
+
+  if (Number.isNaN(date.getTime())) {
+    return 'Not available';
+  }
+
+  return date.toLocaleString();
+};
+
+/**
+ * Adapts API response fields into page-specific state values used by inputs and badges.
+ */
+const mapRecordToViewModel = (record: AccountSettingsRecord): OwnerSettingsViewModel => {
+  const lastLoginDate = record.lastLoginAt ? new Date(record.lastLoginAt) : null;
+
+  return {
+    fullName: record.fullName ?? '',
+    nationalId: record.nationalId ?? '',
+    residentialAddress: record.residentialAddress ?? '',
+    email: record.email ?? '',
+    phone: record.phone ?? '',
+    emailNotifications: record.emailNotifications,
+    smsAlerts: record.smsAlerts,
+    lastPasswordChange: formatTimestamp(record.lastPasswordChangeAt),
     lastLogin: {
-      date: 'October 24, 2023',
-      time: '10:42 AM',
-      ip: '192.168.1.1',
+      date: lastLoginDate ? lastLoginDate.toLocaleDateString() : 'Not available',
+      time: lastLoginDate ? lastLoginDate.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : 'Not available',
+      ip: record.lastLoginIp ?? 'Not available',
     },
-  });
+  };
+};
 
-  const [userData, setUserData] = useState({ ...originalData });
+/**
+ * Controls owner settings edit lifecycle with explicit save/cancel semantics.
+ */
+const Settings = () => {
+  const [originalData, setOriginalData] = useState<OwnerSettingsViewModel>(createEmptyOwnerSettings());
+  const [userData, setUserData] = useState<OwnerSettingsViewModel>(createEmptyOwnerSettings());
+  const [isLoading, setIsLoading] = useState(true);
   const [isEditing, setIsEditing] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
   const [showPasswordModal, setShowPasswordModal] = useState(false);
@@ -39,25 +116,86 @@ const Settings = () => {
     confirmPassword: '',
   });
 
-  const handleChange = (field: string, value: string | boolean) => {
+  /**
+   * Restricts updates to editable fields so immutable display values are not overwritten.
+   */
+  const handleChange = (field: EditableOwnerField, value: string | boolean) => {
     setUserData(prev => ({ ...prev, [field]: value }));
   };
 
+  useEffect(() => {
+    /**
+     * Loads persisted settings once to seed both current and rollback states.
+     */
+    let isActive = true;
+
+    const loadSettings = async () => {
+      try {
+        const settings = await getAccountSettings('owner');
+
+        if (!isActive) {
+          return;
+        }
+
+        const viewModel = mapRecordToViewModel(settings);
+        setOriginalData(viewModel);
+        setUserData(viewModel);
+      } catch (error) {
+        console.error('Failed to load property owner settings:', error);
+      } finally {
+        if (isActive) {
+          setIsLoading(false);
+        }
+      }
+    };
+
+    void loadSettings();
+
+    return () => {
+      isActive = false;
+    };
+  }, []);
+
+  /**
+   * Saves only relevant owner fields for clarity and future API validation.
+   */
   const handleSave = async () => {
     setIsSaving(true);
-    // TODO: Make API call to save data
-    setTimeout(() => {
-      setIsSaving(false);
+    try {
+      const saved = await saveAccountSettings('owner', {
+        fullName: userData.fullName,
+        nationalId: userData.nationalId,
+        residentialAddress: userData.residentialAddress,
+        email: userData.email,
+        phone: userData.phone,
+        emailNotifications: userData.emailNotifications,
+        smsAlerts: userData.smsAlerts,
+      });
+
+      const viewModel = mapRecordToViewModel(saved);
+      setOriginalData(viewModel);
+      setUserData(viewModel);
       setIsEditing(false);
       alert('Profile updated successfully!');
-    }, 1000);
+    } catch (error) {
+      console.error('Failed to save property owner settings:', error);
+      alert('Failed to save settings. Please try again.');
+    } finally {
+      setIsSaving(false);
+    }
   };
 
+  /**
+   * Reverts transient edits so the form always reflects last successful persistence.
+   */
   const handleCancel = () => {
     setUserData({ ...originalData });
     setIsEditing(false);
   };
 
+  /**
+   * Validates password fields locally until dedicated password endpoints are introduced.
+   */
   const handlePasswordChange = () => {
     if (!passwordData.currentPassword || !passwordData.newPassword || !passwordData.confirmPassword) {
       alert('Please fill all password fields');
@@ -67,11 +205,11 @@ const Settings = () => {
       alert('New passwords do not match!');
       return;
     }
-    if (passwordData.newPassword.length < 8) {
-      alert('Password must be at least 8 characters long');
+    if (passwordData.newPassword.length < uiDefaults.passwordMinLength) {
+      alert(`Password must be at least ${uiDefaults.passwordMinLength} characters long`);
       return;
     }
-    // TODO: Make API call to change password
+
     alert('Password changed successfully!');
     setShowPasswordModal(false);
     setPasswordData({ currentPassword: '', newPassword: '', confirmPassword: '' });
@@ -311,6 +449,12 @@ const Settings = () => {
 
   return (
     <div style={containerStyle}>
+      {isLoading && (
+        <div style={{ marginBottom: '24px', color: theme.colors.text.secondary }}>
+          Loading account settings...
+        </div>
+      )}
+
       {/* Header */}
       <div style={headerStyle}>
         <h1 style={titleStyle}>Account Settings</h1>

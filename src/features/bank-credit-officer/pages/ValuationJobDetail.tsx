@@ -20,6 +20,10 @@ import type { TeamMember as TeamType } from '../../../services/teamService';
 import type { Project } from '../types';
 import TeamMemberChatPopup from '../../../components/organisms/TeamMemberChatPopup';
 import { getChatIdentity } from '../../../services/chatIdentity';
+import {
+  getCurrentUserName,
+  projectDetailDefaults,
+} from '../../../config/portalConfig';
 
 interface ValuationJobDetailProps {
   projectId: string;
@@ -37,6 +41,9 @@ interface JobDocument {
   note?: string;
 }
 
+/**
+ * Renders bank-side valuation detail by combining project, document, and team data into one operational workspace.
+ */
 const ValuationJobDetail = ({ projectId, initialProject, onBack }: ValuationJobDetailProps) => {
   const [showAllTeam, setShowAllTeam] = useState(false);
   const [selectedTeamMember, setSelectedTeamMember] = useState<TeamType | null>(null);
@@ -45,22 +52,21 @@ const ValuationJobDetail = ({ projectId, initialProject, onBack }: ValuationJobD
   const documentUploadInputRef = useRef<HTMLInputElement | null>(null);
   const chatIdentity = getChatIdentity('bank', 'Bank Credit Officer');
 
-  // ✅ NEW: State for API data
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [project, setProject] = useState<ProjectDetails | null>(null);
   const [documents, setDocuments] = useState<JobDocument[]>([]);
   const [teamMembers, setTeamMembers] = useState<TeamType[]>([]);
 
-  // ✅ NEW: Fetch project details from backend
   useEffect(() => {
+    /**
+     * Hydrates detail view while tolerating partial endpoint failures to keep the page usable.
+     */
     const fetchProjectDetails = async () => {
       try {
         setLoading(true);
         setError(null);
 
-        // Prefer the selected row data so the page opens even if the
-        // project-by-id endpoint is failing in the running backend process.
         let projectData: ProjectDetails;
         if (initialProject) {
           projectData = initialProject as ProjectDetails;
@@ -81,8 +87,6 @@ const ValuationJobDetail = ({ projectId, initialProject, onBack }: ValuationJobD
 
         const resolvedId = projectData.id || projectId;
 
-        // Load related data independently so a single endpoint failure
-        // does not block the detail page from rendering.
         const [docsResult, teamResult] = await Promise.allSettled([
           documentService.getByProject(resolvedId),
           teamService.getByProject(resolvedId),
@@ -91,7 +95,6 @@ const ValuationJobDetail = ({ projectId, initialProject, onBack }: ValuationJobD
         const docsData = docsResult.status === 'fulfilled' ? docsResult.value : [];
         const teamData = teamResult.status === 'fulfilled' ? teamResult.value : [];
         
-        // Transform documents to match component interface
         const transformedDocs: JobDocument[] = docsData.map(doc => ({
           id: doc.id,
           name: doc.name,
@@ -119,11 +122,17 @@ const ValuationJobDetail = ({ projectId, initialProject, onBack }: ValuationJobD
     fetchProjectDetails();
   }, [projectId, initialProject]);
 
+  /**
+   * Routes upload intent through a hidden input so pending document rows can open native file selection.
+   */
   const handleDocumentUpload = (docId: string) => {
     setSelectedUploadDocId(docId);
     documentUploadInputRef.current?.click();
   };
 
+  /**
+   * Applies local optimistic state updates so users see upload feedback immediately.
+   */
   const handleDocumentFileChange = (event: ChangeEvent<HTMLInputElement>) => {
     const selectedFile = event.target.files?.[0];
     if (!selectedFile || !selectedUploadDocId) return;
@@ -143,7 +152,7 @@ const ValuationJobDetail = ({ projectId, initialProject, onBack }: ValuationJobD
               ...doc,
               status: 'submitted',
               uploadDate,
-              uploadedBy: 'John Doe',
+              uploadedBy: getCurrentUserName('bank'),
               note: undefined,
             }
           : doc
@@ -155,7 +164,6 @@ const ValuationJobDetail = ({ projectId, initialProject, onBack }: ValuationJobD
     event.target.value = '';
   };
 
-  // ✅ Loading state
   if (loading) {
     return (
       <div style={{
@@ -171,7 +179,6 @@ const ValuationJobDetail = ({ projectId, initialProject, onBack }: ValuationJobD
     );
   }
 
-  // ✅ Error state
   if (error || !project) {
     return (
       <div style={{
@@ -203,17 +210,17 @@ const ValuationJobDetail = ({ projectId, initialProject, onBack }: ValuationJobD
     );
   }
 
-  // ✅ Transform backend data to match UI
   const uploadedCount = documents.filter(d => d.status === 'submitted').length;
   const totalCount = documents.length;
 
-  // Calculate days remaining
   const expectedDate = new Date(project.expectedCompletion);
   const today = new Date();
   const diffTime = expectedDate.getTime() - today.getTime();
   const daysRemaining = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
 
-  // Map project status to stages
+  /**
+   * Normalizes stage rendering from status text so timeline behavior remains deterministic.
+   */
   const getStages = (status: string) => {
     const stageOrder = ['Awaiting Docs', 'Site Inspected', 'Report Prepared', 'Payment Pending', 'Completed'];
     const currentIndex = stageOrder.indexOf(status);
@@ -230,14 +237,14 @@ const ValuationJobDetail = ({ projectId, initialProject, onBack }: ValuationJobD
   const jobData = {
     id: project.projectId,
     address: project.propertyAddress,
-    client: 'Abeywickrama Holdings Pvt Ltd', // TODO: Get from backend when client table exists
+    client: projectDetailDefaults.clientDisplayName,
     valuationJobId: project.valuationJobId ?? project.projectId,
-    propertyType: 'Residential Land & House', // TODO: Add to project entity
-    valuationType: 'Market Valuation', // TODO: Add to project entity
-    bankBranch: 'Colombo 07 - Main', // TODO: Add to project entity
-    creditOfficer: 'You (John Doe)', // TODO: Get from auth
+    propertyType: projectDetailDefaults.propertyType,
+    valuationType: projectDetailDefaults.valuationType,
+    bankBranch: projectDetailDefaults.bankBranch,
+    creditOfficer: `You (${getCurrentUserName('bank')})`,
     applicant: project.applicants && project.applicants.length > 0 ? project.applicants[0] : 'N/A',
-    applicantContact: '+94 77 123 4567', // TODO: Add to project entity
+    applicantContact: projectDetailDefaults.applicantContact,
     requestedDate: new Date(project.requestedDate).toLocaleDateString('en-US', {
       month: 'short',
       day: '2-digit',

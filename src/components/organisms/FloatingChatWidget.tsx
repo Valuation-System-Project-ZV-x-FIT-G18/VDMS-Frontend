@@ -1,10 +1,11 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 import type { CSSProperties } from 'react';
 import { MessageOutlined, SendOutlined } from '@ant-design/icons';
 import { messagingService } from '../../services/messagingService';
 import type { ChatConversation, ChatMessage } from '../../services/messagingService';
 import { getChatIdentity } from '../../services/chatIdentity';
 import { theme } from '../../styles/theme';
+import { uiDefaults } from '../../config/portalConfig';
 
 interface FloatingChatWidgetProps {
   role?: string;
@@ -13,6 +14,9 @@ interface FloatingChatWidgetProps {
 
 const receiverRoles = new Set(['coordinator', 'technical-officer', 'l1-manager', 'l2-manager', 'l3-manager']);
 
+/**
+ * Provides compact real-time chat for operational roles while remaining non-invasive to page layout.
+ */
 const FloatingChatWidget = ({ role, userNameHint }: FloatingChatWidgetProps) => {
   const [open, setOpen] = useState(false);
   const [conversations, setConversations] = useState<ChatConversation[]>([]);
@@ -30,23 +34,41 @@ const FloatingChatWidget = ({ role, userNameHint }: FloatingChatWidgetProps) => 
     [conversations, selectedConversationId],
   );
 
-  const refreshConversations = async () => {
-    const list = await messagingService.listConversations(identity.id, identity.role);
-    setConversations(list);
-    if (!selectedConversationId && list.length > 0) {
-      setSelectedConversationId(list[0].id);
+  /**
+   * Keeps sidebar conversations fresh so unread badges and latest previews stay accurate.
+   */
+  const refreshConversations = useCallback(async () => {
+    try {
+      const list = await messagingService.listConversations(identity.id, identity.role);
+      setConversations(list);
+      if (!selectedConversationId && list.length > 0) {
+        setSelectedConversationId(list[0].id);
+      }
+    } catch (error) {
+      console.error('Failed to refresh conversations:', error);
     }
-  };
+  }, [identity.id, identity.role, selectedConversationId]);
 
-  const refreshMessages = async (conversationId: string) => {
-    const list = await messagingService.listMessages(conversationId);
-    setMessages(list);
-  };
+  /**
+   * Refreshes the active thread independently to avoid resetting the whole panel.
+   */
+  const refreshMessages = useCallback(async (conversationId: string) => {
+    try {
+      const list = await messagingService.listMessages(conversationId);
+      setMessages(list);
+    } catch (error) {
+      console.error('Failed to refresh messages:', error);
+    }
+  }, []);
 
   useEffect(() => {
     if (!role || !receiverRoles.has(role)) return;
-    void refreshConversations();
-  }, [role]);
+    const kickoffId = window.setTimeout(() => {
+      void refreshConversations();
+    }, 0);
+
+    return () => window.clearTimeout(kickoffId);
+  }, [role, refreshConversations]);
 
   useEffect(() => {
     if (!role || !receiverRoles.has(role)) return;
@@ -56,26 +78,32 @@ const FloatingChatWidget = ({ role, userNameHint }: FloatingChatWidgetProps) => 
       if (selectedConversationId) {
         void refreshMessages(selectedConversationId);
       }
-    }, 5000);
+    }, uiDefaults.chatPollIntervalMs);
 
     return () => window.clearInterval(pollId);
-  }, [role, selectedConversationId]);
+  }, [role, selectedConversationId, refreshConversations, refreshMessages]);
 
   useEffect(() => {
     if (!selectedConversationId) {
-      setMessages([]);
       return;
     }
 
-    void refreshMessages(selectedConversationId);
+    const loadThreadId = window.setTimeout(() => {
+      void refreshMessages(selectedConversationId);
+    }, 0);
     void messagingService.markConversationAsRead(selectedConversationId, identity.id).then(refreshConversations);
-  }, [selectedConversationId, identity.id]);
+
+    return () => window.clearTimeout(loadThreadId);
+  }, [selectedConversationId, identity.id, refreshConversations, refreshMessages]);
 
   const unreadCount = useMemo(
     () => conversations.reduce((sum, c) => sum + (c.unreadBy?.[identity.id] || 0), 0),
     [conversations, identity.id],
   );
 
+  /**
+   * Sends only non-empty messages and then reloads both thread and conversation summaries.
+   */
   const handleSend = async () => {
     if (!activeConversation) return;
 
@@ -85,18 +113,22 @@ const FloatingChatWidget = ({ role, userNameHint }: FloatingChatWidgetProps) => 
     const recipientId = activeConversation.participantIds.find((id) => id !== identity.id);
     if (!recipientId) return;
 
-    await messagingService.sendMessage({
-      conversationId: activeConversation.id,
-      senderId: identity.id,
-      senderName: identity.name,
-      recipientId,
-      text,
-      valuationJobId: activeConversation.valuationJobId,
-    });
+    try {
+      await messagingService.sendMessage({
+        conversationId: activeConversation.id,
+        senderId: identity.id,
+        senderName: identity.name,
+        recipientId,
+        text,
+        valuationJobId: activeConversation.valuationJobId,
+      });
 
-    setInput('');
-    await refreshMessages(activeConversation.id);
-    await refreshConversations();
+      setInput('');
+      await refreshMessages(activeConversation.id);
+      await refreshConversations();
+    } catch (error) {
+      console.error('Failed to send message:', error);
+    }
   };
 
   if (!role || !receiverRoles.has(role)) {

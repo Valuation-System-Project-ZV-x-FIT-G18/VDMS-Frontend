@@ -11,10 +11,10 @@ export interface DashboardStats {
 
 export const dashboardService = {
   // Get dashboard statistics
-  getStats: async (): Promise<DashboardStats> => {
+  getStats: async (clientId?: string): Promise<DashboardStats> => {
     try {
       // Use normalized project mapping from projectService
-      const projects = await projectService.getAll();
+      const projects = await projectService.getAll({ clientId });
 
       const stats: DashboardStats = {
         totalProjects: projects.length,
@@ -36,9 +36,9 @@ export const dashboardService = {
   },
 
   // Get recent projects
-  getRecentProjects: async (limit: number = 5): Promise<Project[]> => {
+  getRecentProjects: async (limit: number = 5, clientId?: string): Promise<Project[]> => {
     try {
-      return await projectService.getRecent(limit);
+      return await projectService.getRecent(limit, { clientId });
     } catch (error) {
       console.error('Error fetching recent projects:', error);
       throw error;
