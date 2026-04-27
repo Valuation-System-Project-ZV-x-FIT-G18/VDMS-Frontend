@@ -1,78 +1,82 @@
-import { useState } from 'react';
-import type { CSSProperties } from 'react';
+import { Dropdown, Modal } from 'antd';
 import { BellOutlined, CloseOutlined } from '@ant-design/icons';
+import { useState, useEffect } from 'react';
 import { theme } from '../../styles/theme';
+import { notificationService } from '../../services/notificationService';
+import type { Notification } from '../../services/notificationService';
 
-interface Notification {
-  id: string;
-  type: 'success' | 'warning' | 'error' | 'info';
-  title: string;
-  message?: string;
-  timestamp: string;
-  read: boolean;
-}
+// Hardcoded for now — later this will come from auth/login
+const CURRENT_USER_ID = 'client-001';
 
 const NotificationsDropdown = () => {
   const [isOpen, setIsOpen] = useState(false);
+  const [selectedNotification, setSelectedNotification] =
+    useState<Notification | null>(null);
   const [showAllModal, setShowAllModal] = useState(false);
-  const [selectedNotification, setSelectedNotification] = useState<Notification | null>(null);
+  const [notifications, setNotifications] = useState<Notification[]>([]);
+  const [loading, setLoading] = useState(true);
 
-  // Mock notifications - will come from API/WebSocket later
-  const [notifications, setNotifications] = useState<Notification[]>([
-    {
-      id: '1',
-      type: 'success',
-      title: 'Project #2023-003 Report completed',
-      message: 'The valuation report for Project #2023-003 has been completed and is ready for review. The property located at 89 Duplication Rd, Col 03 has been valued at LKR 45,000,000.',
-      timestamp: '2 minutes ago',
-      read: false,
-    },
-    {
-      id: '2',
-      type: 'warning',
-      title: 'Documents missing for Project #2023-002',
-      message: 'The following documents are still pending for Project #2023-002: Survey Plan, Deed Copy (Prior 30 Years). Please upload these documents to proceed with the valuation process.',
-      timestamp: '1 hour ago',
-      read: false,
-    },
-    {
-      id: '3',
-      type: 'error',
-      title: 'Invoice due for Project #2023-004',
-      message: 'Payment for Project #2023-004 is overdue. The invoice amount of LKR 150,000 was due on October 20, 2023. Please process the payment to avoid any delays.',
-      timestamp: '3 hours ago',
-      read: false,
-    },
-    {
-      id: '4',
-      type: 'info',
-      title: 'New message from Support Team',
-      message: 'You have received a new message regarding your query about property valuation guidelines. Our support team has provided detailed information about the latest regulations.',
-      timestamp: 'Yesterday',
-      read: false,
-    },
-    {
-      id: '5',
-      type: 'info',
-      title: 'Weekly Summary Available',
-      message: 'Your weekly summary report for October 16-22, 2023 is now available. This week you had 5 new projects, 3 completed valuations, and 2 pending payments.',
-      timestamp: '2 days ago',
-      read: true,
-    },
-  ]);
+  // ── Fetch notifications from backend ──────────────
+  useEffect(() => {
+    const fetchNotifications = async () => {
+      try {
+        setLoading(true);
+        const data = await notificationService.getForUser(CURRENT_USER_ID);
+        setNotifications(data);
+      } catch (error) {
+        console.error('Failed to fetch notifications:', error);
+      } finally {
+        setLoading(false);
+      }
+    };
 
-  const unreadCount = notifications.filter(n => !n.read).length;
+    fetchNotifications();
+  }, []);
 
-  const markAsRead = (id: string) => {
-    setNotifications(prev =>
-      prev.map(n => (n.id === id ? { ...n, read: true } : n))
-    );
+  const unreadCount = notifications.filter((n) => !n.isRead).length;
+
+  // ── Mark one as read ──────────────────────────────
+  const markAsRead = async (id: string) => {
+    try {
+      await notificationService.markAsRead(id);
+      setNotifications((prev) =>
+        prev.map((n) => (n.id === id ? { ...n, isRead: true } : n)),
+      );
+    } catch (error) {
+      console.error('Failed to mark as read:', error);
+    }
+  };
+
+  // ── Mark all as read ──────────────────────────────
+  const markAllAsRead = async () => {
+    try {
+      await notificationService.markAllAsRead(CURRENT_USER_ID);
+      setNotifications((prev) => prev.map((n) => ({ ...n, isRead: true })));
+    } catch (error) {
+      console.error('Failed to mark all as read:', error);
+    }
   };
 
   const handleNotificationClick = (notification: Notification) => {
     markAsRead(notification.id);
     setSelectedNotification(notification);
     setIsOpen(false);
+  };
+
+  // ── Format timestamp ──────────────────────────────
+  const formatTime = (createdAt: string): string => {
+    const now = new Date();
+    const created = new Date(createdAt);
+    const diffMs = now.getTime() - created.getTime();
+    const diffMins = Math.floor(diffMs / 60000);
+    const diffHours = Math.floor(diffMs / 3600000);
+    const diffDays = Math.floor(diffMs / 86400000);
+
+    if (diffMins < 1) return 'Just now';
+    if (diffMins < 60) return `${diffMins} minutes ago`;
+    if (diffHours < 24) return `${diffHours} hour${diffHours > 1 ? 's' : ''} ago`;
+    if (diffDays === 1) return 'Yesterday';
+    return `${diffDays} days ago`;
   };
 
   const getColorByType = (type: Notification['type']) => {
@@ -85,329 +89,377 @@ const NotificationsDropdown = () => {
     return colors[type];
   };
 
-  // Styles
-  const bellButtonStyle: CSSProperties = {
-    width: '40px',
-    height: '40px',
-    borderRadius: '50%',
-    backgroundColor: 'white',
-    border: 'none',
-    cursor: 'pointer',
-    display: 'flex',
-    alignItems: 'center',
-    justifyContent: 'center',
-    position: 'relative',
-  };
+  // ── Dropdown content ──────────────────────────────
+  const dropdownContent = (
+    <div
+      style={{
+        width: '380px',
+        backgroundColor: 'white',
+        border: '1px solid #000',
+        borderRadius: '8px',
+        boxShadow: '0 4px 12px rgba(0, 0, 0, 0.15)',
+        overflow: 'hidden',
+      }}
+    >
+      {/* Header */}
+      <div
+        style={{
+          padding: '16px 20px',
+          borderBottom: '1px solid #f0f0f0',
+          display: 'flex',
+          justifyContent: 'space-between',
+          alignItems: 'center',
+        }}
+      >
+        <h3
+          style={{
+            fontSize: '16px',
+            fontWeight: 600,
+            color: theme.colors.text.primary,
+            margin: 0,
+          }}
+        >
+          Notifications
+        </h3>
+        <div style={{ display: 'flex', gap: '12px', alignItems: 'center' }}>
+          {unreadCount > 0 && (
+            <button
+              onClick={(e) => {
+                e.stopPropagation();
+                markAllAsRead();
+              }}
+              style={{
+                background: 'none',
+                border: 'none',
+                color: theme.colors.text.secondary,
+                fontSize: '12px',
+                cursor: 'pointer',
+              }}
+            >
+              Mark all read
+            </button>
+          )}
+          <button
+            onClick={(e) => {
+              e.stopPropagation();
+              setShowAllModal(true);
+              setIsOpen(false);
+            }}
+            style={{
+              background: 'none',
+              border: 'none',
+              color: theme.colors.primary.main,
+              fontSize: '14px',
+              cursor: 'pointer',
+              fontWeight: 500,
+            }}
+          >
+            View All
+          </button>
+        </div>
+      </div>
 
-  const badgeStyle: CSSProperties = {
-    position: 'absolute',
-    top: '6px',
-    right: '6px',
-    width: '18px',
-    height: '18px',
-    backgroundColor: '#ff4d4f',
-    borderRadius: '50%',
-    display: 'flex',
-    alignItems: 'center',
-    justifyContent: 'center',
-    fontSize: '11px',
-    fontWeight: 600,
-    color: 'white',
-  };
-
-  const dropdownStyle: CSSProperties = {
-    position: 'absolute',
-    top: '50px',
-    right: '0',
-    width: '380px',
-    maxHeight: '500px',
-    backgroundColor: 'white',
-    border: '1px solid #000',
-    borderRadius: '8px',
-    boxShadow: '0 4px 12px rgba(0, 0, 0, 0.15)',
-    zIndex: 1000,
-    overflow: 'hidden',
-  };
-
-  const dropdownHeaderStyle: CSSProperties = {
-    padding: '16px 20px',
-    borderBottom: '1px solid #f0f0f0',
-    display: 'flex',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-  };
-
-  const titleStyle: CSSProperties = {
-    fontSize: '16px',
-    fontWeight: 600,
-    color: theme.colors.text.primary,
-  };
-
-  const viewAllButtonStyle: CSSProperties = {
-    background: 'none',
-    border: 'none',
-    color: theme.colors.primary.main,
-    fontSize: '14px',
-    cursor: 'pointer',
-    fontWeight: 500,
-  };
-
-  const notificationListStyle: CSSProperties = {
-    maxHeight: '400px',
-    overflowY: 'auto',
-  };
-
-  const notificationItemStyle = (read: boolean): CSSProperties => ({
-    padding: '16px 20px',
-    borderBottom: '1px solid #f0f0f0',
-    cursor: 'pointer',
-    backgroundColor: read ? 'white' : '#f6ffed',
-    transition: 'background-color 0.2s',
-    display: 'flex',
-    gap: '12px',
-  });
-
-  const notificationDotStyle = (color: string): CSSProperties => ({
-    width: '8px',
-    height: '8px',
-    borderRadius: '50%',
-    backgroundColor: color,
-    marginTop: '6px',
-    flexShrink: 0,
-  });
-
-  const notificationContentStyle: CSSProperties = {
-    flex: 1,
-  };
-
-  const notificationTitleStyle: CSSProperties = {
-    fontSize: '14px',
-    fontWeight: 500,
-    color: theme.colors.text.primary,
-    marginBottom: '4px',
-  };
-
-  const notificationTimeStyle: CSSProperties = {
-    fontSize: '12px',
-    color: theme.colors.text.secondary,
-  };
-
-  const modalOverlayStyle: CSSProperties = {
-    position: 'fixed',
-    top: 0,
-    left: 0,
-    right: 0,
-    bottom: 0,
-    backgroundColor: 'rgba(0, 0, 0, 0.5)',
-    display: 'flex',
-    alignItems: 'center',
-    justifyContent: 'center',
-    zIndex: 2000,
-  };
-
-  const modalContentStyle: CSSProperties = {
-    backgroundColor: 'white',
-    borderRadius: '8px',
-    padding: '32px',
-    maxWidth: '600px',
-    width: '90%',
-    maxHeight: '80vh',
-    overflow: 'auto',
-    position: 'relative',
-  };
-
-  const allNotificationsModalContentStyle: CSSProperties = {
-    ...modalContentStyle,
-    border: '1px solid #000',
-  };
-
-  const notificationDetailModalContentStyle: CSSProperties = {
-    ...modalContentStyle,
-    border: '1px solid #000',
-  };
-
-  const modalHeaderStyle: CSSProperties = {
-    display: 'flex',
-    justifyContent: 'space-between',
-    alignItems: 'flex-start',
-    marginBottom: '20px',
-  };
-
-  const modalTitleStyle: CSSProperties = {
-    fontSize: '20px',
-    fontWeight: 600,
-    color: theme.colors.text.primary,
-    marginBottom: '8px',
-  };
-
-  const allNotificationsCountBadgeStyle: CSSProperties = {
-    minWidth: '28px',
-    height: '28px',
-    borderRadius: '50%',
-    backgroundColor: theme.colors.background.default,
-    border: '2px solid #000',
-    color: '#000',
-    display: 'inline-flex',
-    alignItems: 'center',
-    justifyContent: 'center',
-    fontSize: '13px',
-    fontWeight: 700,
-    lineHeight: 1,
-    padding: '0 8px',
-  };
-
-  const closeButtonStyle: CSSProperties = {
-    background: 'none',
-    border: 'none',
-    fontSize: '20px',
-    cursor: 'pointer',
-    color: theme.colors.text.secondary,
-  };
-
-  const modalMessageStyle: CSSProperties = {
-    fontSize: '14px',
-    color: theme.colors.text.primary,
-    lineHeight: '1.6',
-  };
+      {/* Notification List */}
+      <div style={{ maxHeight: '400px', overflowY: 'auto' }}>
+        {loading ? (
+          <div
+            style={{
+              padding: '40px',
+              textAlign: 'center',
+              color: theme.colors.text.secondary,
+            }}
+          >
+            Loading...
+          </div>
+        ) : notifications.length === 0 ? (
+          <div
+            style={{
+              padding: '40px',
+              textAlign: 'center',
+              color: theme.colors.text.secondary,
+            }}
+          >
+            No notifications
+          </div>
+        ) : (
+          notifications.slice(0, 5).map((notification) => (
+            <div
+              key={notification.id}
+              onClick={() => handleNotificationClick(notification)}
+              style={{
+                padding: '16px 20px',
+                borderBottom: '1px solid #f0f0f0',
+                cursor: 'pointer',
+                backgroundColor: notification.isRead ? 'white' : '#f6ffed',
+                display: 'flex',
+                gap: '12px',
+                transition: 'background-color 0.2s',
+              }}
+              onMouseEnter={(e) => {
+                e.currentTarget.style.backgroundColor = notification.isRead
+                  ? '#fafafa'
+                  : '#e6f7e6';
+              }}
+              onMouseLeave={(e) => {
+                e.currentTarget.style.backgroundColor = notification.isRead
+                  ? 'white'
+                  : '#f6ffed';
+              }}
+            >
+              <div
+                style={{
+                  width: '8px',
+                  height: '8px',
+                  borderRadius: '50%',
+                  backgroundColor: getColorByType(notification.type),
+                  marginTop: '6px',
+                  flexShrink: 0,
+                }}
+              />
+              <div style={{ flex: 1 }}>
+                <div
+                  style={{
+                    fontSize: '14px',
+                    fontWeight: 500,
+                    color: theme.colors.text.primary,
+                    marginBottom: '4px',
+                  }}
+                >
+                  {notification.title}
+                </div>
+                <div
+                  style={{
+                    fontSize: '12px',
+                    color: theme.colors.text.secondary,
+                  }}
+                >
+                  {formatTime(notification.createdAt)}
+                </div>
+              </div>
+              <div style={{ color: theme.colors.text.secondary }}>›</div>
+            </div>
+          ))
+        )}
+      </div>
+    </div>
+  );
 
   return (
-    <div style={{ position: 'relative' }}>
-      {/* Bell Icon Button */}
-      <button 
-        style={bellButtonStyle}
-        onClick={() => setIsOpen(!isOpen)}
+    <>
+      {/* Bell Icon with Dropdown */}
+      <Dropdown
+        open={isOpen}
+        onOpenChange={setIsOpen}
+        dropdownRender={() => dropdownContent}
+        trigger={['click']}
+        placement="bottomRight"
       >
-        <BellOutlined style={{ fontSize: '18px', color: '#595959' }} />
-        {unreadCount > 0 && (
-          <span style={badgeStyle}>{unreadCount}</span>
-        )}
-      </button>
-
-      {/* Dropdown */}
-      {isOpen && (
-        <>
-          <div 
+        <div style={{ position: 'relative', cursor: 'pointer' }}>
+          <div
             style={{
-              position: 'fixed',
-              top: 0,
-              left: 0,
-              right: 0,
-              bottom: 0,
-              zIndex: 999,
+              width: '40px',
+              height: '40px',
+              borderRadius: '50%',
+              backgroundColor: 'white',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              position: 'relative',
             }}
-            onClick={() => setIsOpen(false)}
-          />
-          <div style={dropdownStyle}>
-            {/* Header */}
-            <div style={dropdownHeaderStyle}>
-              <h3 style={titleStyle}>Notifications</h3>
-              <button 
-                style={viewAllButtonStyle}
-                onClick={() => {
-                  setShowAllModal(true);
-                  setIsOpen(false);
+          >
+            <BellOutlined style={{ fontSize: '18px', color: '#595959' }} />
+            {unreadCount > 0 && (
+              <span
+                style={{
+                  position: 'absolute',
+                  top: '6px',
+                  right: '6px',
+                  width: '18px',
+                  height: '18px',
+                  backgroundColor: '#ff4d4f',
+                  borderRadius: '50%',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  fontSize: '11px',
+                  fontWeight: 600,
+                  color: 'white',
                 }}
               >
-                View All
-              </button>
-            </div>
-
-            {/* Notification List */}
-            <div style={notificationListStyle}>
-              {notifications.slice(0, 5).map(notification => (
-                <div
-                  key={notification.id}
-                  style={notificationItemStyle(notification.read)}
-                  onClick={() => handleNotificationClick(notification)}
-                  onMouseEnter={(e) => {
-                    e.currentTarget.style.backgroundColor = notification.read ? '#fafafa' : '#e6f7e6';
-                  }}
-                  onMouseLeave={(e) => {
-                    e.currentTarget.style.backgroundColor = notification.read ? 'white' : '#f6ffed';
-                  }}
-                >
-                  <div style={notificationDotStyle(getColorByType(notification.type))} />
-                  <div style={notificationContentStyle}>
-                    <div style={notificationTitleStyle}>{notification.title}</div>
-                    <div style={notificationTimeStyle}>{notification.timestamp}</div>
-                  </div>
-                  <div style={{ color: theme.colors.text.secondary }}>›</div>
-                </div>
-              ))}
-            </div>
+                {unreadCount}
+              </span>
+            )}
           </div>
-        </>
-      )}
+        </div>
+      </Dropdown>
 
       {/* View All Modal */}
-      {showAllModal && (
-        <div style={modalOverlayStyle} onClick={() => setShowAllModal(false)}>
-          <div style={allNotificationsModalContentStyle} onClick={(e) => e.stopPropagation()}>
-            <div style={modalHeaderStyle}>
-              <div>
-                <h2 style={{ ...modalTitleStyle, marginBottom: 0 }}>All Notifications</h2>
-              </div>
-              <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-                <span style={allNotificationsCountBadgeStyle}>{notifications.length}</span>
-                <button style={closeButtonStyle} onClick={() => setShowAllModal(false)}>
-                  <CloseOutlined />
-                </button>
-              </div>
-            </div>
+      <Modal
+        open={showAllModal}
+        onCancel={() => setShowAllModal(false)}
+        footer={null}
+        width={600}
+        closeIcon={<CloseOutlined />}
+        styles={{
+          body: { padding: '32px' },
+          header: { borderBottom: '1px solid #f0f0f0' },
+        }}
+      >
+        <div
+          style={{
+            display: 'flex',
+            justifyContent: 'space-between',
+            alignItems: 'center',
+            marginBottom: '20px',
+          }}
+        >
+          <h2
+            style={{
+              fontSize: '20px',
+              fontWeight: 600,
+              color: theme.colors.text.primary,
+              margin: 0,
+            }}
+          >
+            All Notifications
+          </h2>
+          <span
+            style={{
+              minWidth: '28px',
+              height: '28px',
+              borderRadius: '50%',
+              backgroundColor: theme.colors.background.default,
+              border: '2px solid #000',
+              color: '#000',
+              display: 'inline-flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              fontSize: '13px',
+              fontWeight: 700,
+              padding: '0 8px',
+            }}
+          >
+            {notifications.length}
+          </span>
+        </div>
 
-            {/* All Notifications List */}
-            <div>
-              {notifications.map(notification => (
+        <div>
+          {notifications.map((notification) => (
+            <div
+              key={notification.id}
+              onClick={() => {
+                handleNotificationClick(notification);
+                setShowAllModal(false);
+              }}
+              style={{
+                padding: '16px 20px',
+                borderBottom: '1px solid #f0f0f0',
+                cursor: 'pointer',
+                backgroundColor: notification.isRead ? 'white' : '#f6ffed',
+                borderRadius: '6px',
+                marginBottom: '8px',
+                display: 'flex',
+                gap: '12px',
+              }}
+            >
+              <div
+                style={{
+                  width: '8px',
+                  height: '8px',
+                  borderRadius: '50%',
+                  backgroundColor: getColorByType(notification.type),
+                  marginTop: '6px',
+                  flexShrink: 0,
+                }}
+              />
+              <div style={{ flex: 1 }}>
                 <div
-                  key={notification.id}
                   style={{
-                    ...notificationItemStyle(notification.read),
-                    borderRadius: '6px',
-                    marginBottom: '8px',
-                  }}
-                  onClick={() => {
-                    handleNotificationClick(notification);
-                    setShowAllModal(false);
+                    fontSize: '14px',
+                    fontWeight: 500,
+                    color: theme.colors.text.primary,
+                    marginBottom: '4px',
                   }}
                 >
-                  <div style={notificationDotStyle(getColorByType(notification.type))} />
-                  <div style={notificationContentStyle}>
-                    <div style={notificationTitleStyle}>{notification.title}</div>
-                    <div style={notificationTimeStyle}>{notification.timestamp}</div>
-                  </div>
+                  {notification.title}
                 </div>
-              ))}
+                <div
+                  style={{
+                    fontSize: '12px',
+                    color: theme.colors.text.secondary,
+                  }}
+                >
+                  {formatTime(notification.createdAt)}
+                </div>
+              </div>
             </div>
-          </div>
+          ))}
         </div>
-      )}
+      </Modal>
 
       {/* Single Notification Detail Modal */}
-      {selectedNotification && (
-        <div style={modalOverlayStyle} onClick={() => setSelectedNotification(null)}>
-          <div style={notificationDetailModalContentStyle} onClick={(e) => e.stopPropagation()}>
-            <div style={modalHeaderStyle}>
-              <div style={{ flex: 1 }}>
-                <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '8px' }}>
-                  <div style={{ ...notificationDotStyle(getColorByType(selectedNotification.type)), marginTop: 0 }} />
-                  <h2 style={{ ...modalTitleStyle, marginBottom: 0 }}>{selectedNotification.title}</h2>
-                </div>
-                <p style={{ fontSize: '13px', color: theme.colors.text.secondary }}>
-                  {selectedNotification.timestamp}
-                </p>
-              </div>
-              <button style={closeButtonStyle} onClick={() => setSelectedNotification(null)}>
-                <CloseOutlined />
-              </button>
+      <Modal
+        open={!!selectedNotification}
+        onCancel={() => setSelectedNotification(null)}
+        footer={null}
+        width={600}
+        closeIcon={<CloseOutlined />}
+        styles={{
+          body: { padding: '32px' },
+          header: { borderBottom: '1px solid #f0f0f0' },
+        }}
+      >
+        {selectedNotification && (
+          <>
+            <div
+              style={{
+                display: 'flex',
+                alignItems: 'center',
+                gap: '12px',
+                marginBottom: '8px',
+              }}
+            >
+              <div
+                style={{
+                  width: '8px',
+                  height: '8px',
+                  borderRadius: '50%',
+                  backgroundColor: getColorByType(selectedNotification.type),
+                }}
+              />
+              <h2
+                style={{
+                  fontSize: '20px',
+                  fontWeight: 600,
+                  color: theme.colors.text.primary,
+                  margin: 0,
+                }}
+              >
+                {selectedNotification.title}
+              </h2>
             </div>
-
-            <div style={modalMessageStyle}>
+            <p
+              style={{
+                fontSize: '13px',
+                color: theme.colors.text.secondary,
+                marginBottom: '20px',
+              }}
+            >
+              {formatTime(selectedNotification.createdAt)}
+            </p>
+            <div
+              style={{
+                fontSize: '14px',
+                color: theme.colors.text.primary,
+                lineHeight: '1.6',
+              }}
+            >
               {selectedNotification.message}
             </div>
-          </div>
-        </div>
-      )}
-    </div>
+          </>
+        )}
+      </Modal>
+    </>
   );
 };
 

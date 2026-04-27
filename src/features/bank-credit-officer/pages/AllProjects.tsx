@@ -1,36 +1,62 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import type { CSSProperties } from 'react';
 import ProjectsTable from '../../../components/organisms/ProjectsTable';
 import ValuationJobDetail from './ValuationJobDetail';
-import { mockProjects } from '../utils/mockData';
+import { projectService } from '../../../services/projectService';
+import type { Project } from '../types';
 import { theme } from '../../../styles/theme';
 
 const AllProjectsPage = () => {
   const [statusFilter, setStatusFilter] = useState<string>('All');
   const [paymentFilter, setPaymentFilter] = useState<string>('All');
+  const [searchQuery, setSearchQuery] = useState<string>('');
   const [dateFormat, setDateFormat] = useState<string>('mm/dd/yy');
-  const [selectedProjectId, setSelectedProjectId] = useState<string | null>(null);
+  const [selectedProject, setSelectedProject] = useState<Project | null>(null);
+  
+  // ✅ NEW: State for API data
+  const [projects, setProjects] = useState<Project[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
-  const filteredProjects = mockProjects.filter((project) => {
-    const matchesStatus = statusFilter === 'All' || project.status === statusFilter;
-    const matchesPayment = paymentFilter === 'All' || project.paymentStatus === paymentFilter;
-    return matchesStatus && matchesPayment;
-  });
+  // ✅ NEW: Fetch projects from backend
+  useEffect(() => {
+    const fetchProjects = async () => {
+      try {
+        setLoading(true);
+        setError(null);
+        
+        const data = await projectService.getAll({
+          status: statusFilter !== 'All' ? statusFilter : undefined,
+          paymentStatus: paymentFilter !== 'All' ? paymentFilter : undefined,
+          search: searchQuery || undefined,
+        });
+        
+        setProjects(data);
+      } catch (err) {
+        setError('Failed to load projects');
+        console.error('Error:', err);
+      } finally {
+        setLoading(false);
+      }
+    };
 
-  if (selectedProjectId) {
+    fetchProjects();
+  }, [statusFilter, paymentFilter, searchQuery]);
+
+  if (selectedProject) {
     return (
       <ValuationJobDetail
-        projectId={selectedProjectId}
-        onBack={() => setSelectedProjectId(null)}
+        projectId={selectedProject.id}
+        initialProject={selectedProject}
+        onBack={() => setSelectedProject(null)}
       />
     );
   }
 
-  // ✅ Added horizontal spacing
   const containerStyle: CSSProperties = {
     maxWidth: '1400px',
     margin: '0 auto',
-    padding: '0 32px',   // 👈 space from left & right
+    padding: '0 32px',
     boxSizing: 'border-box',
   };
 
@@ -94,6 +120,24 @@ const AllProjectsPage = () => {
     minWidth: '150px',
   };
 
+  const loadingStyle: CSSProperties = {
+    textAlign: 'center',
+    padding: '40px',
+    color: theme.colors.text.secondary,
+  };
+
+  const errorStyle: CSSProperties = {
+    textAlign: 'center',
+    padding: '40px',
+    color: '#dc2626',
+  };
+
+  const emptyStyle: CSSProperties = {
+    textAlign: 'center',
+    padding: '40px',
+    color: theme.colors.text.secondary,
+  };
+
   return (
     <div style={containerStyle}>
       {/* Header */}
@@ -111,6 +155,8 @@ const AllProjectsPage = () => {
             type="text"
             placeholder="search by project id or location"
             style={searchInputStyle}
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
           />
         </div>
 
@@ -149,12 +195,52 @@ const AllProjectsPage = () => {
         </select>
       </div>
 
-      {/* Projects Table */}
-      <ProjectsTable
-        projects={filteredProjects}
-        showSearch={false}
-        onProjectClick={(projectId) => setSelectedProjectId(projectId)}
-      />
+      {/* ✅ Loading State */}
+      {loading && (
+        <div style={loadingStyle}>Loading projects...</div>
+      )}
+
+      {/* ✅ Error State */}
+      {error && (
+        <div style={errorStyle}>
+          <p>{error}</p>
+          <button 
+            onClick={() => window.location.reload()}
+            style={{
+              marginTop: '16px',
+              padding: '8px 16px',
+              backgroundColor: theme.colors.primary.main,
+              color: 'white',
+              border: 'none',
+              borderRadius: '6px',
+              cursor: 'pointer',
+            }}
+          >
+            Retry
+          </button>
+        </div>
+      )}
+
+      {/* ✅ Projects Table - Using REAL data */}
+      {!loading && !error && projects.length > 0 && (
+        <ProjectsTable
+          projects={projects}
+          showSearch={false}
+          onProjectClick={(projectId) => {
+            const selected = projects.find(
+              (project) => project.id === projectId || project.projectId === projectId,
+            );
+            if (selected) {
+              setSelectedProject(selected);
+            }
+          }}
+        />
+      )}
+
+      {/* ✅ Empty State */}
+      {!loading && !error && projects.length === 0 && (
+        <div style={emptyStyle}>No projects found.</div>
+      )}
     </div>
   );
 };
