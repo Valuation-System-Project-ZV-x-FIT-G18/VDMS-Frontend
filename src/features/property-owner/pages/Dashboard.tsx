@@ -13,9 +13,14 @@ import ValuationJobDetail from './ValuationJobDetail';
 import { projectService } from '../../../services/projectService';
 import type { Project } from '../../../services/projectService';
 import { theme } from '../../../styles/theme';
+import { getPortalClientId, uiDefaults } from '../../../config/portalConfig';
 
-const DEFAULT_OWNER_CLIENT_ID = 'client-001';
+const OWNER_CLIENT_ID = getPortalClientId('owner');
+const retryButtonLabel = 'Retry';
 
+/**
+ * Builds owner dashboard metrics from the same project list used for recent-row navigation.
+ */
 const DashboardPage = () => {
   const [selectedValuationJob, setSelectedValuationJob] = useState<Project | null>(null);
   const [valuationJobs, setValuationJobs] = useState<Project[]>([]);
@@ -23,13 +28,15 @@ const DashboardPage = () => {
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
+    /**
+     * Uses one data source call so KPI cards and the recent table stay aligned.
+     */
     const fetchOwnerDashboardData = async () => {
       try {
         setLoading(true);
         setError(null);
 
-        const clientId = localStorage.getItem('ownerClientId') || DEFAULT_OWNER_CLIENT_ID;
-        const ownerValuationJobs = await projectService.getAll({ clientId });
+        const ownerValuationJobs = await projectService.getAll({ clientId: OWNER_CLIENT_ID });
         setValuationJobs(ownerValuationJobs);
       } catch (err) {
         setError('Failed to load dashboard data');
@@ -65,7 +72,7 @@ const DashboardPage = () => {
     pendingDocuments: valuationJobs.filter((p) => p.status === 'Awaiting Docs').length,
   };
 
-  const recentValuationJobs = valuationJobs.slice(0, 5);
+  const recentValuationJobs = valuationJobs.slice(0, uiDefaults.recentItemsLimit);
 
   const containerStyle: CSSProperties = {
     maxWidth: '1400px',
@@ -134,7 +141,7 @@ const DashboardPage = () => {
               cursor: 'pointer',
             }}
           >
-            Retry
+            {retryButtonLabel}
           </button>
         </div>
       </div>
