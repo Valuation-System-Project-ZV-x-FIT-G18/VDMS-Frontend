@@ -60,7 +60,26 @@ export const invoiceService = {
   },
 
   notifyCoordinator: async (id: string): Promise<Invoice> => {
-    const response = await api.patch<Invoice>(`/invoices/${id}/notify`);
+    try {
+      const response = await api.patch<Invoice>(`/invoices/${id}/notify-l1-manager`);
+      return response.data;
+    } catch {
+      const fallback = await api.patch<Invoice>(`/invoices/${id}/notify`);
+      return fallback.data;
+    }
+  },
+
+  removePaymentProof: async (id: string): Promise<Invoice> => {
+    const response = await api.patch<Invoice>(`/invoices/${id}/payment-proof/remove`);
+    return response.data;
+  },
+
+  createFromL1Approval: async (input: {
+    projectId: string;
+    amount: number;
+    l1ManagerId?: string;
+  }): Promise<Invoice> => {
+    const response = await api.patch<Invoice>('/invoices/l1-approval/create', input);
     return response.data;
   },
 };

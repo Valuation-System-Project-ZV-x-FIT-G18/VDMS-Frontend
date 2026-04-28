@@ -1,18 +1,16 @@
-import { useState } from "react";
 import type { CSSProperties } from "react";
 import {
-  MessageOutlined,
   ThunderboltFilled,
   MenuOutlined,
   CloseOutlined,
 } from "@ant-design/icons";
 import NotificationsDropdown from "../components/organisms/NotificationsDropdown";
-import MessagingSystem from "../components/organisms/MessagingSystem";
 import { theme } from "../styles/theme";
 
 interface HeaderProps {
   userName: string;
   userRole: string;
+  role?: string;
   onMenuToggle?: () => void;
   isMobile?: boolean;
   menuOpen?: boolean;
@@ -21,12 +19,11 @@ interface HeaderProps {
 const Header = ({
   userName,
   userRole,
+  role,
   onMenuToggle,
   isMobile,
   menuOpen,
 }: HeaderProps) => {
-  const [showMessaging, setShowMessaging] = useState(false);
-
   const headerStyle: CSSProperties = {
     height: "64px",
     backgroundColor: "#e6f7ff",
@@ -165,17 +162,7 @@ const Header = ({
         </div>
 
         <div style={rightStyle}>
-          <NotificationsDropdown />
-
-          {/* Message Icon - Opens Messaging System */}
-          <button
-            style={iconButtonStyle}
-            onClick={() => setShowMessaging(true)}
-          >
-            <MessageOutlined
-              style={{ fontSize: isMobile ? "16px" : "18px", color: "#595959" }}
-            />
-          </button>
+          <NotificationsDropdown role={role} />
 
           <div style={userInfoStyle}>
             <span style={userNameStyle}>{userName}</span>
@@ -185,11 +172,6 @@ const Header = ({
           <div style={avatarStyle}>{userName.charAt(0).toUpperCase()}</div>
         </div>
       </header>
-
-      {/* Messaging System Modal */}
-      {showMessaging && (
-        <MessagingSystem onClose={() => setShowMessaging(false)} />
-      )}
     </>
   );
 };

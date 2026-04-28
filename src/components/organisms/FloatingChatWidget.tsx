@@ -14,6 +14,39 @@ interface FloatingChatWidgetProps {
 
 const receiverRoles = new Set(['coordinator', 'technical-officer', 'l1-manager', 'l2-manager', 'l3-manager']);
 
+const areMessagesEqual = (left: ChatMessage[], right: ChatMessage[]) => {
+  if (left.length !== right.length) {
+    return false;
+  }
+
+  return left.every((message, index) => {
+    const candidate = right[index];
+    return (
+      message.id === candidate.id &&
+      message.text === candidate.text &&
+      message.senderId === candidate.senderId &&
+      message.createdAt === candidate.createdAt
+    );
+  });
+};
+
+const areConversationsEqual = (left: ChatConversation[], right: ChatConversation[], userId: string) => {
+  if (left.length !== right.length) {
+    return false;
+  }
+
+  return left.every((conversation, index) => {
+    const candidate = right[index];
+    return (
+      conversation.id === candidate.id &&
+      conversation.updatedAt === candidate.updatedAt &&
+      conversation.lastMessage === candidate.lastMessage &&
+      conversation.valuationJobId === candidate.valuationJobId &&
+      (conversation.unreadBy?.[userId] || 0) === (candidate.unreadBy?.[userId] || 0)
+    );
+  });
+};
+
 /**
  * Provides compact real-time chat for operational roles while remaining non-invasive to page layout.
  */
@@ -23,6 +56,7 @@ const FloatingChatWidget = ({ role, userNameHint }: FloatingChatWidgetProps) => 
   const [selectedConversationId, setSelectedConversationId] = useState<string | null>(null);
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [input, setInput] = useState('');
+  const isSinglePaneRole = role === 'l1-manager';
 
   const identity = useMemo(
     () => getChatIdentity((role as Parameters<typeof getChatIdentity>[0]) || undefined, userNameHint),
@@ -34,13 +68,34 @@ const FloatingChatWidget = ({ role, userNameHint }: FloatingChatWidgetProps) => 
     [conversations, selectedConversationId],
   );
 
+  const markConversationReadLocally = useCallback(
+    (conversationId: string) => {
+      setConversations((prev) =>
+        prev.map((conv) =>
+          conv.id === conversationId
+            ? {
+                ...conv,
+                unreadBy: {
+                  ...(conv.unreadBy || {}),
+                  [identity.id]: 0,
+                },
+              }
+            : conv,
+        ),
+      );
+    },
+    [identity.id],
+  );
+
   /**
    * Keeps sidebar conversations fresh so unread badges and latest previews stay accurate.
    */
   const refreshConversations = useCallback(async () => {
     try {
       const list = await messagingService.listConversations(identity.id, identity.role);
-      setConversations(list);
+      const nextConversations = list;
+      setConversations((prev) => (areConversationsEqual(prev, nextConversations, identity.id) ? prev : nextConversations));
+
       if (!selectedConversationId && list.length > 0) {
         setSelectedConversationId(list[0].id);
       }
@@ -55,11 +110,28 @@ const FloatingChatWidget = ({ role, userNameHint }: FloatingChatWidgetProps) => 
   const refreshMessages = useCallback(async (conversationId: string) => {
     try {
       const list = await messagingService.listMessages(conversationId);
-      setMessages(list);
+      setMessages((prev) => (areMessagesEqual(prev, list) ? prev : list));
     } catch (error) {
       console.error('Failed to refresh messages:', error);
     }
   }, []);
+
+  const markConversationAsRead = useCallback(async (conversationId: string) => {
+    markConversationReadLocally(conversationId);
+
+    try {
+      await messagingService.markConversationAsRead(conversationId, identity.id);
+    } catch (error) {
+      console.error('Failed to mark conversation as read:', error);
+    } finally {
+      await refreshConversations();
+    }
+  }, [identity.id, markConversationReadLocally, refreshConversations]);
+
+  const handleSelectConversation = (conversationId: string) => {
+    setSelectedConversationId(conversationId);
+    void markConversationAsRead(conversationId);
+  };
 
   useEffect(() => {
     if (!role || !receiverRoles.has(role)) return;
@@ -74,32 +146,36 @@ const FloatingChatWidget = ({ role, userNameHint }: FloatingChatWidgetProps) => 
     if (!role || !receiverRoles.has(role)) return;
 
     const pollId = window.setInterval(() => {
-      void refreshConversations();
-      if (selectedConversationId) {
-        void refreshMessages(selectedConversationId);
-      }
+      void (async () => {
+        if (selectedConversationId) {
+          await refreshMessages(selectedConversationId);
+        }
+        await refreshConversations();
+      })();
     }, uiDefaults.chatPollIntervalMs);
 
     return () => window.clearInterval(pollId);
   }, [role, selectedConversationId, refreshConversations, refreshMessages]);
 
   useEffect(() => {
-    if (!selectedConversationId) {
+    if (!role || !receiverRoles.has(role) || !selectedConversationId) {
       return;
     }
 
-    const loadThreadId = window.setTimeout(() => {
+    const preloadThreadId = window.setTimeout(() => {
       void refreshMessages(selectedConversationId);
     }, 0);
-    void messagingService.markConversationAsRead(selectedConversationId, identity.id).then(refreshConversations);
 
-    return () => window.clearTimeout(loadThreadId);
-  }, [selectedConversationId, identity.id, refreshConversations, refreshMessages]);
+    return () => window.clearTimeout(preloadThreadId);
+  }, [role, selectedConversationId, refreshMessages]);
 
-  const unreadCount = useMemo(
-    () => conversations.reduce((sum, c) => sum + (c.unreadBy?.[identity.id] || 0), 0),
-    [conversations, identity.id],
-  );
+  useEffect(() => {
+    if (!open || !selectedConversationId) {
+      return;
+    }
+
+    void markConversationAsRead(selectedConversationId);
+  }, [open, selectedConversationId, markConversationAsRead]);
 
   /**
    * Sends only non-empty messages and then reloads both thread and conversation summaries.
@@ -158,7 +234,7 @@ const FloatingChatWidget = ({ role, userNameHint }: FloatingChatWidgetProps) => 
     position: 'absolute',
     right: 0,
     bottom: '68px',
-    width: '360px',
+    width: isSinglePaneRole ? '420px' : '360px',
     height: '470px',
     backgroundColor: '#fff',
     borderRadius: '12px',
@@ -166,58 +242,63 @@ const FloatingChatWidget = ({ role, userNameHint }: FloatingChatWidgetProps) => 
     overflow: 'hidden',
     display: 'flex',
     boxShadow: '0 20px 32px rgba(15,23,42,0.2)',
+    willChange: 'opacity, transform',
+  };
+
+  const panelVisibilityStyle: CSSProperties = {
+    opacity: open ? 1 : 0,
+    transform: open ? 'translateY(0)' : 'translateY(8px)',
+    visibility: open ? 'visible' : 'hidden',
+    pointerEvents: open ? 'auto' : 'none',
+    transition: open
+      ? 'opacity 160ms ease, transform 160ms ease'
+      : 'opacity 120ms ease, transform 120ms ease, visibility 0s linear 120ms',
   };
 
   return (
     <div style={wrapperStyle}>
-      {open && (
-        <div style={panelStyle}>
-          <div style={{ width: '38%', borderRight: `1px solid ${theme.colors.border}`, overflowY: 'auto' }}>
-            <div style={{ padding: '10px 12px', fontSize: '13px', fontWeight: 600 }}>Messages</div>
-            {conversations.map((c) => {
-              const otherId = c.participantIds.find((id) => id !== identity.id) || 'Unknown';
-              const otherName = c.participantNames?.[otherId] || otherId;
-              const unread = c.unreadBy?.[identity.id] || 0;
-              return (
-                <button
-                  key={c.id}
-                  style={{
-                    width: '100%',
-                    border: 'none',
-                    textAlign: 'left',
-                    backgroundColor: selectedConversationId === c.id ? '#f0f5ff' : '#fff',
-                    padding: '10px 12px',
-                    borderTop: `1px solid ${theme.colors.border}`,
-                    cursor: 'pointer',
-                  }}
-                  onClick={() => setSelectedConversationId(c.id)}
-                >
-                  <div style={{ fontSize: '12px', fontWeight: 600 }}>{otherName}</div>
-                  <div style={{ fontSize: '11px', color: theme.colors.text.secondary, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
-                    {c.lastMessage || 'No messages yet'}
-                  </div>
-                  {unread > 0 && (
-                    <span style={{
-                      marginTop: '6px',
-                      display: 'inline-block',
-                      minWidth: '18px',
-                      height: '18px',
-                      borderRadius: '9px',
-                      padding: '0 6px',
-                      lineHeight: '18px',
-                      fontSize: '10px',
-                      color: '#fff',
-                      backgroundColor: '#ef4444',
-                    }}>{unread}</span>
-                  )}
-                </button>
-              );
-            })}
-          </div>
+      <div style={{ ...panelStyle, ...panelVisibilityStyle }} aria-hidden={!open}>
+          {!isSinglePaneRole && (
+            <div style={{ width: '38%', borderRight: `1px solid ${theme.colors.border}`, overflowY: 'auto' }}>
+              <div style={{ padding: '10px 12px', fontSize: '13px', fontWeight: 600 }}>Messages</div>
+              {conversations.map((c) => {
+                const otherId = c.participantIds.find((id) => id !== identity.id) || 'Unknown';
+                const otherName = c.participantNames?.[otherId] || otherId;
+                return (
+                  <button
+                    key={c.id}
+                    style={{
+                      width: '100%',
+                      border: 'none',
+                      textAlign: 'left',
+                      backgroundColor: selectedConversationId === c.id ? '#f0f5ff' : '#fff',
+                      padding: '10px 12px',
+                      borderTop: `1px solid ${theme.colors.border}`,
+                      cursor: 'pointer',
+                    }}
+                    onClick={() => handleSelectConversation(c.id)}
+                  >
+                    <div style={{ fontSize: '12px', fontWeight: 600 }}>{otherName}</div>
+                    <div style={{ fontSize: '11px', color: theme.colors.text.secondary, marginTop: '2px' }}>
+                      Job ID: {c.valuationJobId || 'N/A'}
+                    </div>
+                    <div style={{ fontSize: '11px', color: theme.colors.text.secondary, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                      {c.lastMessage || 'No messages yet'}
+                    </div>
+                  </button>
+                );
+              })}
+            </div>
+          )}
 
           <div style={{ flex: 1, display: 'flex', flexDirection: 'column' }}>
             <div style={{ padding: '10px 12px', borderBottom: `1px solid ${theme.colors.border}`, fontSize: '12px', fontWeight: 600 }}>
               {activeConversation ? 'Conversation' : 'Select a conversation'}
+              {activeConversation && (
+                <div style={{ marginTop: '6px', fontSize: '11px', fontWeight: 400, color: theme.colors.text.secondary }}>
+                  <div>Valuation Job ID: {activeConversation.valuationJobId || 'N/A'}</div>
+                </div>
+              )}
             </div>
             <div style={{ flex: 1, overflowY: 'auto', padding: '10px', backgroundColor: '#f8fafc' }}>
               {messages.map((m) => {
@@ -268,31 +349,10 @@ const FloatingChatWidget = ({ role, userNameHint }: FloatingChatWidgetProps) => 
               </button>
             </div>
           </div>
-        </div>
-      )}
+      </div>
 
       <button style={fabStyle} onClick={() => setOpen((v) => !v)}>
         <MessageOutlined style={{ fontSize: '22px' }} />
-        {unreadCount > 0 && (
-          <span
-            style={{
-              position: 'absolute',
-              top: '-4px',
-              right: '-2px',
-              minWidth: '20px',
-              height: '20px',
-              lineHeight: '20px',
-              borderRadius: '10px',
-              backgroundColor: '#ef4444',
-              color: '#fff',
-              fontSize: '11px',
-              fontWeight: 700,
-              padding: '0 6px',
-            }}
-          >
-            {unreadCount}
-          </span>
-        )}
       </button>
     </div>
   );

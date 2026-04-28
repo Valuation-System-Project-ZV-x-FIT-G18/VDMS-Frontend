@@ -1,9 +1,10 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 import type { CSSProperties } from 'react';
 import { CloseOutlined, SendOutlined } from '@ant-design/icons';
 import { messagingService } from '../../services/messagingService';
 import type { ChatConversation, ChatMessage } from '../../services/messagingService';
 import { theme } from '../../styles/theme';
+import { resolveChatUserId } from '../../services/chatIdentity';
 
 interface TeamMemberChatPopupProps {
   open: boolean;
@@ -32,14 +33,25 @@ const TeamMemberChatPopup = ({
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [input, setInput] = useState('');
   const [loading, setLoading] = useState(false);
+  const [errorMessage, setErrorMessage] = useState<string | null>(null);
 
   const formattedJobId = useMemo(() => valuationJobId || 'N/A', [valuationJobId]);
+  const resolvedRecipientId = useMemo(
+    () => resolveChatUserId(recipientRole) || recipientId,
+    [recipientId, recipientRole],
+  );
 
-  const loadMessages = async (conversationId: string) => {
-    const list = await messagingService.listMessages(conversationId);
-    setMessages(list);
-    await messagingService.markConversationAsRead(conversationId, currentUserId);
-  };
+  const loadMessages = useCallback(async (conversationId: string) => {
+    try {
+      const list = await messagingService.listMessages(conversationId);
+      setMessages(list);
+      await messagingService.markConversationAsRead(conversationId, currentUserId);
+      setErrorMessage(null);
+    } catch (error) {
+      console.error('Failed to load team chat messages:', error);
+      setErrorMessage('Unable to load messages. Please try again.');
+    }
+  }, [currentUserId]);
 
   useEffect(() => {
     if (!open) return;
@@ -48,11 +60,12 @@ const TeamMemberChatPopup = ({
     const init = async () => {
       try {
         setLoading(true);
+        setErrorMessage(null);
         const conv = await messagingService.startConversation({
           userId: currentUserId,
           userName: currentUserName,
           userRole: currentUserRole,
-          otherUserId: recipientId,
+          otherUserId: resolvedRecipientId,
           otherUserName: recipientName,
           otherUserRole: recipientRole,
           valuationJobId,
@@ -60,6 +73,11 @@ const TeamMemberChatPopup = ({
         if (!active) return;
         setConversation(conv);
         await loadMessages(conv.id);
+      } catch (error) {
+        console.error('Failed to open team conversation:', error);
+        if (active) {
+          setErrorMessage('Unable to open this conversation right now.');
+        }
       } finally {
         if (active) setLoading(false);
       }
@@ -70,7 +88,7 @@ const TeamMemberChatPopup = ({
     return () => {
       active = false;
     };
-  }, [open, currentUserId, currentUserName, currentUserRole, recipientId, recipientName, recipientRole, valuationJobId]);
+  }, [open, currentUserId, currentUserName, currentUserRole, recipientId, recipientName, recipientRole, resolvedRecipientId, valuationJobId, loadMessages]);
 
   useEffect(() => {
     if (!open || !conversation) return;
@@ -80,23 +98,29 @@ const TeamMemberChatPopup = ({
     }, 5000);
 
     return () => window.clearInterval(pollId);
-  }, [open, conversation, currentUserId]);
+  }, [open, conversation, loadMessages]);
 
   const handleSend = async () => {
     const text = input.trim();
     if (!text || !conversation) return;
 
-    await messagingService.sendMessage({
-      conversationId: conversation.id,
-      senderId: currentUserId,
-      senderName: currentUserName,
-      recipientId,
-      text,
-      valuationJobId,
-    });
+    try {
+      await messagingService.sendMessage({
+        conversationId: conversation.id,
+        senderId: currentUserId,
+        senderName: currentUserName,
+        recipientId: resolvedRecipientId,
+        text,
+        valuationJobId,
+      });
 
-    setInput('');
-    await loadMessages(conversation.id);
+      setInput('');
+      setErrorMessage(null);
+      await loadMessages(conversation.id);
+    } catch (error) {
+      console.error('Failed to send team chat message:', error);
+      setErrorMessage('Message was not sent. Please try again.');
+    }
   };
 
   if (!open) return null;
@@ -178,6 +202,9 @@ const TeamMemberChatPopup = ({
 
         <div style={messagesStyle}>
           {loading && <div style={{ fontSize: '13px', color: theme.colors.text.secondary }}>Loading messages...</div>}
+          {!loading && errorMessage && (
+            <div style={{ fontSize: '13px', color: '#dc2626', marginBottom: '8px' }}>{errorMessage}</div>
+          )}
           {!loading && messages.length === 0 && (
             <div style={{ fontSize: '13px', color: theme.colors.text.secondary }}>
               No messages yet. Start the conversation.

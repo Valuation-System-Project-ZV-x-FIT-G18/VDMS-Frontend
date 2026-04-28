@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import type { CSSProperties } from 'react';
 import {
   SendOutlined,
@@ -32,6 +32,55 @@ interface Conversation {
   avatar: string;
 }
 
+const CONVERSATIONS_STORAGE_KEY = 'vdms_messaging_system_conversations';
+
+const DEFAULT_CONVERSATIONS: Conversation[] = [
+  {
+    id: '1',
+    name: 'John Doe',
+    lastMessage: 'Waiting for the inspection report to proceed',
+    timestamp: '10:45 AM',
+    unread: 0,
+    avatar: 'JD',
+  },
+  {
+    id: '2',
+    name: 'ABC Corp - Sarah Jen',
+    lastMessage: 'The documents have been uploaded for review',
+    timestamp: 'Oct 24',
+    unread: 2,
+    avatar: 'SJ',
+  },
+  {
+    id: '3',
+    name: 'Michael Smith',
+    lastMessage: 'Property photos are now in the shared folder',
+    timestamp: 'Oct 24',
+    unread: 0,
+    avatar: 'MS',
+  },
+  {
+    id: '4',
+    name: 'RealEstate Partners',
+    lastMessage: 'Confirmation of receipt for the final valuation',
+    timestamp: 'Oct 23',
+    unread: 0,
+    avatar: 'RP',
+  },
+];
+
+const loadStoredConversations = (): Conversation[] => {
+  try {
+    const raw = localStorage.getItem(CONVERSATIONS_STORAGE_KEY);
+    if (!raw) return DEFAULT_CONVERSATIONS;
+    const parsed = JSON.parse(raw) as Conversation[];
+    if (!Array.isArray(parsed)) return DEFAULT_CONVERSATIONS;
+    return parsed;
+  } catch {
+    return DEFAULT_CONVERSATIONS;
+  }
+};
+
 const MessagingSystem = ({ onClose }: { onClose: () => void }) => {
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedConversation, setSelectedConversation] = useState<string>('1');
@@ -39,40 +88,11 @@ const MessagingSystem = ({ onClose }: { onClose: () => void }) => {
   const [showTemplates, setShowTemplates] = useState(false);
 
   // Mock conversations - will come from API
-  const conversations: Conversation[] = [
-    {
-      id: '1',
-      name: 'John Doe',
-      lastMessage: 'Waiting for the inspection report to proceed',
-      timestamp: '10:45 AM',
-      unread: 0,
-      avatar: 'JD',
-    },
-    {
-      id: '2',
-      name: 'ABC Corp - Sarah Jen',
-      lastMessage: 'The documents have been uploaded for review',
-      timestamp: 'Oct 24',
-      unread: 2,
-      avatar: 'SJ',
-    },
-    {
-      id: '3',
-      name: 'Michael Smith',
-      lastMessage: 'Property photos are now in the shared folder',
-      timestamp: 'Oct 24',
-      unread: 0,
-      avatar: 'MS',
-    },
-    {
-      id: '4',
-      name: 'RealEstate Partners',
-      lastMessage: 'Confirmation of receipt for the final valuation',
-      timestamp: 'Oct 23',
-      unread: 0,
-      avatar: 'RP',
-    },
-  ];
+  const [conversations, setConversations] = useState<Conversation[]>(loadStoredConversations);
+
+  useEffect(() => {
+    localStorage.setItem(CONVERSATIONS_STORAGE_KEY, JSON.stringify(conversations));
+  }, [conversations]);
 
   // Mock messages - will come from API
   const messages: Message[] = [
@@ -122,6 +142,17 @@ const MessagingSystem = ({ onClose }: { onClose: () => void }) => {
   const filteredConversations = conversations.filter(conv =>
     conv.name.toLowerCase().includes(searchQuery.toLowerCase())
   );
+
+  const handleConversationSelect = (conversationId: string) => {
+    setSelectedConversation(conversationId);
+    setConversations((prev) =>
+      prev.map((conversation) =>
+        conversation.id === conversationId
+          ? { ...conversation, unread: 0 }
+          : conversation,
+      ),
+    );
+  };
 
   const handleSendMessage = () => {
     if (!messageInput.trim()) return;
@@ -402,7 +433,7 @@ const MessagingSystem = ({ onClose }: { onClose: () => void }) => {
               <div
                 key={conv.id}
                 style={conversationItemStyle(selectedConversation === conv.id)}
-                onClick={() => setSelectedConversation(conv.id)}
+                onClick={() => handleConversationSelect(conv.id)}
                 onMouseEnter={(e) => {
                   if (selectedConversation !== conv.id) {
                     e.currentTarget.style.backgroundColor = '#fafafa';

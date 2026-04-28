@@ -14,6 +14,18 @@ export interface Notification {
 }
 
 export const notificationService = {
+  create: async (payload: {
+    type: Notification['type'];
+    event: Notification['event'];
+    title: string;
+    message: string;
+    recipientId: string;
+    recipientRole: string;
+    projectId?: string | null;
+  }): Promise<Notification> => {
+    const response = await api.post<Notification>('/notifications', payload);
+    return response.data;
+  },
 
   // Get all notifications for a user
   getForUser: async (recipientId: string): Promise<Notification[]> => {

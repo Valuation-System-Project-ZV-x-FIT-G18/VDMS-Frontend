@@ -23,6 +23,8 @@ const StatCard = ({ title, value, icon, iconBgColor = '#1890ff' }: StatCardProps
     display: 'flex',
     flexDirection: 'column',
     gap: '8px',
+    flex: 1,
+    minWidth: 0,
   };
 
   const titleStyle: CSSProperties = {
@@ -52,6 +54,7 @@ const StatCard = ({ title, value, icon, iconBgColor = '#1890ff' }: StatCardProps
     justifyContent: 'center',
     color: iconBgColor,
     fontSize: '24px',
+    flexShrink: 0,
   };
 
   return (

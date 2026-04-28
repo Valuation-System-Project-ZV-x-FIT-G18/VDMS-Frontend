@@ -110,6 +110,7 @@ const MainLayout = ({
         <Header
           userName="John Doe"
           userRole={getRoleLabel(role)}
+          role={role}
           onMenuToggle={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
           isMobile={isMobile}
           menuOpen={isMobileMenuOpen}
@@ -142,7 +143,9 @@ const MainLayout = ({
         <main style={contentWrapperStyle}>{children}</main>
       </div>
 
-      <FloatingChatWidget role={role} userNameHint="John Doe" />
+      {role !== 'bank' && role !== 'owner' && (
+        <FloatingChatWidget role={role} userNameHint="John Doe" />
+      )}
     </div>
   );
 };

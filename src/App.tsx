@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import {
   Routes,
   Route,
@@ -26,7 +26,11 @@ import BankSettingsPage from "./features/bank-credit-officer/pages/Settings";
 import OwnerDashboardPage from "./features/property-owner/pages/Dashboard";
 import OwnerAllProjectsPage from "./features/property-owner/pages/AllProjects";
 import OwnerPaymentPage from "./features/property-owner/pages/Payment";
+import OwnerInvoiceDetailPage from "./features/property-owner/pages/InvoiceDetail";
 import OwnerSettingsPage from "./features/property-owner/pages/Settings";
+import { invoiceService } from "./services/invoiceService";
+import { notificationService } from "./services/notificationService";
+import { getPortalClientId } from "./config/portalConfig";
 
 // L3 Manager pages
 import L3DashboardPage from "./features/l3/pages/Dashboard";
@@ -107,6 +111,16 @@ type Role =
   | "technical-officer"
   | "senior-valuator";
 
+const DEMO_APPROVAL_PROJECT_ID = "VAL-2026-001";
+
+const resolveApprovalProjectId = (projectId?: string) => {
+  if (projectId && /^VAL-\d{4}-\d{3}$/i.test(projectId)) {
+    return projectId;
+  }
+
+  return DEMO_APPROVAL_PROJECT_ID;
+};
+
 function BlankRolePage({ title }: { title: string }) {
   return (
     <div
@@ -170,6 +184,7 @@ function L2DraftReportDetailPage() {
 function L1DraftReportDetailPage() {
   const { projectId } = useParams<{ projectId: string }>();
   const navigate = useNavigate();
+  const approvalProjectId = resolveApprovalProjectId(projectId);
   return (
     <L1DraftReportDetail
       projectId={projectId || "PV-2024-8842"}
@@ -180,7 +195,9 @@ function L1DraftReportDetailPage() {
         navigate("/l1-manager/request-clarification")
       }
       onApproveDraft={() =>
-        navigate(`/l1-manager/approve-final-report/${projectId}`)
+        navigate(`/l1-manager/approve-final-report/${approvalProjectId}`, {
+          state: { openFeePrompt: true },
+        })
       }
     />
   );
@@ -190,6 +207,29 @@ function L1DraftReportDetailPage() {
 function L3ApproveFinalReportPage() {
   const { projectId } = useParams<{ projectId: string }>();
   const navigate = useNavigate();
+
+  useEffect(() => {
+    if (!projectId) {
+      return;
+    }
+
+    const key = `vdms-notif-l3-approval-${projectId}`;
+    if (localStorage.getItem(key) === "1") {
+      return;
+    }
+
+    localStorage.setItem(key, "1");
+    void notificationService.create({
+      type: "info",
+      event: "STAGE_CHANGED",
+      title: `L3 Approval Completed - ${projectId}`,
+      message: `Valuation job ${projectId} has been approved by L3 manager and moved to L2 review.`,
+      recipientId: getPortalClientId("bank"),
+      recipientRole: "client",
+      projectId: null,
+    });
+  }, [projectId]);
+
   return (
     <div
       style={{
@@ -256,6 +296,29 @@ function L3ApproveFinalReportPage() {
 function L2ApproveFinalReportPage() {
   const { projectId } = useParams<{ projectId: string }>();
   const navigate = useNavigate();
+
+  useEffect(() => {
+    if (!projectId) {
+      return;
+    }
+
+    const key = `vdms-notif-l2-approval-${projectId}`;
+    if (localStorage.getItem(key) === "1") {
+      return;
+    }
+
+    localStorage.setItem(key, "1");
+    void notificationService.create({
+      type: "info",
+      event: "STAGE_CHANGED",
+      title: `L2 Approval Completed - ${projectId}`,
+      message: `Valuation job ${projectId} has been approved by L2 manager and forwarded to L1 manager.`,
+      recipientId: getPortalClientId("bank"),
+      recipientRole: "client",
+      projectId: null,
+    });
+  }, [projectId]);
+
   return (
     <div
       style={{
@@ -322,11 +385,84 @@ function L2ApproveFinalReportPage() {
 
 function L1ApproveFinalReportPage() {
   const { projectId } = useParams<{ projectId: string }>();
-  const [isLocked, setIsLocked] = useState(false);
+  const location = useLocation();
+  const openFeePrompt = Boolean(
+    (location.state as { openFeePrompt?: boolean } | null)?.openFeePrompt,
+  );
+  const [showAmountPrompt, setShowAmountPrompt] = useState(openFeePrompt);
+  const [valuationAmount, setValuationAmount] = useState("");
+  const [amountError, setAmountError] = useState<string | null>(null);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [invoiceId, setInvoiceId] = useState<string | null>(null);
 
-  const handleLockReport = () => {
-    setIsLocked(true);
+  useEffect(() => {
+    if (openFeePrompt) {
+      setShowAmountPrompt(true);
+    }
+  }, [openFeePrompt]);
+
+  const handleGenerateInvoice = async () => {
+    const parsedAmount = Number(valuationAmount);
+
+    if (!Number.isFinite(parsedAmount) || parsedAmount <= 0) {
+      setAmountError("Please enter a valid valuation amount.");
+      return;
+    }
+
+    try {
+      setIsSubmitting(true);
+      setAmountError(null);
+
+      if (projectId) {
+        const approvalKey = `vdms-notif-l1-approval-${projectId}`;
+        if (localStorage.getItem(approvalKey) !== "1") {
+          localStorage.setItem(approvalKey, "1");
+          void notificationService.create({
+            type: "success",
+            event: "PROJECT_COMPLETED",
+            title: `L1 Final Approval Completed - ${projectId}`,
+            message: `Valuation job ${projectId} has received final approval from L1 manager. Invoice generation is in progress.`,
+            recipientId: getPortalClientId("bank"),
+            recipientRole: "client",
+            projectId: null,
+          });
+        }
+      }
+
+      const createdInvoice = await invoiceService.createFromL1Approval({
+        projectId: projectId || "",
+        amount: parsedAmount,
+        l1ManagerId: "user-l1-manager-001",
+      });
+      setInvoiceId(createdInvoice.id);
+      setShowAmountPrompt(false);
+    } catch (error) {
+      console.error("Failed to generate invoice after L1 approval:", error);
+      const backendMessage =
+        typeof error === "object" && error && "response" in error
+          ? (error as { response?: { data?: { message?: string | string[] } } }).response?.data?.message
+          : null;
+
+      if (Array.isArray(backendMessage) && backendMessage.length > 0) {
+        setAmountError(backendMessage[0]);
+      } else if (typeof backendMessage === "string" && backendMessage.trim()) {
+        setAmountError(backendMessage);
+      } else {
+        setAmountError("Failed to generate invoice. Please try again.");
+      }
+    } finally {
+      setIsSubmitting(false);
+    }
   };
+
+  if (invoiceId) {
+    return (
+      <OwnerInvoiceDetailPage
+        invoiceId={invoiceId}
+        onBack={() => (window.location.href = "/l1-manager/dashboard")}
+      />
+    );
+  }
 
   return (
     <div
@@ -340,42 +476,37 @@ function L1ApproveFinalReportPage() {
         justifyContent: "center",
       }}
     >
-      {isLocked ? (
+      <div
+        style={{
+          textAlign: "center",
+          maxWidth: "540px",
+          backgroundColor: "#f0fdf4",
+          border: "2px solid #22c55e",
+          borderRadius: "8px",
+          padding: "32px",
+        }}
+      >
+        <h1 style={{ color: "#16a34a", marginBottom: "16px" }}>
+          ✓ Report Approved
+        </h1>
+        <p style={{ color: "#4b5563", marginBottom: "24px", fontSize: "14px" }}>
+          Project {projectId} has been approved by L3 and L2 managers.
+          <br />
+          Click Approve & Generate Invoice to enter the valuation fee.
+        </p>
         <div
           style={{
-            textAlign: "center",
-            maxWidth: "500px",
-            backgroundColor: "#fee2e2",
-            border: "3px solid #dc2626",
-            borderRadius: "8px",
-            padding: "48px",
+            display: "flex",
+            gap: "12px",
+            justifyContent: "center",
+            marginTop: "32px",
           }}
         >
-          <h1
-            style={{ color: "#991b1b", marginBottom: "16px", fontSize: "28px" }}
-          >
-            🔒 REPORT LOCKED
-          </h1>
-          <p
-            style={{
-              color: "#7f1d1d",
-              marginBottom: "24px",
-              fontSize: "14px",
-              lineHeight: "1.6",
-              fontWeight: 600,
-            }}
-          >
-            Project {projectId} has been successfully locked.
-            <br />
-            <br />
-            This report is now permanently locked and cannot be edited. All
-            approvals are final.
-          </p>
           <button
             onClick={() => (window.location.href = "/l1-manager/dashboard")}
             style={{
               padding: "12px 24px",
-              backgroundColor: "#3b82f6",
+              backgroundColor: "#6b7280",
               color: "#ffffff",
               border: "none",
               borderRadius: "6px",
@@ -384,67 +515,112 @@ function L1ApproveFinalReportPage() {
               cursor: "pointer",
             }}
           >
-            Return to Dashboard
+            Back to Dashboard
           </button>
-        </div>
-      ) : (
-        <div
-          style={{
-            textAlign: "center",
-            maxWidth: "500px",
-            backgroundColor: "#f0fdf4",
-            border: "2px solid #22c55e",
-            borderRadius: "8px",
-            padding: "32px",
-          }}
-        >
-          <h1 style={{ color: "#16a34a", marginBottom: "16px" }}>
-            ✓ Report Approved
-          </h1>
-          <p
-            style={{ color: "#4b5563", marginBottom: "24px", fontSize: "14px" }}
-          >
-            Project {projectId} has been successfully approved by L3 and L2
-            managers. As the final approver (L1), you can now lock this report.
-          </p>
-          <div
+          <button
+            onClick={() => setShowAmountPrompt(true)}
             style={{
-              display: "flex",
-              gap: "12px",
-              justifyContent: "center",
-              marginTop: "32px",
+              padding: "12px 24px",
+              backgroundColor: "#1677ff",
+              color: "#ffffff",
+              border: "none",
+              borderRadius: "6px",
+              fontSize: "14px",
+              fontWeight: 600,
+              cursor: "pointer",
             }}
           >
-            <button
-              onClick={() => (window.location.href = "/l1-manager/dashboard")}
-              style={{
-                padding: "12px 24px",
-                backgroundColor: "#6b7280",
-                color: "#ffffff",
-                border: "none",
-                borderRadius: "6px",
-                fontSize: "14px",
-                fontWeight: 600,
-                cursor: "pointer",
+            Approve & Generate Invoice
+          </button>
+        </div>
+      </div>
+
+      {showAmountPrompt && (
+        <div
+          style={{
+            position: "fixed",
+            inset: 0,
+            backgroundColor: "rgba(0,0,0,0.45)",
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            zIndex: 4000,
+          }}
+        >
+          <div
+            style={{
+              width: "420px",
+              backgroundColor: "#ffffff",
+              borderRadius: "10px",
+              padding: "24px",
+              boxShadow: "0 12px 28px rgba(0,0,0,0.24)",
+            }}
+          >
+            <h3 style={{ marginTop: 0, marginBottom: "12px", fontSize: "18px" }}>
+              Enter Valuation Fee
+            </h3>
+            <p style={{ marginTop: 0, marginBottom: "14px", color: "#6b7280", fontSize: "13px" }}>
+              This fee will be used to generate the invoice for valuation job {projectId}.
+            </p>
+            <input
+              type="number"
+              min="0"
+              step="0.01"
+              value={valuationAmount}
+              onChange={(e) => {
+                setValuationAmount(e.target.value);
+                if (amountError) {
+                  setAmountError(null);
+                }
               }}
-            >
-              Back to Dashboard
-            </button>
-            <button
-              onClick={handleLockReport}
+              placeholder="Enter valuation fee (LKR)"
               style={{
-                padding: "12px 24px",
-                backgroundColor: "#dc2626",
-                color: "#ffffff",
-                border: "none",
+                width: "100%",
+                padding: "10px 12px",
                 borderRadius: "6px",
+                border: "1px solid #d1d5db",
                 fontSize: "14px",
-                fontWeight: 600,
-                cursor: "pointer",
+                boxSizing: "border-box",
               }}
-            >
-              🔒 Lock Final Report
-            </button>
+            />
+            {amountError && (
+              <div style={{ marginTop: "10px", color: "#dc2626", fontSize: "12px" }}>
+                {amountError}
+              </div>
+            )}
+            <div style={{ marginTop: "18px", display: "flex", justifyContent: "flex-end", gap: "10px" }}>
+              <button
+                onClick={() => {
+                  setShowAmountPrompt(false);
+                  setAmountError(null);
+                }}
+                style={{
+                  padding: "10px 14px",
+                  borderRadius: "6px",
+                  border: "1px solid #d1d5db",
+                  backgroundColor: "#ffffff",
+                  cursor: "pointer",
+                }}
+                disabled={isSubmitting}
+              >
+                Cancel
+              </button>
+              <button
+                onClick={() => void handleGenerateInvoice()}
+                style={{
+                  padding: "10px 14px",
+                  borderRadius: "6px",
+                  border: "none",
+                  backgroundColor: "#1677ff",
+                  color: "#ffffff",
+                  cursor: "pointer",
+                  fontWeight: 600,
+                }}
+                disabled={isSubmitting}
+              >
+                {isSubmitting ? "Generating..." : "Generate Invoice"}
+              </button>
+            </div>
           </div>
         </div>
       )}

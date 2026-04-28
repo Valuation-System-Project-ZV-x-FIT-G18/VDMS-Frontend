@@ -15,6 +15,7 @@ const ValuationJobDetail = ({ projectId, initialProject, onBack }: ValuationJobD
     projectId={projectId}
     initialProject={initialProject}
     onBack={onBack}
+    viewerRole="owner"
   />
 );
 

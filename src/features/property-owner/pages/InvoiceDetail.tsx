@@ -171,7 +171,7 @@ const InvoiceDetail = ({ invoiceId, onBack }: InvoiceDetailProps) => {
   /**
    * Calls notification workflow endpoint and exposes a short success state to prevent duplicate clicks.
    */
-  const handleNotifyCoordinator = async () => {
+  const handleNotifyL1Manager = async () => {
     if (!invoice) return;
 
     try {
@@ -180,8 +180,20 @@ const InvoiceDetail = ({ invoiceId, onBack }: InvoiceDetailProps) => {
       setNotifySuccess(true);
       setTimeout(() => setNotifySuccess(false), 3000);
     } catch (err) {
-      console.error('Error notifying coordinator:', err);
-      setError('Failed to notify coordinator');
+      console.error('Error notifying L1 manager:', err);
+      setError('Failed to notify L1 manager');
+    }
+  };
+
+  const handleRemovePaymentProof = async () => {
+    if (!invoice) return;
+
+    try {
+      const updated = await invoiceService.removePaymentProof(invoice.id);
+      setInvoice(updated);
+    } catch (err) {
+      console.error('Error removing payment proof:', err);
+      setError('Failed to remove payment proof');
     }
   };
 
@@ -596,9 +608,25 @@ const InvoiceDetail = ({ invoiceId, onBack }: InvoiceDetailProps) => {
                 <div style={{ flex: 1 }}>
                   <div style={{ fontSize: '14px', fontWeight: 500 }}>{invoice.paymentProofFileName}</div>
                   <div style={{ fontSize: '12px', color: '#fa8c16' }}>
-                    ● {invoice.paymentProofUploadedAt ? 'Awaiting verification' : 'Uploaded'}
+                    ● Uploaded
                   </div>
                 </div>
+                <button
+                  style={{
+                    border: '1px solid #d9d9d9',
+                    backgroundColor: '#fff',
+                    color: '#595959',
+                    borderRadius: '6px',
+                    padding: '6px 10px',
+                    cursor: 'pointer',
+                    fontSize: '12px',
+                  }}
+                  onClick={() => {
+                    void handleRemovePaymentProof();
+                  }}
+                >
+                  Remove
+                </button>
               </div>
             )}
 
@@ -619,10 +647,10 @@ const InvoiceDetail = ({ invoiceId, onBack }: InvoiceDetailProps) => {
                 borderColor: notifySuccess ? '#52c41a' : theme.colors.border,
               }}
               onClick={() => {
-                void handleNotifyCoordinator();
+                void handleNotifyL1Manager();
               }}
             >
-              {notifySuccess ? <><CheckCircleOutlined /> Coordinator Notified!</> : <><BellOutlined /> Notify Coordinator</>}
+              {notifySuccess ? <><CheckCircleOutlined /> L1 Manager Notified!</> : <><BellOutlined /> Notify L1 Manager</>}
             </button>
           </div>
         </div>

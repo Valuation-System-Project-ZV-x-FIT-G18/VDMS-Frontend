@@ -17,10 +17,10 @@ import type { ProjectDetails } from '../../../services/projectService';
 import { documentService } from '../../../services/documentService';
 import { teamService } from '../../../services/teamService';
 import type { TeamMember as TeamType } from '../../../services/teamService';
-import type { Project } from '../types';
 import TeamMemberChatPopup from '../../../components/organisms/TeamMemberChatPopup';
-import { getChatIdentity } from '../../../services/chatIdentity';
+import type { Project } from '../types';
 import {
+  getCurrentUserId,
   getCurrentUserName,
   projectDetailDefaults,
 } from '../../../config/portalConfig';
@@ -29,6 +29,7 @@ interface ValuationJobDetailProps {
   projectId: string;
   initialProject?: Project | null;
   onBack: () => void;
+  viewerRole?: 'bank' | 'owner';
 }
 
 interface JobDocument {
@@ -36,6 +37,7 @@ interface JobDocument {
   name: string;
   uploadDate?: string;
   status: 'submitted' | 'pending';
+  fileUrl?: string;
   uploadedBy?: string;
   required: boolean;
   note?: string;
@@ -44,16 +46,16 @@ interface JobDocument {
 /**
  * Renders bank-side valuation detail by combining project, document, and team data into one operational workspace.
  */
-const ValuationJobDetail = ({ projectId, initialProject, onBack }: ValuationJobDetailProps) => {
+const ValuationJobDetail = ({ projectId, initialProject, onBack, viewerRole = 'bank' }: ValuationJobDetailProps) => {
   const [showAllTeam, setShowAllTeam] = useState(false);
-  const [selectedTeamMember, setSelectedTeamMember] = useState<TeamType | null>(null);
+  const [chatMember, setChatMember] = useState<TeamType | null>(null);
   const [uploadingDoc, setUploadingDoc] = useState<string | null>(null);
   const [selectedUploadDocId, setSelectedUploadDocId] = useState<string | null>(null);
   const documentUploadInputRef = useRef<HTMLInputElement | null>(null);
-  const chatIdentity = getChatIdentity('bank', 'Bank Credit Officer');
 
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [reportMessage, setReportMessage] = useState<string | null>(null);
   const [project, setProject] = useState<ProjectDetails | null>(null);
   const [documents, setDocuments] = useState<JobDocument[]>([]);
   const [teamMembers, setTeamMembers] = useState<TeamType[]>([]);
@@ -95,19 +97,28 @@ const ValuationJobDetail = ({ projectId, initialProject, onBack }: ValuationJobD
         const docsData = docsResult.status === 'fulfilled' ? docsResult.value : [];
         const teamData = teamResult.status === 'fulfilled' ? teamResult.value : [];
         
-        const transformedDocs: JobDocument[] = docsData.map(doc => ({
-          id: doc.id,
-          name: doc.name,
-          uploadDate: doc.uploadDate ? new Date(doc.uploadDate).toLocaleDateString('en-US', {
-            month: 'short',
-            day: '2-digit',
-            year: 'numeric',
-          }) : undefined,
-          status: (doc.status === 'submitted' || doc.status === 'approved') ? 'submitted' : 'pending',
-          uploadedBy: doc.uploadedBy || undefined,
-          required: doc.required,
-          note: doc.note || undefined,
-        }));
+        const transformedDocs: JobDocument[] = docsData.map(doc => {
+          const normalizedStatus: JobDocument['status'] =
+            doc.status === 'submitted' || doc.status === 'approved' ? 'submitted' : 'pending';
+
+          return {
+            id: doc.id,
+            name: doc.name,
+            uploadDate:
+              normalizedStatus === 'submitted' && doc.uploadDate
+                ? new Date(doc.uploadDate).toLocaleDateString('en-US', {
+                    month: 'short',
+                    day: '2-digit',
+                    year: 'numeric',
+                  })
+                : undefined,
+            status: normalizedStatus,
+            fileUrl: doc.fileUrl || undefined,
+            uploadedBy: normalizedStatus === 'submitted' ? doc.uploadedBy || undefined : undefined,
+            required: doc.required,
+            note: doc.note || undefined,
+          };
+        });
         
         setDocuments(transformedDocs);
         setTeamMembers(teamData);
@@ -121,6 +132,98 @@ const ValuationJobDetail = ({ projectId, initialProject, onBack }: ValuationJobD
 
     fetchProjectDetails();
   }, [projectId, initialProject]);
+
+  const resolveBackendFileUrl = (fileUrl: string) => {
+    if (/^https?:\/\//i.test(fileUrl)) {
+      return fileUrl;
+    }
+
+    const baseUrl = (import.meta.env.VITE_API_BASE_URL ?? 'http://localhost:3000').replace(/\/$/, '');
+    const normalizedPath = fileUrl.startsWith('/') ? fileUrl : `/${fileUrl}`;
+    return `${baseUrl}${normalizedPath}`;
+  };
+
+  const openDocumentForView = (doc: JobDocument) => {
+    if (doc.fileUrl) {
+      window.open(resolveBackendFileUrl(doc.fileUrl), '_blank', 'noopener,noreferrer');
+      return;
+    }
+
+    const previewWindow = window.open('', '_blank', 'noopener,noreferrer');
+    if (!previewWindow) return;
+    previewWindow.document.write(`
+      <html>
+        <head><title>${doc.name}</title></head>
+        <body style="font-family: Arial, sans-serif; padding: 24px;">
+          <h2>${doc.name}</h2>
+          <p>Status: ${doc.status}</p>
+          <p>Uploaded By: ${doc.uploadedBy ?? 'N/A'}</p>
+          <p>Upload Date: ${doc.uploadDate ?? 'N/A'}</p>
+          <p>Note: ${doc.note ?? 'No additional note'}</p>
+          <p>File content is not available from backend yet. This is metadata preview.</p>
+        </body>
+      </html>
+    `);
+    previewWindow.document.close();
+  };
+
+  const downloadDocument = (doc: JobDocument) => {
+    if (doc.fileUrl) {
+      const anchor = document.createElement('a');
+      anchor.href = resolveBackendFileUrl(doc.fileUrl);
+      anchor.download = doc.name;
+      anchor.target = '_blank';
+      anchor.rel = 'noopener noreferrer';
+      document.body.appendChild(anchor);
+      anchor.click();
+      document.body.removeChild(anchor);
+      return;
+    }
+
+    const fallbackContent = [
+      `Document: ${doc.name}`,
+      `Status: ${doc.status}`,
+      `Uploaded By: ${doc.uploadedBy ?? 'N/A'}`,
+      `Upload Date: ${doc.uploadDate ?? 'N/A'}`,
+      `Note: ${doc.note ?? 'No additional note'}`,
+    ].join('\n');
+
+    const blob = new Blob([fallbackContent], { type: 'text/plain;charset=utf-8' });
+    const blobUrl = URL.createObjectURL(blob);
+    const anchor = document.createElement('a');
+    anchor.href = blobUrl;
+    anchor.download = `${doc.name.replace(/\s+/g, '_')}.txt`;
+    document.body.appendChild(anchor);
+    anchor.click();
+    document.body.removeChild(anchor);
+    URL.revokeObjectURL(blobUrl);
+  };
+
+  const getReportDocument = () => {
+    const submittedDocs = documents.filter((doc) => doc.status === 'submitted');
+    const explicitReport = submittedDocs.find((doc) => /report/i.test(doc.name));
+    return explicitReport ?? submittedDocs[0] ?? null;
+  };
+
+  const handleViewReport = () => {
+    setReportMessage(null);
+    const reportDoc = getReportDocument();
+    if (!reportDoc) {
+      setReportMessage('No submitted report document available yet.');
+      return;
+    }
+    openDocumentForView(reportDoc);
+  };
+
+  const handleDownloadReport = () => {
+    setReportMessage(null);
+    const reportDoc = getReportDocument();
+    if (!reportDoc) {
+      setReportMessage('No submitted report document available to download.');
+      return;
+    }
+    downloadDocument(reportDoc);
+  };
 
   /**
    * Routes upload intent through a hidden input so pending document rows can open native file selection.
@@ -162,6 +265,10 @@ const ValuationJobDetail = ({ projectId, initialProject, onBack }: ValuationJobD
     setUploadingDoc(null);
     setSelectedUploadDocId(null);
     event.target.value = '';
+  };
+
+  const handleOpenChat = (member: TeamType) => {
+    setChatMember(member);
   };
 
   if (loading) {
@@ -212,11 +319,21 @@ const ValuationJobDetail = ({ projectId, initialProject, onBack }: ValuationJobD
 
   const uploadedCount = documents.filter(d => d.status === 'submitted').length;
   const totalCount = documents.length;
+  const applicantName = project.applicants && project.applicants.length > 0 ? project.applicants[0] : 'N/A';
+  const assignedTeamLastThree = teamMembers.slice(-3);
 
-  const expectedDate = new Date(project.expectedCompletion);
-  const today = new Date();
-  const diffTime = expectedDate.getTime() - today.getTime();
-  const daysRemaining = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+  const toDateOnly = (value: string | Date) => {
+    const parsed = value instanceof Date ? value : new Date(value);
+    return new Date(parsed.getFullYear(), parsed.getMonth(), parsed.getDate());
+  };
+
+  const expectedDateOnly = toDateOnly(project.expectedCompletion);
+  const todayDateOnly = toDateOnly(new Date());
+  const completedDateOnly = toDateOnly(project.updatedAt);
+  const MS_PER_DAY = 24 * 60 * 60 * 1000;
+  const isCompleted = project.status === 'Completed';
+  const referenceDateForGap = isCompleted ? completedDateOnly : todayDateOnly;
+  const daysRemaining = Math.floor((expectedDateOnly.getTime() - referenceDateForGap.getTime()) / MS_PER_DAY);
 
   /**
    * Normalizes stage rendering from status text so timeline behavior remains deterministic.
@@ -237,13 +354,13 @@ const ValuationJobDetail = ({ projectId, initialProject, onBack }: ValuationJobD
   const jobData = {
     id: project.projectId,
     address: project.propertyAddress,
-    client: projectDetailDefaults.clientDisplayName,
+    client: applicantName,
     valuationJobId: project.valuationJobId ?? project.projectId,
     propertyType: projectDetailDefaults.propertyType,
     valuationType: projectDetailDefaults.valuationType,
     bankBranch: projectDetailDefaults.bankBranch,
-    creditOfficer: `You (${getCurrentUserName('bank')})`,
-    applicant: project.applicants && project.applicants.length > 0 ? project.applicants[0] : 'N/A',
+    creditOfficer: applicantName,
+    applicant: applicantName,
     applicantContact: projectDetailDefaults.applicantContact,
     requestedDate: new Date(project.requestedDate).toLocaleDateString('en-US', {
       month: 'short',
@@ -257,7 +374,8 @@ const ValuationJobDetail = ({ projectId, initialProject, onBack }: ValuationJobD
     }),
     daysRemaining,
     currentStage: project.status,
-    assignedTeam: teamMembers,
+    assignedTeam: assignedTeamLastThree,
+    fullAssignedTeam: teamMembers,
     documents,
     stages: getStages(project.status),
   };
@@ -575,6 +693,27 @@ const ValuationJobDetail = ({ projectId, initialProject, onBack }: ValuationJobD
     marginBottom: '20px',
   };
 
+  const teamMemberButtonStyle: CSSProperties = {
+    width: '100%',
+    border: 'none',
+    backgroundColor: '#fff',
+    display: 'flex',
+    alignItems: 'center',
+    gap: '12px',
+    marginBottom: '12px',
+    padding: '8px',
+    borderRadius: '8px',
+    cursor: 'pointer',
+    textAlign: 'left',
+  };
+
+  const chatHintTextStyle: CSSProperties = {
+    marginTop: '4px',
+    fontSize: '11px',
+    color: '#1677ff',
+    fontWeight: 500,
+  };
+
   const reportActionButtonStyle: CSSProperties = {
     display: 'flex',
     alignItems: 'center',
@@ -609,15 +748,22 @@ const ValuationJobDetail = ({ projectId, initialProject, onBack }: ValuationJobD
             Client: <strong>{jobData.client}</strong>
           </div>
 
-          <div style={{ display: 'flex', gap: '12px', alignItems: 'center' }}>
-            <button style={reportActionButtonStyle} onClick={() => alert('Report download feature will be available soon.')}>
-              <DownloadOutlined /> Download Report
-            </button>
-            <button style={reportActionButtonStyle}>
-              <EyeOutlined /> View Report
-            </button>
-          </div>
+          {viewerRole === 'bank' && (
+            <div style={{ display: 'flex', gap: '12px', alignItems: 'center' }}>
+              <button style={reportActionButtonStyle} onClick={handleDownloadReport}>
+                <DownloadOutlined /> Download Report
+              </button>
+              <button style={reportActionButtonStyle} onClick={handleViewReport}>
+                <EyeOutlined /> View Report
+              </button>
+            </div>
+          )}
         </div>
+        {viewerRole === 'bank' && reportMessage && (
+          <div style={{ marginTop: '10px', fontSize: '12px', color: '#d46b08' }}>
+            {reportMessage}
+          </div>
+        )}
       </div>
 
       {/* Progress Stages */}
@@ -682,7 +828,15 @@ const ValuationJobDetail = ({ projectId, initialProject, onBack }: ValuationJobD
                 <div style={detailLabelStyle}>Days Remaining</div>
                 <div style={detailValueStyle}>
                   <span style={daysBadgeStyle}>
-                    {daysRemaining < 0 ? `${Math.abs(daysRemaining)} Days Overdue` : `${daysRemaining} Days`}
+                    {isCompleted
+                      ? daysRemaining < 0
+                        ? `${Math.abs(daysRemaining)} Days Delayed`
+                        : daysRemaining > 0
+                          ? `${daysRemaining} Days Early`
+                          : 'Completed On Time'
+                      : daysRemaining < 0
+                        ? `${Math.abs(daysRemaining)} Days Overdue`
+                        : `${daysRemaining} Days`}
                   </span>
                 </div>
               </div>
@@ -748,7 +902,7 @@ const ValuationJobDetail = ({ projectId, initialProject, onBack }: ValuationJobD
                       <span style={submittedBadgeStyle}>
                         Submitted
                       </span>
-                      <button style={viewBtnStyle}>
+                      <button style={viewBtnStyle} onClick={() => openDocumentForView(doc)} title="View submitted document">
                         <EyeOutlined />
                       </button>
                     </>
@@ -778,28 +932,31 @@ const ValuationJobDetail = ({ projectId, initialProject, onBack }: ValuationJobD
               <span style={sectionHeaderTitleStyle}>Assigned Team</span>
             </div>
             <div style={cardBodyStyle}>
-              {jobData.assignedTeam.slice(0, 3).map((member, index) => (
-                <div key={index} style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '16px' }}>
+              {jobData.assignedTeam.map((member) => (
+                <button
+                  key={member.id}
+                  type="button"
+                  style={teamMemberButtonStyle}
+                  onClick={() => handleOpenChat(member)}
+                  title={`Message ${member.name}`}
+                >
                   <div style={teamAvatarStyle}>
                     <UserOutlined />
                   </div>
                   <div>
-                    <div
-                      style={{ fontSize: '13px', fontWeight: 500, color: theme.colors.primary.main, cursor: 'pointer' }}
-                      onClick={() => setSelectedTeamMember(member)}
-                      title="Open chat"
-                    >
+                    <div style={{ fontSize: '13px', fontWeight: 500, color: theme.colors.primary.main }}>
                       {member.name}
                     </div>
                     <div style={{ fontSize: '12px', color: theme.colors.text.secondary }}>
                       {member.role}
                     </div>
+                    <div style={chatHintTextStyle}>Click to message</div>
                   </div>
-                </div>
+                </button>
               ))}
 
               <button style={viewAllBtnStyle} onClick={() => setShowAllTeam(true)}>
-                View All ({jobData.assignedTeam.length})
+                View All ({jobData.fullAssignedTeam.length})
               </button>
             </div>
           </div>
@@ -820,7 +977,7 @@ const ValuationJobDetail = ({ projectId, initialProject, onBack }: ValuationJobD
           <div style={modalBoxStyle} onClick={(e) => e.stopPropagation()}>
             <div style={modalHeaderStyle}>
               <h3 style={{ fontSize: '16px', fontWeight: 600 }}>
-                Complete Team ({jobData.assignedTeam.length})
+                Complete Team ({jobData.fullAssignedTeam.length})
               </h3>
               <button
                 style={{ background: 'none', border: 'none', cursor: 'pointer', fontSize: '18px' }}
@@ -830,42 +987,50 @@ const ValuationJobDetail = ({ projectId, initialProject, onBack }: ValuationJobD
               </button>
             </div>
 
-            {jobData.assignedTeam.map((member, index) => (
-              <div key={index} style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '16px' }}>
+            {jobData.fullAssignedTeam.map((member) => (
+              <button
+                key={member.id}
+                type="button"
+                style={teamMemberButtonStyle}
+                onClick={() => {
+                  setShowAllTeam(false);
+                  handleOpenChat(member);
+                }}
+                title={`Message ${member.name}`}
+              >
                 <div style={teamAvatarStyle}>
                   <UserOutlined />
                 </div>
                 <div>
-                  <div
-                    style={{ fontSize: '13px', fontWeight: 500, color: theme.colors.primary.main, cursor: 'pointer' }}
-                    onClick={() => {
-                      setSelectedTeamMember(member);
-                      setShowAllTeam(false);
-                    }}
-                    title="Open chat"
-                  >
+                  <div style={{ fontSize: '13px', fontWeight: 500, color: theme.colors.primary.main }}>
                     {member.name}
                   </div>
-                  <div style={{ fontSize: '12px', color: theme.colors.text.secondary }}>{member.role}</div>
+                  <div style={{ fontSize: '12px', color: theme.colors.text.secondary }}>
+                    {member.role}
+                  </div>
                   <div style={{ fontSize: '12px', color: theme.colors.primary.main }}>{member.email}</div>
+                  <div style={chatHintTextStyle}>Click to message</div>
                 </div>
-              </div>
+              </button>
             ))}
           </div>
         </div>
       )}
 
-      <TeamMemberChatPopup
-        open={Boolean(selectedTeamMember)}
-        valuationJobId={project?.valuationJobId ?? project?.projectId ?? projectId}
-        currentUserId={chatIdentity.id}
-        currentUserName={chatIdentity.name}
-        currentUserRole={chatIdentity.role}
-        recipientId={selectedTeamMember?.id || ''}
-        recipientName={selectedTeamMember?.name || ''}
-        recipientRole={selectedTeamMember?.role || ''}
-        onClose={() => setSelectedTeamMember(null)}
-      />
+      {chatMember && (
+        <TeamMemberChatPopup
+          open={Boolean(chatMember)}
+          valuationJobId={jobData.id}
+          currentUserId={getCurrentUserId(viewerRole)}
+          currentUserName={getCurrentUserName(viewerRole)}
+          currentUserRole={viewerRole}
+          recipientId={chatMember.id}
+          recipientName={chatMember.name}
+          recipientRole={chatMember.role}
+          onClose={() => setChatMember(null)}
+        />
+      )}
+
     </div>
   );
 };

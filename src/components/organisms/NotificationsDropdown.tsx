@@ -1,25 +1,40 @@
 import { Dropdown, Modal } from 'antd';
 import { BellOutlined, CloseOutlined } from '@ant-design/icons';
-import { useState, useEffect } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { theme } from '../../styles/theme';
 import { notificationService } from '../../services/notificationService';
 import type { Notification } from '../../services/notificationService';
-import { getCurrentUserId, uiDefaults } from '../../config/portalConfig';
+import { getPortalClientId, uiDefaults } from '../../config/portalConfig';
 import { formatRelativeTime } from '../../utils/formatters';
+import { getChatIdentity } from '../../services/chatIdentity';
 
 const notificationCardWidthPx = '380px';
-const currentUserId = getCurrentUserId('bank');
+
+interface NotificationsDropdownProps {
+  role?: string;
+}
 
 /**
  * Consolidates notification preview, read-state updates, and detail modal behavior for the global bell menu.
  */
-const NotificationsDropdown = () => {
+const NotificationsDropdown = ({ role }: NotificationsDropdownProps) => {
   const [isOpen, setIsOpen] = useState(false);
   const [selectedNotification, setSelectedNotification] =
     useState<Notification | null>(null);
   const [showAllModal, setShowAllModal] = useState(false);
   const [notifications, setNotifications] = useState<Notification[]>([]);
   const [loading, setLoading] = useState(true);
+  const recipientId = useMemo(() => {
+    if (role === 'owner' || role === 'bank') {
+      return getPortalClientId(role);
+    }
+
+    if (role) {
+      return getChatIdentity(role as Parameters<typeof getChatIdentity>[0]).id;
+    }
+
+    return getPortalClientId('bank');
+  }, [role]);
 
   useEffect(() => {
     /**
@@ -28,7 +43,7 @@ const NotificationsDropdown = () => {
     const fetchNotifications = async () => {
       try {
         setLoading(true);
-        const data = await notificationService.getForUser(currentUserId);
+        const data = await notificationService.getForUser(recipientId);
         setNotifications(data);
       } catch (error) {
         console.error('Failed to fetch notifications:', error);
@@ -37,8 +52,13 @@ const NotificationsDropdown = () => {
       }
     };
 
-    fetchNotifications();
-  }, []);
+    void fetchNotifications();
+    const pollId = window.setInterval(() => {
+      void fetchNotifications();
+    }, uiDefaults.chatPollIntervalMs);
+
+    return () => window.clearInterval(pollId);
+  }, [recipientId]);
 
   const unreadCount = notifications.filter((n) => !n.isRead).length;
 
@@ -61,7 +81,7 @@ const NotificationsDropdown = () => {
    */
   const markAllAsRead = async () => {
     try {
-      await notificationService.markAllAsRead(currentUserId);
+      await notificationService.markAllAsRead(recipientId);
       setNotifications((prev) => prev.map((n) => ({ ...n, isRead: true })));
     } catch (error) {
       console.error('Failed to mark all as read:', error);

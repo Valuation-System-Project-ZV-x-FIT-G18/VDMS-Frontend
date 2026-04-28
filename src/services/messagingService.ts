@@ -76,14 +76,9 @@ const sortByUpdated = (items: ChatConversation[]) =>
 const hasBothUsers = (conv: ChatConversation, a: string, b: string) =>
   conv.participantIds.includes(a) && conv.participantIds.includes(b);
 
-const localListConversations = (userId: string, role?: string): ChatConversation[] => {
+const localListConversations = (userId: string): ChatConversation[] => {
   const all = readLocalConversations();
-  return sortByUpdated(
-    all.filter((c) =>
-      c.participantIds.includes(userId) ||
-      (role ? Object.values(c.participantRoles || {}).includes(role) : false),
-    ),
-  );
+  return sortByUpdated(all.filter((c) => c.participantIds.includes(userId)));
 };
 
 const localListMessages = (conversationId: string): ChatMessage[] => {
@@ -210,7 +205,7 @@ export const messagingService = {
       });
       return sortByUpdated(response.data.map(normalizeConversation));
     } catch {
-      return localListConversations(userId, role);
+      return localListConversations(userId);
     }
   },
 

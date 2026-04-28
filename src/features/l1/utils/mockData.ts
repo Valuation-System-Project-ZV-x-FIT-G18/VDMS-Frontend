@@ -11,7 +11,7 @@ export const dashboardStats = {
 export const mockProjects = [
   {
     id: '1',
-    projectId: 'PRJ-2026-0001',
+    projectId: 'VAL-2026-001',
     propertyAddress: '4512 Oakwood Drive, Austin, TX',
     applicant: 'John Smith',
     status: 'Completed',
@@ -23,7 +23,7 @@ export const mockProjects = [
   },
   {
     id: '2',
-    projectId: 'PRJ-2026-0002',
+    projectId: 'VAL-2026-002',
     propertyAddress: 'B82 Commercial Plaza, Seattle, WA',
     applicant: 'Sarah Wilson',
     status: 'Needs Review',
@@ -35,7 +35,7 @@ export const mockProjects = [
   },
   {
     id: '3',
-    projectId: 'PRJ-2026-0003',
+    projectId: 'VAL-2026-003',
     propertyAddress: '1212 Bluebell Way, Denver, CO',
     applicant: 'James Brown',
     status: 'In Progress',
@@ -47,7 +47,7 @@ export const mockProjects = [
   },
   {
     id: '4',
-    projectId: 'PRJ-2026-0004',
+    projectId: 'VAL-2026-004',
     propertyAddress: '303 Skyline Apartments, Miami, FL',
     applicant: 'Robert Hall',
     status: 'Payment Pending',
@@ -59,7 +59,7 @@ export const mockProjects = [
   },
   {
     id: '5',
-    projectId: 'PRJ-2026-0005',
+    projectId: 'VAL-2026-005',
     propertyAddress: '19 Larkspur Court, Phoenix, AZ',
     applicant: 'Alice Stevens',
     status: 'Report Prepared',
@@ -71,7 +71,7 @@ export const mockProjects = [
   },
   {
     id: '6',
-    projectId: 'PRJ-2026-0006',
+    projectId: 'VAL-2026-006',
     propertyAddress: '567 Pine Street, Portland, OR',
     applicant: 'Emma Johnson',
     status: 'Needs Review',
@@ -83,7 +83,7 @@ export const mockProjects = [
   },
   {
     id: '7',
-    projectId: 'PRJ-2026-0007',
+    projectId: 'VAL-2026-007',
     propertyAddress: '891 Maple Avenue, Houston, TX',
     applicant: 'Michael Davis',
     status: 'Completed',
@@ -95,7 +95,7 @@ export const mockProjects = [
   },
   {
     id: '8',
-    projectId: 'PRJ-2026-0008',
+    projectId: 'VAL-2026-008',
     propertyAddress: '234 Cedar Lane, Philadelphia, PA',
     applicant: 'Jennifer Taylor',
     status: 'In Progress',
@@ -119,7 +119,7 @@ export const mockProjects = [
   },
   {
     id: '10',
-    projectId: 'PRJ-2026-0010',
+    projectId: 'VAL-2026-010',
     propertyAddress: '555 Sunset Boulevard, Los Angeles, CA',
     applicant: 'Premier Properties Inc.',
     status: 'Rejected',
@@ -131,7 +131,7 @@ export const mockProjects = [
   },
   {
     id: '11',
-    projectId: 'PRJ-2026-0011',
+    projectId: 'VAL-2026-011',
     propertyAddress: '777 Mountain View Road, Denver, CO',
     applicant: 'Colorado Real Estate Group',
     status: 'Rejected',
@@ -212,7 +212,7 @@ export const teamMembers = [
 
 export const pendingApprovals = [
   {
-    projectId: 'PRJ-2026-0002',
+    projectId: 'VAL-2026-002',
     propertyAddress: 'B82 Commercial Plaza, Seattle, WA',
     submittedBy: 'Mark Kendrick',
     submittedDate: '2023-10-25',
@@ -220,7 +220,7 @@ export const pendingApprovals = [
     approvalType: 'Report Approval',
   },
   {
-    projectId: 'PRJ-2026-0006',
+    projectId: 'VAL-2026-006',
     propertyAddress: '567 Pine Street, Portland, OR',
     submittedBy: 'David Chen',
     submittedDate: '2023-10-26',
@@ -228,7 +228,7 @@ export const pendingApprovals = [
     approvalType: 'Document Review',
   },
   {
-    projectId: 'PRJ-2026-0004',
+    projectId: 'VAL-2026-004',
     propertyAddress: '303 Skyline Apartments, Miami, FL',
     submittedBy: 'Robert Hall',
     submittedDate: '2023-10-24',
@@ -236,7 +236,7 @@ export const pendingApprovals = [
     approvalType: 'Payment Authorization',
   },
   {
-    projectId: 'PRJ-2026-0008',
+    projectId: 'VAL-2026-008',
     propertyAddress: '234 Cedar Lane, Philadelphia, PA',
     submittedBy: 'Christopher Lee',
     submittedDate: '2023-10-26',
@@ -244,7 +244,7 @@ export const pendingApprovals = [
     approvalType: 'Document Review',
   },
   {
-    projectId: 'PRJ-2026-0009',
+    projectId: 'VAL-2026-009',
     propertyAddress: '456 Oak Boulevard, Chicago, IL',
     submittedBy: 'Emma Davis',
     submittedDate: '2023-10-27',
@@ -252,7 +252,7 @@ export const pendingApprovals = [
     approvalType: 'Report Approval',
   },
   {
-    projectId: 'PRJ-2026-0010',
+    projectId: 'VAL-2026-010',
     propertyAddress: '789 Elm Street, New York, NY',
     submittedBy: 'Mike Johnson',
     submittedDate: '2023-10-27',

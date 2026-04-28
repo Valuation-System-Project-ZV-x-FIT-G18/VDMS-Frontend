@@ -1,6 +1,8 @@
 import React, { useState, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import WorkflowLayout from "../../components/WorkflowLayout";
+import { notificationService } from "../../../../services/notificationService";
+import { getPortalClientId } from "../../../../config/portalConfig";
 
 interface ValuationDetails {
   priority: "High" | "Medium" | "Low";
@@ -188,6 +190,15 @@ const NewValuation: React.FC = () => {
       };
 
       console.log("Valuation details:", valuationData);
+      void notificationService.create({
+        type: "success",
+        event: "PROJECT_CREATED",
+        title: `Valuation Job Created - ${projectId}`,
+        message: `Coordinator created valuation job ${projectId}. Priority: ${priority}. Estimated completion: ${completionDate}.`,
+        recipientId: getPortalClientId("bank"),
+        recipientRole: "client",
+        projectId: null,
+      });
       navigate("/coordinator/workflow/assign-to");
     } else {
       alert("Please fill in all required fields and upload required documents");

@@ -39,6 +39,14 @@ const defaultNameByRole: Record<string, string> = {
   'senior-valuator': 'Senior Valuator',
 };
 
+export const resolveChatUserId = (role?: AppRole | string): string | undefined => {
+  if (!role) {
+    return undefined;
+  }
+
+  return defaultIdByRole[role] || undefined;
+};
+
 export const getChatIdentity = (role?: AppRole, preferredName?: string): ChatIdentity => {
   const storedId = localStorage.getItem('currentUserId');
   const storedName = localStorage.getItem('currentUserName');
@@ -48,8 +56,17 @@ export const getChatIdentity = (role?: AppRole, preferredName?: string): ChatIde
   const fallbackId = role ? defaultIdByRole[role] : undefined;
   const fallbackName = role ? defaultNameByRole[role] : undefined;
 
-  const id = storedId || fallbackId || 'user-generic-001';
-  const name = preferredName || storedName || fallbackName || 'User';
+  const hasExplicitRole = Boolean(role);
+
+  // For role-specific portals, always bind chat identity to that role's canonical user.
+  // This prevents stale localStorage ids from other roles causing incorrect unread/read behavior.
+  const id = hasExplicitRole
+    ? fallbackId || 'user-generic-001'
+    : storedId || fallbackId || 'user-generic-001';
+
+  const name = hasExplicitRole
+    ? preferredName || fallbackName || storedName || 'User'
+    : preferredName || storedName || fallbackName || 'User';
 
   localStorage.setItem('currentUserId', id);
   localStorage.setItem('currentUserName', name);
