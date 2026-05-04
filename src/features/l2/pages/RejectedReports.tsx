@@ -1,20 +1,37 @@
 import type { CSSProperties } from "react";
-import { useState, useMemo } from "react";
-import { mockProjects } from "../utils/mockData";
+import { useState, useMemo, useEffect } from "react";
+import { Modal, Button } from "antd";
+import { CloseOutlined, ArrowLeftOutlined } from "@ant-design/icons";
+import { projectService } from "../../../services/projectService";
 import { formatDate } from "../utils/helpers";
 
-interface L3RejectedReportsProps {
-  onNavigate?: (page: string, projectId?: string) => void;
-}
-
-const L3RejectedReports = ({ onNavigate }: L3RejectedReportsProps) => {
+const L3RejectedReports = () => {
   const [searchQuery, setSearchQuery] = useState("");
   const [currentPage, setCurrentPage] = useState(1);
+  const [projects, setProjects] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [selectedProject, setSelectedProject] = useState<any>(null);
   const itemsPerPage = 5;
+
+  useEffect(() => {
+    const fetchProjects = async () => {
+      try {
+        setLoading(true);
+        const data = await projectService.getRejected();
+        setProjects(Array.isArray(data) ? data : []);
+      } catch (err) {
+        console.error("Error fetching projects:", err);
+        setProjects([]);
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchProjects();
+  }, []);
 
   // Filter for rejected reports only
   const filteredProjects = useMemo(() => {
-    const rejected = mockProjects.filter((p) => p.status === "Rejected");
+    const rejected = projects.filter((p) => p.status === "Rejected");
 
     if (!searchQuery) return rejected;
 
@@ -24,7 +41,7 @@ const L3RejectedReports = ({ onNavigate }: L3RejectedReportsProps) => {
         project.projectId.toLowerCase().includes(query) ||
         project.propertyAddress.toLowerCase().includes(query),
     );
-  }, [searchQuery]);
+  }, [searchQuery, projects]);
 
   // Pagination
   const totalPages = Math.ceil(filteredProjects.length / itemsPerPage);
@@ -270,9 +287,7 @@ const L3RejectedReports = ({ onNavigate }: L3RejectedReportsProps) => {
                     <td style={tdStyle}>
                       <button
                         style={actionButtonStyle}
-                        onClick={() =>
-                          onNavigate?.("reject-report", project.projectId)
-                        }
+                        onClick={() => setSelectedProject(project)}
                       >
                         Review Rejection
                       </button>

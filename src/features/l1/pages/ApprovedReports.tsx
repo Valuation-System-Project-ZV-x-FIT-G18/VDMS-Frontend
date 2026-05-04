@@ -1,30 +1,45 @@
 import type { CSSProperties } from "react";
-import { useState, useMemo } from "react";
-import { mockProjects } from "../utils/mockData";
+import { useState, useMemo, useEffect } from "react";
+import { projectService } from "../../../services/projectService";
 import { formatDate } from "../utils/helpers";
 
 const ApprovedReports = () => {
   const [searchQuery, setSearchQuery] = useState("");
   const [currentPage, setCurrentPage] = useState(1);
+  const [approvedProjects, setApprovedProjects] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
   const itemsPerPage = 6;
 
-  const approvedProjects = useMemo(() => {
-    const approved = mockProjects.filter((p) => p.status === "Completed");
+  useEffect(() => {
+    const fetchApprovedProjects = async () => {
+      try {
+        setLoading(true);
+        const data = await projectService.getCompleted();
+        setApprovedProjects(data);
+      } catch (error) {
+        console.error("Failed to fetch approved projects:", error);
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchApprovedProjects();
+  }, []);
 
-    if (!searchQuery) return approved;
+  const filteredProjects = useMemo(() => {
+    if (!searchQuery) return approvedProjects;
 
     const query = searchQuery.toLowerCase();
-    return approved.filter(
-      (project) =>
+    return approvedProjects.filter(
+      (project: any) =>
         project.projectId.toLowerCase().includes(query) ||
         project.propertyAddress.toLowerCase().includes(query),
     );
-  }, [searchQuery]);
+  }, [searchQuery, approvedProjects]);
 
-  const totalPages = Math.ceil(approvedProjects.length / itemsPerPage);
+  const totalPages = Math.ceil(filteredProjects.length / itemsPerPage);
   const startIndex = (currentPage - 1) * itemsPerPage;
   const endIndex = startIndex + itemsPerPage;
-  const currentProjects = approvedProjects.slice(startIndex, endIndex);
+  const currentProjects = filteredProjects.slice(startIndex, endIndex);
 
   const containerStyle: CSSProperties = {
     padding: "32px",

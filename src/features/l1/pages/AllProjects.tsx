@@ -1,5 +1,5 @@
 import type { CSSProperties } from "react";
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect } from "react";
 import {
   FilterOutlined,
   ReloadOutlined,
@@ -8,17 +8,35 @@ import {
   ExclamationOutlined,
 } from "@ant-design/icons";
 import L3ProjectsTable from "../../../components/organisms/L3ProjectsTable";
-import { mockProjects } from "../utils/mockData";
 import { theme } from "../../../styles/theme";
+import { projectService } from "../../../services/projectService";
 
 type FilterStatus = "all" | "needs-review" | "in-progress" | "completed";
 
 const AllProjectsPage = () => {
   const [filterStatus, setFilterStatus] = useState<FilterStatus>("all");
   const [searchQuery, setSearchQuery] = useState("");
+  const [projects, setProjects] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    const fetchProjects = async () => {
+      try {
+        setLoading(true);
+        const data = await projectService.getAll();
+        setProjects(Array.isArray(data) ? data : []);
+      } catch (err) {
+        console.error("Error fetching projects:", err);
+        setProjects([]);
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchProjects();
+  }, []);
 
   const filteredProjects = useMemo(() => {
-    let result = mockProjects;
+    let result = projects;
 
     // Filter by status
     if (filterStatus !== "all") {
@@ -45,22 +63,22 @@ const AllProjectsPage = () => {
     }
 
     return result;
-  }, [filterStatus, searchQuery]);
+  }, [filterStatus, searchQuery, projects]);
 
   const statusStats = useMemo(() => {
     return {
-      all: mockProjects.length,
-      "needs-review": mockProjects.filter((p) =>
+      all: projects.length,
+      "needs-review": projects.filter((p) =>
         ["Needs Review", "Payment Pending"].includes(p.status),
       ).length,
-      "in-progress": mockProjects.filter((p) =>
+      "in-progress": projects.filter((p) =>
         ["In Progress", "Awaiting Docs", "Site Inspected"].includes(p.status),
       ).length,
-      completed: mockProjects.filter((p) =>
+      completed: projects.filter((p) =>
         ["Completed", "Report Prepared"].includes(p.status),
       ).length,
     };
-  }, []);
+  }, [projects]);
 
   const containerStyle: CSSProperties = {
     maxWidth: "1400px",
@@ -241,7 +259,7 @@ const AllProjectsPage = () => {
             <FilterOutlined />
           </div>
           <div style={statContentStyle}>
-            <div style={statValueStyle}>{mockProjects.length}</div>
+            <div style={statValueStyle}>{projects.length}</div>
             <div style={statLabelStyle}>Total Projects</div>
           </div>
         </div>
@@ -253,7 +271,7 @@ const AllProjectsPage = () => {
           <div style={statContentStyle}>
             <div style={statValueStyle}>
               {
-                mockProjects.filter((p) =>
+                projects.filter((p: any) =>
                   ["Needs Review", "Payment Pending"].includes(p.status),
                 ).length
               }
@@ -269,7 +287,7 @@ const AllProjectsPage = () => {
           <div style={statContentStyle}>
             <div style={statValueStyle}>
               {
-                mockProjects.filter((p) =>
+                projects.filter((p: any) =>
                   ["In Progress", "Awaiting Docs", "Site Inspected"].includes(
                     p.status,
                   ),
@@ -287,7 +305,7 @@ const AllProjectsPage = () => {
           <div style={statContentStyle}>
             <div style={statValueStyle}>
               {
-                mockProjects.filter((p) =>
+                projects.filter((p: any) =>
                   ["Completed", "Report Prepared"].includes(p.status),
                 ).length
               }

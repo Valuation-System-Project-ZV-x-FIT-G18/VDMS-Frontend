@@ -105,37 +105,30 @@ const Sidebar = ({ activePage, onNavigate, role }: SidebarProps) => {
     { id: "rejected", label: "Rejected Reports", icon: CloseCircleOutlined },
     { id: "all", label: "All Reports", icon: FileTextOutlined },
     { id: "finalized", label: "Finalized Reports", icon: LockOutlined },
-    { id: "history", label: "Version History", icon: HistoryOutlined },
+    //{ id: "history", label: "Version History", icon: HistoryOutlined },
   ];
 
   // L2 Manager menu items
   const l2MenuItems = [
     { id: "dashboard", label: "Dashboard", icon: DashboardOutlined },
-    { id: "projects", label: "All Projects", icon: FolderOpenOutlined },
-    { id: "approvals", label: "Approvals", icon: CheckCircleOutlined },
-    { id: "reports", label: "Reports", icon: FileTextOutlined },
     { id: "pending", label: "Pending Reviews", icon: ClockCircleOutlined },
     { id: "approved", label: "Approved Reports", icon: CheckCircleOutlined },
     { id: "rejected", label: "Rejected Reports", icon: CloseCircleOutlined },
     { id: "all", label: "All Reports", icon: FileTextOutlined },
     { id: "finalized", label: "Finalized Reports", icon: LockOutlined },
-    { id: "history", label: "Version History", icon: HistoryOutlined },
+    //{ id: "history", label: "Version History", icon: HistoryOutlined },
   ];
 
   // L1 Manager menu items
   const l1MenuItems = [
     { id: "dashboard", label: "Dashboard", icon: DashboardOutlined },
-    { id: "projects", label: "All Projects", icon: FolderOpenOutlined },
-    { id: "approvals", label: "Approvals", icon: CheckCircleOutlined },
-    { id: "reports", label: "Reports", icon: FileTextOutlined },
     { id: "pending", label: "Pending Reviews", icon: ClockCircleOutlined },
     { id: "approved", label: "Approved Reports", icon: CheckCircleOutlined },
     { id: "rejected", label: "Rejected Reports", icon: CloseCircleOutlined },
     { id: "all", label: "All Reports", icon: FileTextOutlined },
     { id: "finalized", label: "Finalized Reports", icon: LockOutlined },
-    { id: "history", label: "Version History", icon: HistoryOutlined },
-    { id: "bottlenecks", label: "Bottlenecks", icon: BarChartOutlined },
-    { id: "morning-report", label: "Morning Report", icon: ClockCircleOutlined },
+    //{ id: "history", label: "Version History", icon: HistoryOutlined },
+    
   ];
 
   // Get menu items based on role

@@ -1,47 +1,29 @@
-import type { Project } from './projectService';
-import { projectService } from './projectService';
+import axiosInstance from '../api/axios';
 
 export interface DashboardStats {
   totalProjects: number;
   completedProjects: number;
-  activeProjects: number;
-  pendingPayments: number;
-  pendingDocuments: number;
+  pendingApprovals: number;
+  bottlenecks: number;
+  recentProjects: any[];
+  [key: string]: any;
 }
 
 export const dashboardService = {
-  // Get dashboard statistics
-  getStats: async (): Promise<DashboardStats> => {
-    try {
-      // Use normalized project mapping from projectService
-      const projects = await projectService.getAll();
-
-      const stats: DashboardStats = {
-        totalProjects: projects.length,
-        completedProjects: projects.filter(p => p.status === 'Completed').length,
-        activeProjects: projects.filter(p => 
-          p.status === 'In Progress' || 
-          p.status === 'Site Inspected' || 
-          p.status === 'Report Prepared'
-        ).length,
-        pendingPayments: projects.filter(p => p.paymentStatus === 'Pending').length,
-        pendingDocuments: projects.filter(p => p.status === 'Awaiting Docs').length,
-      };
-
-      return stats;
-    } catch (error) {
-      console.error('Error fetching dashboard stats:', error);
-      throw error;
-    }
+  async getStats() {
+    const response = await axiosInstance.get('/dashboard/stats');
+    return response.data;
   },
 
-  // Get recent projects
-  getRecentProjects: async (limit: number = 5): Promise<Project[]> => {
-    try {
-      return await projectService.getRecent(limit);
-    } catch (error) {
-      console.error('Error fetching recent projects:', error);
-      throw error;
-    }
+  async getMorningReport() {
+    const response = await axiosInstance.get('/dashboard/morning-report');
+    return response.data;
+  },
+
+  async getRecentProjects(limit?: number) {
+    const response = await axiosInstance.get('/projects/recent', {
+      params: limit ? { limit } : {},
+    });
+    return response.data;
   },
 };

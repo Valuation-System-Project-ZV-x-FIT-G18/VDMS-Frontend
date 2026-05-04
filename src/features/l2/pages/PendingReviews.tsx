@@ -1,6 +1,6 @@
 import type { CSSProperties } from "react";
-import { useState, useMemo } from "react";
-import { mockProjects } from "../utils/mockData";
+import { useState, useMemo, useEffect } from "react";
+import { projectService } from "../../../services/projectService";
 import { formatDate, getStatusColor } from "../utils/helpers";
 
 interface PendingReviewsProps {
@@ -10,11 +10,29 @@ interface PendingReviewsProps {
 const PendingReviews = ({ onNavigate }: PendingReviewsProps) => {
   const [searchQuery, setSearchQuery] = useState("");
   const [currentPage, setCurrentPage] = useState(1);
+  const [projects, setProjects] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
   const itemsPerPage = 5;
+
+  useEffect(() => {
+    const fetchProjects = async () => {
+      try {
+        setLoading(true);
+        const data = await projectService.getPending();
+        setProjects(Array.isArray(data) ? data : []);
+      } catch (err) {
+        console.error("Error fetching projects:", err);
+        setProjects([]);
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchProjects();
+  }, []);
 
   // Filter for pending reviews only
   const filteredProjects = useMemo(() => {
-    const pendingReviews = mockProjects.filter((p) =>
+    const pendingReviews = projects.filter((p) =>
       ["Needs Review", "Payment Pending"].includes(p.status),
     );
 
@@ -27,7 +45,7 @@ const PendingReviews = ({ onNavigate }: PendingReviewsProps) => {
         project.propertyAddress.toLowerCase().includes(query) ||
         project.status.toLowerCase().includes(query),
     );
-  }, [searchQuery]);
+  }, [searchQuery, projects]);
 
   // Pagination
   const totalPages = Math.ceil(filteredProjects.length / itemsPerPage);

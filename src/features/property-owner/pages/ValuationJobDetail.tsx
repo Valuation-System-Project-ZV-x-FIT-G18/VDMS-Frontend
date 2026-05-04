@@ -1,5 +1,5 @@
-import BankValuationJobDetail from '../../bank-credit-officer/pages/ValuationJobDetail';
-import type { Project } from '../../../services/projectService';
+import BankValuationJobDetail from "../../bank-credit-officer/pages/ValuationJobDetail";
+import type { Project } from "../../bank-credit-officer/types";
 
 interface ValuationJobDetailProps {
   projectId: string;
@@ -7,7 +7,11 @@ interface ValuationJobDetailProps {
   onBack: () => void;
 }
 
-const ValuationJobDetail = ({ projectId, initialProject, onBack }: ValuationJobDetailProps) => (
+const ValuationJobDetail = ({
+  projectId,
+  initialProject,
+  onBack,
+}: ValuationJobDetailProps) => (
   <BankValuationJobDetail
     projectId={projectId}
     initialProject={initialProject}

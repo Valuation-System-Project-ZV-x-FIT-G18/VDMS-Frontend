@@ -1,10 +1,12 @@
 import { useState } from "react";
+import { useNavigate } from "react-router-dom";
 import type { CSSProperties } from "react";
 import {
   MessageOutlined,
   ThunderboltFilled,
   MenuOutlined,
   CloseOutlined,
+  LogoutOutlined,
 } from "@ant-design/icons";
 import NotificationsDropdown from "../components/organisms/NotificationsDropdown";
 import MessagingSystem from "../components/organisms/MessagingSystem";
@@ -26,6 +28,8 @@ const Header = ({
   menuOpen,
 }: HeaderProps) => {
   const [showMessaging, setShowMessaging] = useState(false);
+  const [showUserMenu, setShowUserMenu] = useState(false);
+  const navigate = useNavigate();
 
   const headerStyle: CSSProperties = {
     height: "64px",
@@ -146,6 +150,40 @@ const Header = ({
     fontWeight: 600,
     fontSize: isMobile ? "14px" : "16px",
     flexShrink: 0,
+    cursor: "pointer",
+    position: "relative",
+  };
+
+  const userMenuStyle: CSSProperties = {
+    position: "absolute",
+    top: "100%",
+    right: 0,
+    marginTop: "8px",
+    backgroundColor: "white",
+    borderRadius: "8px",
+    border: "1px solid #e5e7eb",
+    boxShadow: "0 4px 6px rgba(0, 0, 0, 0.1)",
+    minWidth: "160px",
+    zIndex: 1000,
+  };
+
+  const menuItemStyle: CSSProperties = {
+    padding: "12px 16px",
+    borderBottom: "1px solid #f3f4f6",
+    cursor: "pointer",
+    display: "flex",
+    alignItems: "center",
+    gap: "8px",
+    color: "#374151",
+    fontSize: "13px",
+    transition: "background-color 0.2s",
+  };
+
+  const handleLogout = () => {
+    localStorage.clear();
+    setShowUserMenu(false);
+    navigate("/");
+    window.location.reload();
   };
 
   return (
@@ -182,7 +220,35 @@ const Header = ({
             <span style={userRoleStyle}>{userRole}</span>
           </div>
 
-          <div style={avatarStyle}>{userName.charAt(0).toUpperCase()}</div>
+          <div style={{ position: "relative" }}>
+            <div
+              style={avatarStyle}
+              onClick={() => setShowUserMenu(!showUserMenu)}
+              title="Click to open user menu"
+            >
+              {userName.charAt(0).toUpperCase()}
+            </div>
+
+            {/* User Menu Dropdown */}
+            {showUserMenu && (
+              <div style={userMenuStyle}>
+                <div
+                  style={menuItemStyle}
+                  onClick={handleLogout}
+                  onMouseEnter={(e) => {
+                    (e.target as HTMLElement).style.backgroundColor = "#f3f4f6";
+                  }}
+                  onMouseLeave={(e) => {
+                    (e.target as HTMLElement).style.backgroundColor =
+                      "transparent";
+                  }}
+                >
+                  <LogoutOutlined style={{ fontSize: "14px" }} />
+                  Logout
+                </div>
+              </div>
+            )}
+          </div>
         </div>
       </header>
 

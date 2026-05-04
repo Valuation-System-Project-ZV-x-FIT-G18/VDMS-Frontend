@@ -1,12 +1,51 @@
 import type { CSSProperties } from "react";
-import { useState } from "react";
+import { useState, useEffect } from "react";
+import { dashboardService } from "../../../services/dashboardService";
 
 interface DailyMorningReportProps {
   onNavigate?: (page: string) => void;
 }
 
 const DailyMorningReport = ({ onNavigate: _ }: DailyMorningReportProps) => {
-  const [selectedDate, setSelectedDate] = useState("10/28/2023");
+  const [selectedDate, setSelectedDate] = useState(
+    new Date().toLocaleDateString("en-US"),
+  );
+  const [report, setReport] = useState<any>({
+    completedProjects: 0,
+    activeProjects: 0,
+    criticalIssues: 0,
+    meetings: 0,
+  });
+  const [shareLinks, setShareLinks] = useState<any[]>([
+    {
+      projectId: "PID-0042",
+      createdDate: "Oct 26, 2023",
+      expires: "In 2 days",
+      accessCount: 12,
+    },
+    {
+      projectId: "PID-0089",
+      createdDate: "Oct 27, 2023",
+      expires: "Expires today",
+      accessCount: 8,
+    },
+  ]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    const fetchReport = async () => {
+      try {
+        setLoading(true);
+        const data = await dashboardService.getMorningReport();
+        setReport(data);
+      } catch (error) {
+        console.error("Failed to fetch morning report:", error);
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchReport();
+  }, []);
 
   const containerStyle: CSSProperties = {
     padding: "32px",
@@ -74,83 +113,6 @@ const DailyMorningReport = ({ onNavigate: _ }: DailyMorningReportProps) => {
     fontSize: "11px",
     color: "#9ca3af",
     lineHeight: "1.4",
-  };
-
-  const gridStyle: CSSProperties = {
-    display: "grid",
-    gridTemplateColumns: "repeat(2, 1fr)",
-    gap: "24px",
-    marginBottom: "40px",
-  };
-
-  const cardStyle: CSSProperties = {
-    backgroundColor: "#f9fafb",
-    padding: "24px",
-    borderRadius: "8px",
-    border: "1px solid #e5e7eb",
-  };
-
-  const cardTitleStyle: CSSProperties = {
-    fontSize: "14px",
-    fontWeight: 600,
-    color: "#1f2937",
-    marginBottom: "16px",
-    margin: "0 0 16px 0",
-  };
-
-  const issueCardStyle: CSSProperties = {
-    backgroundColor: "#ffffff",
-    padding: "12px",
-    borderRadius: "6px",
-    border: "1px solid #e5e7eb",
-    marginBottom: "8px",
-  };
-
-  const severityBadgeStyle = (
-    severity: "High" | "Med" | "Low",
-  ): CSSProperties => {
-    let bgColor = "#fecaca";
-    let textColor = "#991b1b";
-    if (severity === "Med") {
-      bgColor = "#fed7aa";
-      textColor = "#92400e";
-    }
-    if (severity === "Low") {
-      bgColor = "#bbf7d0";
-      textColor = "#065f46";
-    }
-
-    return {
-      display: "inline-block",
-      padding: "2px 8px",
-      borderRadius: "4px",
-      fontSize: "10px",
-      fontWeight: 600,
-      backgroundColor: bgColor,
-      color: textColor,
-    };
-  };
-
-  const issueTitleStyle: CSSProperties = {
-    fontSize: "13px",
-    fontWeight: 600,
-    color: "#1f2937",
-    marginBottom: "4px",
-  };
-
-  const issueDescStyle: CSSProperties = {
-    fontSize: "11px",
-    color: "#6b7280",
-    marginBottom: "8px",
-  };
-
-  const linkStyle: CSSProperties = {
-    color: "#3b82f6",
-    fontSize: "11px",
-    fontWeight: 600,
-    cursor: "pointer",
-    marginRight: "12px",
-    textDecoration: "none",
   };
 
   const secureShareSectionStyle: CSSProperties = {
@@ -233,6 +195,21 @@ const DailyMorningReport = ({ onNavigate: _ }: DailyMorningReportProps) => {
     cursor: "pointer",
   };
 
+  if (loading) {
+    return (
+      <div
+        style={{
+          display: "flex",
+          justifyContent: "center",
+          alignItems: "center",
+          minHeight: "100vh",
+        }}
+      >
+        <p>Loading morning report...</p>
+      </div>
+    );
+  }
+
   return (
     <div style={containerStyle}>
       {/* Header with Date Picker */}
@@ -246,37 +223,35 @@ const DailyMorningReport = ({ onNavigate: _ }: DailyMorningReportProps) => {
         />
       </div>
 
-      {/* Yesterday's Workflow Summary - Visual Cards */}
+      {/* Summary Cards — now from backend */}
       <div style={summaryGridStyle}>
-        {/* Projects Completed */}
         <div style={summaryCardStyle}>
           <div style={summaryIconStyle}>✅</div>
           <div style={summaryLabelStyle}>Projects Completed</div>
-          <div style={summaryValueStyle}>2</div>
+          <div style={summaryValueStyle}>{report.completedProjects}</div>
           <div style={summaryDescStyle}>Successfully finalized</div>
         </div>
 
-        {/* Active Projects */}
         <div style={summaryCardStyle}>
           <div style={summaryIconStyle}>⚡</div>
           <div style={summaryLabelStyle}>Active Projects</div>
-          <div style={summaryValueStyle}>4</div>
+          <div style={summaryValueStyle}>{report.activeProjects}</div>
           <div style={summaryDescStyle}>Advanced to next phase</div>
         </div>
 
-        {/* Issues Found */}
-        <div style={{ ...summaryCardStyle, borderLeft: "4px solid #ef4444" }}>
+        <div
+          style={{ ...summaryCardStyle, borderLeft: "4px solid #ef4444" }}
+        >
           <div style={summaryIconStyle}>⚠️</div>
           <div style={summaryLabelStyle}>Critical Issues</div>
-          <div style={summaryValueStyle}>2</div>
+          <div style={summaryValueStyle}>{report.criticalIssues}</div>
           <div style={summaryDescStyle}>Require attention</div>
         </div>
 
-        {/* Meetings Completed */}
         <div style={summaryCardStyle}>
           <div style={summaryIconStyle}>📅</div>
           <div style={summaryLabelStyle}>Meetings</div>
-          <div style={summaryValueStyle}>1</div>
+          <div style={summaryValueStyle}>{report.meetings}</div>
           <div style={summaryDescStyle}>Morning briefing with HR</div>
         </div>
       </div>
@@ -294,7 +269,6 @@ const DailyMorningReport = ({ onNavigate: _ }: DailyMorningReportProps) => {
           + Generate Secure Share Link
         </button>
 
-        {/* Active Secure Shares */}
         <h3
           style={{
             fontSize: "12px",
@@ -305,58 +279,34 @@ const DailyMorningReport = ({ onNavigate: _ }: DailyMorningReportProps) => {
         >
           Active Secure Share Links
         </h3>
-        <div style={shareTableStyle}>
-          {/* Share Item 1 */}
-          <div style={shareItemStyle}>
-            <div style={shareItemRowStyle}>
-              <span style={shareItemLabelStyle}>Project ID</span>
-              <span style={shareItemValueStyle}>PID-0042</span>
-            </div>
-            <div style={shareItemRowStyle}>
-              <span style={shareItemLabelStyle}>Created Date</span>
-              <span style={shareItemValueStyle}>Oct 26, 2023</span>
-            </div>
-            <div style={shareItemRowStyle}>
-              <span style={shareItemLabelStyle}>Expires</span>
-              <span style={{ ...shareItemValueStyle, color: "#ef4444" }}>
-                In 2 days
-              </span>
-            </div>
-            <div style={shareItemRowStyle}>
-              <span style={shareItemLabelStyle}>Access Count</span>
-              <span style={shareItemValueStyle}>12</span>
-            </div>
-            <div style={actionButtonsStyle}>
-              <button style={smallButtonStyle}>Regenerate</button>
-              <button style={smallButtonStyle}>Revoke</button>
-            </div>
-          </div>
 
-          {/* Share Item 2 */}
-          <div style={shareItemStyle}>
-            <div style={shareItemRowStyle}>
-              <span style={shareItemLabelStyle}>Project ID</span>
-              <span style={shareItemValueStyle}>PID-0089</span>
+        <div style={shareTableStyle}>
+          {shareLinks.map((link, index) => (
+            <div key={index} style={shareItemStyle}>
+              <div style={shareItemRowStyle}>
+                <span style={shareItemLabelStyle}>Project ID</span>
+                <span style={shareItemValueStyle}>{link.projectId}</span>
+              </div>
+              <div style={shareItemRowStyle}>
+                <span style={shareItemLabelStyle}>Created Date</span>
+                <span style={shareItemValueStyle}>{link.createdDate}</span>
+              </div>
+              <div style={shareItemRowStyle}>
+                <span style={shareItemLabelStyle}>Expires</span>
+                <span style={{ ...shareItemValueStyle, color: "#ef4444" }}>
+                  {link.expires}
+                </span>
+              </div>
+              <div style={shareItemRowStyle}>
+                <span style={shareItemLabelStyle}>Access Count</span>
+                <span style={shareItemValueStyle}>{link.accessCount}</span>
+              </div>
+              <div style={actionButtonsStyle}>
+                <button style={smallButtonStyle}>Regenerate</button>
+                <button style={smallButtonStyle}>Revoke</button>
+              </div>
             </div>
-            <div style={shareItemRowStyle}>
-              <span style={shareItemLabelStyle}>Created Date</span>
-              <span style={shareItemValueStyle}>Oct 27, 2023</span>
-            </div>
-            <div style={shareItemRowStyle}>
-              <span style={shareItemLabelStyle}>Expires</span>
-              <span style={{ ...shareItemValueStyle, color: "#ef4444" }}>
-                Expires today
-              </span>
-            </div>
-            <div style={shareItemRowStyle}>
-              <span style={shareItemLabelStyle}>Access Count</span>
-              <span style={shareItemValueStyle}>8</span>
-            </div>
-            <div style={actionButtonsStyle}>
-              <button style={smallButtonStyle}>Regenerate</button>
-              <button style={smallButtonStyle}>Revoke</button>
-            </div>
-          </div>
+          ))}
         </div>
       </div>
     </div>

@@ -1,12 +1,12 @@
-import { Dropdown, Modal } from 'antd';
-import { BellOutlined, CloseOutlined } from '@ant-design/icons';
-import { useState, useEffect } from 'react';
-import { theme } from '../../styles/theme';
-import { notificationService } from '../../services/notificationService';
-import type { Notification } from '../../services/notificationService';
+import { Dropdown, Modal } from "antd";
+import { BellOutlined, CloseOutlined } from "@ant-design/icons";
+import { useState, useEffect } from "react";
+import { theme } from "../../styles/theme";
+import { notificationService } from "../../services/notificationService";
+import type { Notification } from "../../services/notificationService";
 
 // Hardcoded for now — later this will come from auth/login
-const CURRENT_USER_ID = 'client-001';
+const CURRENT_USER_ID = "client-001";
 
 const NotificationsDropdown = () => {
   const [isOpen, setIsOpen] = useState(false);
@@ -21,10 +21,10 @@ const NotificationsDropdown = () => {
     const fetchNotifications = async () => {
       try {
         setLoading(true);
-        const data = await notificationService.getForUser(CURRENT_USER_ID);
+        const data = await notificationService.getAll();
         setNotifications(data);
       } catch (error) {
-        console.error('Failed to fetch notifications:', error);
+        console.error("Failed to fetch notifications:", error);
       } finally {
         setLoading(false);
       }
@@ -38,22 +38,22 @@ const NotificationsDropdown = () => {
   // ── Mark one as read ──────────────────────────────
   const markAsRead = async (id: string) => {
     try {
-      await notificationService.markAsRead(id);
+      await notificationService.markRead(id);
       setNotifications((prev) =>
         prev.map((n) => (n.id === id ? { ...n, isRead: true } : n)),
       );
     } catch (error) {
-      console.error('Failed to mark as read:', error);
+      console.error("Failed to mark as read:", error);
     }
   };
 
   // ── Mark all as read ──────────────────────────────
   const markAllAsRead = async () => {
     try {
-      await notificationService.markAllAsRead(CURRENT_USER_ID);
+      await notificationService.markAllRead();
       setNotifications((prev) => prev.map((n) => ({ ...n, isRead: true })));
     } catch (error) {
-      console.error('Failed to mark all as read:', error);
+      console.error("Failed to mark all as read:", error);
     }
   };
 
@@ -72,48 +72,49 @@ const NotificationsDropdown = () => {
     const diffHours = Math.floor(diffMs / 3600000);
     const diffDays = Math.floor(diffMs / 86400000);
 
-    if (diffMins < 1) return 'Just now';
+    if (diffMins < 1) return "Just now";
     if (diffMins < 60) return `${diffMins} minutes ago`;
-    if (diffHours < 24) return `${diffHours} hour${diffHours > 1 ? 's' : ''} ago`;
-    if (diffDays === 1) return 'Yesterday';
+    if (diffHours < 24)
+      return `${diffHours} hour${diffHours > 1 ? "s" : ""} ago`;
+    if (diffDays === 1) return "Yesterday";
     return `${diffDays} days ago`;
   };
 
-  const getColorByType = (type: Notification['type']) => {
-    const colors = {
-      success: '#52c41a',
-      warning: '#faad14',
-      error: '#ff4d4f',
-      info: '#1890ff',
+  const getColorByType = (type: string) => {
+    const colors: Record<string, string> = {
+      success: "#52c41a",
+      warning: "#faad14",
+      error: "#ff4d4f",
+      info: "#1890ff",
     };
-    return colors[type];
+    return colors[type] || "#1890ff";
   };
 
   // ── Dropdown content ──────────────────────────────
   const dropdownContent = (
     <div
       style={{
-        width: '380px',
-        backgroundColor: 'white',
-        border: '1px solid #000',
-        borderRadius: '8px',
-        boxShadow: '0 4px 12px rgba(0, 0, 0, 0.15)',
-        overflow: 'hidden',
+        width: "380px",
+        backgroundColor: "white",
+        border: "1px solid #000",
+        borderRadius: "8px",
+        boxShadow: "0 4px 12px rgba(0, 0, 0, 0.15)",
+        overflow: "hidden",
       }}
     >
       {/* Header */}
       <div
         style={{
-          padding: '16px 20px',
-          borderBottom: '1px solid #f0f0f0',
-          display: 'flex',
-          justifyContent: 'space-between',
-          alignItems: 'center',
+          padding: "16px 20px",
+          borderBottom: "1px solid #f0f0f0",
+          display: "flex",
+          justifyContent: "space-between",
+          alignItems: "center",
         }}
       >
         <h3
           style={{
-            fontSize: '16px',
+            fontSize: "16px",
             fontWeight: 600,
             color: theme.colors.text.primary,
             margin: 0,
@@ -121,7 +122,7 @@ const NotificationsDropdown = () => {
         >
           Notifications
         </h3>
-        <div style={{ display: 'flex', gap: '12px', alignItems: 'center' }}>
+        <div style={{ display: "flex", gap: "12px", alignItems: "center" }}>
           {unreadCount > 0 && (
             <button
               onClick={(e) => {
@@ -129,11 +130,11 @@ const NotificationsDropdown = () => {
                 markAllAsRead();
               }}
               style={{
-                background: 'none',
-                border: 'none',
+                background: "none",
+                border: "none",
                 color: theme.colors.text.secondary,
-                fontSize: '12px',
-                cursor: 'pointer',
+                fontSize: "12px",
+                cursor: "pointer",
               }}
             >
               Mark all read
@@ -146,11 +147,11 @@ const NotificationsDropdown = () => {
               setIsOpen(false);
             }}
             style={{
-              background: 'none',
-              border: 'none',
+              background: "none",
+              border: "none",
               color: theme.colors.primary.main,
-              fontSize: '14px',
-              cursor: 'pointer',
+              fontSize: "14px",
+              cursor: "pointer",
               fontWeight: 500,
             }}
           >
@@ -160,12 +161,12 @@ const NotificationsDropdown = () => {
       </div>
 
       {/* Notification List */}
-      <div style={{ maxHeight: '400px', overflowY: 'auto' }}>
+      <div style={{ maxHeight: "400px", overflowY: "auto" }}>
         {loading ? (
           <div
             style={{
-              padding: '40px',
-              textAlign: 'center',
+              padding: "40px",
+              textAlign: "center",
               color: theme.colors.text.secondary,
             }}
           >
@@ -174,8 +175,8 @@ const NotificationsDropdown = () => {
         ) : notifications.length === 0 ? (
           <div
             style={{
-              padding: '40px',
-              textAlign: 'center',
+              padding: "40px",
+              textAlign: "center",
               color: theme.colors.text.secondary,
             }}
           >
@@ -187,53 +188,53 @@ const NotificationsDropdown = () => {
               key={notification.id}
               onClick={() => handleNotificationClick(notification)}
               style={{
-                padding: '16px 20px',
-                borderBottom: '1px solid #f0f0f0',
-                cursor: 'pointer',
-                backgroundColor: notification.isRead ? 'white' : '#f6ffed',
-                display: 'flex',
-                gap: '12px',
-                transition: 'background-color 0.2s',
+                padding: "16px 20px",
+                borderBottom: "1px solid #f0f0f0",
+                cursor: "pointer",
+                backgroundColor: notification.isRead ? "white" : "#f6ffed",
+                display: "flex",
+                gap: "12px",
+                transition: "background-color 0.2s",
               }}
               onMouseEnter={(e) => {
                 e.currentTarget.style.backgroundColor = notification.isRead
-                  ? '#fafafa'
-                  : '#e6f7e6';
+                  ? "#fafafa"
+                  : "#e6f7e6";
               }}
               onMouseLeave={(e) => {
                 e.currentTarget.style.backgroundColor = notification.isRead
-                  ? 'white'
-                  : '#f6ffed';
+                  ? "white"
+                  : "#f6ffed";
               }}
             >
               <div
                 style={{
-                  width: '8px',
-                  height: '8px',
-                  borderRadius: '50%',
+                  width: "8px",
+                  height: "8px",
+                  borderRadius: "50%",
                   backgroundColor: getColorByType(notification.type),
-                  marginTop: '6px',
+                  marginTop: "6px",
                   flexShrink: 0,
                 }}
               />
               <div style={{ flex: 1 }}>
                 <div
                   style={{
-                    fontSize: '14px',
+                    fontSize: "14px",
                     fontWeight: 500,
                     color: theme.colors.text.primary,
-                    marginBottom: '4px',
+                    marginBottom: "4px",
                   }}
                 >
-                  {notification.title}
+                  {notification.title || notification.message}
                 </div>
                 <div
                   style={{
-                    fontSize: '12px',
+                    fontSize: "12px",
                     color: theme.colors.text.secondary,
                   }}
                 >
-                  {formatTime(notification.createdAt)}
+                  {formatTime(notification.created_at)}
                 </div>
               </div>
               <div style={{ color: theme.colors.text.secondary }}>›</div>
@@ -251,39 +252,39 @@ const NotificationsDropdown = () => {
         open={isOpen}
         onOpenChange={setIsOpen}
         dropdownRender={() => dropdownContent}
-        trigger={['click']}
+        trigger={["click"]}
         placement="bottomRight"
       >
-        <div style={{ position: 'relative', cursor: 'pointer' }}>
+        <div style={{ position: "relative", cursor: "pointer" }}>
           <div
             style={{
-              width: '40px',
-              height: '40px',
-              borderRadius: '50%',
-              backgroundColor: 'white',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              position: 'relative',
+              width: "40px",
+              height: "40px",
+              borderRadius: "50%",
+              backgroundColor: "white",
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+              position: "relative",
             }}
           >
-            <BellOutlined style={{ fontSize: '18px', color: '#595959' }} />
+            <BellOutlined style={{ fontSize: "18px", color: "#595959" }} />
             {unreadCount > 0 && (
               <span
                 style={{
-                  position: 'absolute',
-                  top: '6px',
-                  right: '6px',
-                  width: '18px',
-                  height: '18px',
-                  backgroundColor: '#ff4d4f',
-                  borderRadius: '50%',
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  fontSize: '11px',
+                  position: "absolute",
+                  top: "6px",
+                  right: "6px",
+                  width: "18px",
+                  height: "18px",
+                  backgroundColor: "#ff4d4f",
+                  borderRadius: "50%",
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  fontSize: "11px",
                   fontWeight: 600,
-                  color: 'white',
+                  color: "white",
                 }}
               >
                 {unreadCount}
@@ -301,21 +302,21 @@ const NotificationsDropdown = () => {
         width={600}
         closeIcon={<CloseOutlined />}
         styles={{
-          body: { padding: '32px' },
-          header: { borderBottom: '1px solid #f0f0f0' },
+          body: { padding: "32px" },
+          header: { borderBottom: "1px solid #f0f0f0" },
         }}
       >
         <div
           style={{
-            display: 'flex',
-            justifyContent: 'space-between',
-            alignItems: 'center',
-            marginBottom: '20px',
+            display: "flex",
+            justifyContent: "space-between",
+            alignItems: "center",
+            marginBottom: "20px",
           }}
         >
           <h2
             style={{
-              fontSize: '20px',
+              fontSize: "20px",
               fontWeight: 600,
               color: theme.colors.text.primary,
               margin: 0,
@@ -325,18 +326,18 @@ const NotificationsDropdown = () => {
           </h2>
           <span
             style={{
-              minWidth: '28px',
-              height: '28px',
-              borderRadius: '50%',
+              minWidth: "28px",
+              height: "28px",
+              borderRadius: "50%",
               backgroundColor: theme.colors.background.default,
-              border: '2px solid #000',
-              color: '#000',
-              display: 'inline-flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              fontSize: '13px',
+              border: "2px solid #000",
+              color: "#000",
+              display: "inline-flex",
+              alignItems: "center",
+              justifyContent: "center",
+              fontSize: "13px",
               fontWeight: 700,
-              padding: '0 8px',
+              padding: "0 8px",
             }}
           >
             {notifications.length}
@@ -352,44 +353,44 @@ const NotificationsDropdown = () => {
                 setShowAllModal(false);
               }}
               style={{
-                padding: '16px 20px',
-                borderBottom: '1px solid #f0f0f0',
-                cursor: 'pointer',
-                backgroundColor: notification.isRead ? 'white' : '#f6ffed',
-                borderRadius: '6px',
-                marginBottom: '8px',
-                display: 'flex',
-                gap: '12px',
+                padding: "16px 20px",
+                borderBottom: "1px solid #f0f0f0",
+                cursor: "pointer",
+                backgroundColor: notification.isRead ? "white" : "#f6ffed",
+                borderRadius: "6px",
+                marginBottom: "8px",
+                display: "flex",
+                gap: "12px",
               }}
             >
               <div
                 style={{
-                  width: '8px',
-                  height: '8px',
-                  borderRadius: '50%',
+                  width: "8px",
+                  height: "8px",
+                  borderRadius: "50%",
                   backgroundColor: getColorByType(notification.type),
-                  marginTop: '6px',
+                  marginTop: "6px",
                   flexShrink: 0,
                 }}
               />
               <div style={{ flex: 1 }}>
                 <div
                   style={{
-                    fontSize: '14px',
+                    fontSize: "14px",
                     fontWeight: 500,
                     color: theme.colors.text.primary,
-                    marginBottom: '4px',
+                    marginBottom: "4px",
                   }}
                 >
-                  {notification.title}
+                  {notification.title || notification.message}
                 </div>
                 <div
                   style={{
-                    fontSize: '12px',
+                    fontSize: "12px",
                     color: theme.colors.text.secondary,
                   }}
                 >
-                  {formatTime(notification.createdAt)}
+                  {formatTime(notification.created_at)}
                 </div>
               </div>
             </div>
@@ -405,53 +406,53 @@ const NotificationsDropdown = () => {
         width={600}
         closeIcon={<CloseOutlined />}
         styles={{
-          body: { padding: '32px' },
-          header: { borderBottom: '1px solid #f0f0f0' },
+          body: { padding: "32px" },
+          header: { borderBottom: "1px solid #f0f0f0" },
         }}
       >
         {selectedNotification && (
           <>
             <div
               style={{
-                display: 'flex',
-                alignItems: 'center',
-                gap: '12px',
-                marginBottom: '8px',
+                display: "flex",
+                alignItems: "center",
+                gap: "12px",
+                marginBottom: "8px",
               }}
             >
               <div
                 style={{
-                  width: '8px',
-                  height: '8px',
-                  borderRadius: '50%',
+                  width: "8px",
+                  height: "8px",
+                  borderRadius: "50%",
                   backgroundColor: getColorByType(selectedNotification.type),
                 }}
               />
               <h2
                 style={{
-                  fontSize: '20px',
+                  fontSize: "20px",
                   fontWeight: 600,
                   color: theme.colors.text.primary,
                   margin: 0,
                 }}
               >
-                {selectedNotification.title}
+                {selectedNotification.title || selectedNotification.message}
               </h2>
             </div>
             <p
               style={{
-                fontSize: '13px',
+                fontSize: "13px",
                 color: theme.colors.text.secondary,
-                marginBottom: '20px',
+                marginBottom: "20px",
               }}
             >
-              {formatTime(selectedNotification.createdAt)}
+              {formatTime(selectedNotification.created_at)}
             </p>
             <div
               style={{
-                fontSize: '14px',
+                fontSize: "14px",
                 color: theme.colors.text.primary,
-                lineHeight: '1.6',
+                lineHeight: "1.6",
               }}
             >
               {selectedNotification.message}

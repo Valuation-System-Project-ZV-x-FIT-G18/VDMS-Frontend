@@ -1,37 +1,36 @@
-import api from './api';
+import axiosInstance from '../api/axios';
 
 export interface Notification {
   id: string;
-  type: 'success' | 'warning' | 'error' | 'info';
-  event: string;
-  title: string;
+  managerId: string;
+  type: string;
   message: string;
-  recipientId: string;
-  recipientRole: string;
-  projectId: string | null;
+  title?: string;
   isRead: boolean;
-  createdAt: string;
+  projectId?: string;
+  created_at: string;
+  createdAt?: string;
 }
 
 export const notificationService = {
-
-  // Get all notifications for a user
-  getForUser: async (recipientId: string): Promise<Notification[]> => {
-    const response = await api.get<Notification[]>('/notifications', {
-      params: { recipientId },
+  async getAll() {
+    const manager = JSON.parse(localStorage.getItem('vdms_manager') || '{}');
+    const response = await axiosInstance.get('/notifications', {
+      params: { managerId: manager.id },
     });
     return response.data;
   },
 
-  // Mark one as read
-  markAsRead: async (id: string): Promise<void> => {
-    await api.patch(`/notifications/${id}/read`);
+  async markRead(id: string) {
+    const response = await axiosInstance.patch(`/notifications/${id}/read`);
+    return response.data;
   },
 
-  // Mark all as read
-  markAllAsRead: async (recipientId: string): Promise<void> => {
-    await api.patch('/notifications/mark-all-read', null, {
-      params: { recipientId },
+  async markAllRead() {
+    const manager = JSON.parse(localStorage.getItem('vdms_manager') || '{}');
+    const response = await axiosInstance.patch('/notifications/mark-all-read', {
+      managerId: manager.id,
     });
+    return response.data;
   },
 };

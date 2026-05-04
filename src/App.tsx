@@ -554,10 +554,7 @@ function L3Manager() {
           element={<L3PendingReviews onNavigate={handleNavigation} />}
         />
         <Route path="/approved" element={<L3ApprovedReports />} />
-        <Route
-          path="/rejected"
-          element={<L3RejectedReports onNavigate={handleNavigation} />}
-        />
+        <Route path="/rejected" element={<L3RejectedReports />} />
         <Route path="/all" element={<L3AllReports />} />
         <Route path="/finalized" element={<L3FinalizedReports />} />
         <Route path="/history" element={<L3VersionHistory />} />
@@ -660,10 +657,7 @@ function L2Manager() {
         <Route path="/approved" element={<L2ApprovedReports />} />
         <Route path="/all" element={<L2AllReports />} />
         <Route path="/finalized" element={<L2FinalizedReports />} />
-        <Route
-          path="/rejected"
-          element={<L2RejectedReports onNavigate={handleNavigation} />}
-        />
+        <Route path="/rejected" element={<L2RejectedReports />} />
         <Route path="/history" element={<L2VersionHistory />} />
         <Route
           path="/draft-review/:projectId"
@@ -910,6 +904,14 @@ function AppContent() {
   const navigate = useNavigate();
   const location = useLocation();
 
+  // Check if role is stored in localStorage on mount
+  useEffect(() => {
+    const savedRole = localStorage.getItem("selectedRole") as Role | null;
+    if (savedRole) {
+      setRole(savedRole);
+    }
+  }, []);
+
   // Extract role from URL path on mount and route changes
   useEffect(() => {
     const pathSegments = location.pathname.split("/").filter(Boolean);
@@ -933,11 +935,13 @@ function AppContent() {
     }
   }, [location]);
 
-  // Role selection page
+  // Role select page
   if (!role) {
     return (
       <RoleSelectPage
         onSelectRole={(selectedRole) => {
+          // Store selected role in localStorage
+          localStorage.setItem("selectedRole", selectedRole);
           setRole(selectedRole);
           navigate(`/${selectedRole}/dashboard`);
         }}
@@ -960,6 +964,10 @@ function AppContent() {
       <Route
         path="/senior-valuator"
         element={<BlankRolePage title="Senior Valuator Portal" />}
+      />
+      <Route
+        path="*"
+        element={<BlankRolePage title="404 - Page Not Found" />}
       />
     </Routes>
   );

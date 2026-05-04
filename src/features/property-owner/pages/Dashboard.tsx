@@ -1,20 +1,20 @@
-import { useState, useEffect } from 'react';
-import type { CSSProperties } from 'react';
+import { useState, useEffect } from "react";
+import type { CSSProperties } from "react";
 import {
- FolderOutlined, 
+  FolderOutlined,
   CheckCircleOutlined,
-   FileTextOutlined, 
+  FileTextOutlined,
   CreditCardOutlined,
   FileOutlined,
-} from '@ant-design/icons'; 
-import StatCard from '../../../components/atoms/StatCard';
-import ProjectsTable from '../../../components/organisms/ProjectsTable';
-import ValuationJobDetail from './ValuationJobDetail';
-import { projectService } from '../../../services/projectService';
-import type { Project } from '../../../services/projectService';
-import { theme } from '../../../styles/theme';
+} from "@ant-design/icons";
+import StatCard from "../../../components/atoms/StatCard";
+import ProjectsTable from "../../../components/organisms/ProjectsTable";
+import ValuationJobDetail from "./ValuationJobDetail";
+import { projectService } from "../../../services/projectService";
+import type { Project } from "../../bank-credit-officer/types";
+import { theme } from "../../../styles/theme";
 
-const DEFAULT_OWNER_CLIENT_ID = 'client-001';
+const DEFAULT_OWNER_CLIENT_ID = "client-001";
 
 const DashboardPage = () => {
   const [selectedProject, setSelectedProject] = useState<Project | null>(null);
@@ -28,12 +28,13 @@ const DashboardPage = () => {
         setLoading(true);
         setError(null);
 
-        const clientId = localStorage.getItem('ownerClientId') || DEFAULT_OWNER_CLIENT_ID;
-        const ownerProjects = await projectService.getAll({ clientId });
+        const clientId =
+          localStorage.getItem("ownerClientId") || DEFAULT_OWNER_CLIENT_ID;
+        const ownerProjects = await projectService.getRecent();
         setProjects(ownerProjects);
       } catch (err) {
-        setError('Failed to load dashboard data');
-        console.error('Owner dashboard error:', err);
+        setError("Failed to load dashboard data");
+        console.error("Owner dashboard error:", err);
       } finally {
         setLoading(false);
       }
@@ -54,59 +55,61 @@ const DashboardPage = () => {
 
   const stats = {
     totalProjects: projects.length,
-    completedProjects: projects.filter((p) => p.status === 'Completed').length,
+    completedProjects: projects.filter((p) => p.status === "Completed").length,
     activeProjects: projects.filter(
       (p) =>
-        p.status === 'In Progress' ||
-        p.status === 'Site Inspected' ||
-        p.status === 'Report Prepared',
+        p.status === "In Progress" ||
+        p.status === "Site Inspected" ||
+        p.status === "Report Prepared",
     ).length,
-    pendingPayment: projects.filter((p) => p.paymentStatus === 'Pending').length,
-    pendingDocuments: projects.filter((p) => p.status === 'Awaiting Docs').length,
+    pendingPayment: projects.filter((p) => p.paymentStatus === "Pending")
+      .length,
+    pendingDocuments: projects.filter((p) => p.status === "Awaiting Docs")
+      .length,
   };
 
   const recentProjects = projects.slice(0, 5);
 
   const containerStyle: CSSProperties = {
-    maxWidth: '1400px',
-    margin: '0 auto',
-    padding: '0 32px',
-    boxSizing: 'border-box',
+    maxWidth: "1400px",
+    margin: "0 auto",
+    padding: "0 32px",
+    boxSizing: "border-box",
   };
 
   const headerStyle: CSSProperties = {
-    marginBottom: '24px',
+    marginBottom: "24px",
   };
 
   const titleStyle: CSSProperties = {
-    fontSize: '28px',
+    fontSize: "28px",
     fontWeight: 700,
     color: theme.colors.text.primary,
-    marginBottom: '8px',
+    marginBottom: "8px",
   };
 
   const subtitleStyle: CSSProperties = {
-    fontSize: '14px',
+    fontSize: "14px",
     color: theme.colors.text.secondary,
   };
 
   const statsGridStyle: CSSProperties = {
-    display: 'grid',
-    gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))',
-    gap: '20px',
-    marginBottom: '32px',
+    display: "grid",
+    gridTemplateColumns: "repeat(auto-fit, minmax(200px, 1fr))",
+    gap: "20px",
+    marginBottom: "32px",
   };
 
   const loadingStyle: CSSProperties = {
-    textAlign: 'center',
-    padding: '40px',
+    textAlign: "center",
+    padding: "40px",
     color: theme.colors.text.secondary,
   };
 
   const errorStyle: CSSProperties = {
-    textAlign: 'center',
-    padding: '40px',
-    color: '#dc2626',
+    textAlign: "center",
+    padding: "40px",
+    color: "#dc2626",
   };
 
   if (loading) {
@@ -125,13 +128,13 @@ const DashboardPage = () => {
           <button
             onClick={() => window.location.reload()}
             style={{
-              marginTop: '16px',
-              padding: '8px 16px',
+              marginTop: "16px",
+              padding: "8px 16px",
               backgroundColor: theme.colors.primary.main,
-              color: 'white',
-              border: 'none',
-              borderRadius: '6px',
-              cursor: 'pointer',
+              color: "white",
+              border: "none",
+              borderRadius: "6px",
+              cursor: "pointer",
             }}
           >
             Retry
@@ -188,7 +191,8 @@ const DashboardPage = () => {
         showSearch
         onProjectClick={(projectId) => {
           const selected = recentProjects.find(
-            (project) => project.id === projectId || project.projectId === projectId,
+            (project) =>
+              project.id === projectId || project.projectId === projectId,
           );
           if (selected) {
             setSelectedProject(selected);
