@@ -5,9 +5,14 @@ import InvoiceDetail from './InvoiceDetail';
 import { theme } from '../../../styles/theme';
 import { invoiceService } from '../../../services/invoiceService';
 import type { Invoice } from '../../../services/invoiceService';
+import { getPortalClientId, uiDefaults } from '../../../config/portalConfig';
+import { formatAmountLkr, formatDateShort } from '../../../utils/formatters';
 
-const DEFAULT_OWNER_CLIENT_ID = 'client-001';
+const OWNER_CLIENT_ID = getPortalClientId('owner');
 
+/**
+ * Handles owner invoice browsing with search and pagination while delegating filtering to backend APIs.
+ */
 const Payment = () => {
   const [searchQuery, setSearchQuery] = useState('');
   const [currentPage, setCurrentPage] = useState(1);
@@ -15,17 +20,19 @@ const Payment = () => {
   const [invoices, setInvoices] = useState<Invoice[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const itemsPerPage = 5;
+  const itemsPerPage = uiDefaults.tablePageSize;
 
   useEffect(() => {
+    /**
+     * Keeps list results consistent with search text while using backend filtering.
+     */
     const loadInvoices = async () => {
       try {
         setLoading(true);
         setError(null);
 
-        const clientId = localStorage.getItem('ownerClientId') || DEFAULT_OWNER_CLIENT_ID;
         const data = await invoiceService.getAll({
-          clientId,
+          clientId: OWNER_CLIENT_ID,
           search: searchQuery || undefined,
         });
 
@@ -55,23 +62,30 @@ const Payment = () => {
 
   const filteredInvoices = invoices;
 
-  // Pagination
   const totalPages = Math.ceil(filteredInvoices.length / itemsPerPage);
   const startIndex = (currentPage - 1) * itemsPerPage;
   const currentInvoices = filteredInvoices.slice(startIndex, startIndex + itemsPerPage);
 
+  /**
+   * Guards page transitions to valid bounds so pagination controls never produce empty invalid states.
+   */
   const handlePageChange = (page: number) => {
     if (page >= 1 && page <= totalPages) {
       setCurrentPage(page);
     }
   };
 
+  /**
+   * Resets paging on search changes so users always see the first matching result set.
+   */
   const handleSearchChange = (value: string) => {
     setSearchQuery(value);
     setCurrentPage(1);
   };
 
-  // Status badge colors
+  /**
+   * Centralizes status color mapping to keep badge visuals consistent across table rows.
+   */
   const getStatusStyle = (status: Invoice['status']): CSSProperties => {
     const styles = {
       Overdue: { backgroundColor: '#fff1f0', color: '#ff4d4f' },
@@ -88,20 +102,6 @@ const Payment = () => {
     };
   };
 
-  // Format amount
-  const formatAmount = (amount: string | number) => {
-    const value = typeof amount === 'string' ? Number(amount) : amount;
-    return value.toLocaleString('en-US', { minimumFractionDigits: 2 });
-  };
-
-  const formatDueDate = (date: string) =>
-    new Date(date).toLocaleDateString('en-US', {
-      month: 'short',
-      day: '2-digit',
-      year: 'numeric',
-    });
-
-  // Styles
   const containerStyle: CSSProperties = {
     maxWidth: '1200px',
     margin: '0 auto',
@@ -231,6 +231,9 @@ const Payment = () => {
     alignItems: 'center',
   };
 
+  /**
+   * Highlights the current page so pagination state remains visually obvious.
+   */
   const getPageButtonStyle = (isActive: boolean): CSSProperties => ({
     padding: '6px 12px',
     border: `1px solid ${isActive ? theme.colors.primary.main : theme.colors.border}`,
@@ -243,6 +246,9 @@ const Payment = () => {
     textAlign: 'center',
   });
 
+  /**
+   * Prevents navigation controls from appearing interactive when boundary pages are reached.
+   */
   const navButtonStyle = (disabled: boolean): CSSProperties => ({
     padding: '6px 10px',
     border: `1px solid ${theme.colors.border}`,
@@ -337,9 +343,9 @@ const Payment = () => {
                     </span>
                   </td>
                   <td style={tdStyle}>
-                    {formatAmount(invoice.amount)}
+                      {formatAmountLkr(invoice.amount)}
                   </td>
-                  <td style={tdStyle}>{formatDueDate(invoice.dueDate)}</td>
+                    <td style={tdStyle}>{formatDateShort(invoice.dueDate)}</td>
                   <td style={tdStyle}>
                     <span style={getStatusStyle(invoice.status)}>
                       {invoice.status}

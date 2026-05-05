@@ -14,36 +14,73 @@ import { dashboardService } from '../../../services/dashboardService';
 import type { DashboardStats } from '../../../services/dashboardService';
 import type { Project } from '../types';
 import { theme } from '../../../styles/theme';
+import { getPortalClientId, uiDefaults } from '../../../config/portalConfig';
 
+const BANK_CLIENT_ID = getPortalClientId('bank');
+const RETRY_BUTTON_LABEL = 'Retry';
+
+const EMPTY_STATS: DashboardStats = {
+  totalProjects: 0,
+  completedProjects: 0,
+  activeProjects: 0,
+  pendingPayments: 0,
+  pendingDocuments: 0,
+};
+
+/**
+ * Aggregates bank dashboard concerns so summary cards and recent jobs are loaded from one cohesive view model.
+ */
 const DashboardPage = () => {
   const [selectedValuationJob, setSelectedValuationJob] = useState<Project | null>(null);
-  
+
   // ✅ NEW: State for API data
-  const [stats, setStats] = useState<DashboardStats>({
-    totalProjects: 0,
-    completedProjects: 0,
-    activeProjects: 0,
-    pendingPayments: 0,
-    pendingDocuments: 0,
-  });
+  const [stats, setStats] = useState<DashboardStats>(EMPTY_STATS);
   const [recentValuationJobs, setRecentValuationJobs] = useState<Project[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [warning, setWarning] = useState<string | null>(null);
+  const [refreshKey, setRefreshKey] = useState(0);
 
-  // ✅ NEW: Fetch data from backend
   useEffect(() => {
+    /**
+     * Loads both summary and table data together so dashboard cards and list stay in sync.
+     */
     const fetchDashboardData = async () => {
       try {
         setLoading(true);
         setError(null);
+        setWarning(null);
 
-        const [statsData, valuationJobsData] = await Promise.all([
-          dashboardService.getStats(),
-          dashboardService.getRecentProjects(5),
+        const [statsResult, valuationJobsResult] = await Promise.allSettled([
+          dashboardService.getStats(BANK_CLIENT_ID),
+          dashboardService.getRecentProjects(uiDefaults.recentItemsLimit, BANK_CLIENT_ID),
         ]);
 
-        setStats(statsData);
-        setRecentValuationJobs(valuationJobsData);
+        const statsLoaded = statsResult.status === 'fulfilled';
+        const jobsLoaded = valuationJobsResult.status === 'fulfilled';
+
+        if (statsLoaded) {
+          setStats(statsResult.value);
+        } else {
+          setStats(EMPTY_STATS);
+          console.error('Dashboard stats error:', statsResult.reason);
+        }
+
+        if (jobsLoaded) {
+          setRecentValuationJobs(valuationJobsResult.value);
+        } else {
+          setRecentValuationJobs([]);
+          console.error('Recent valuation jobs error:', valuationJobsResult.reason);
+        }
+
+        if (!statsLoaded && !jobsLoaded) {
+          setError('Failed to load dashboard data');
+          return;
+        }
+
+        if (!statsLoaded || !jobsLoaded) {
+          setWarning('Some dashboard sections could not be loaded.');
+        }
       } catch (err) {
         setError('Failed to load dashboard data');
         console.error('Dashboard error:', err);
@@ -53,7 +90,7 @@ const DashboardPage = () => {
     };
 
     fetchDashboardData();
-  }, []);
+  }, [refreshKey]);
 
   if (selectedValuationJob) {
     return (
@@ -107,7 +144,6 @@ const DashboardPage = () => {
     color: '#dc2626',
   };
 
-  // ✅ Loading state
   if (loading) {
     return (
       <div style={containerStyle}>
@@ -116,14 +152,13 @@ const DashboardPage = () => {
     );
   }
 
-  // ✅ Error state
   if (error) {
     return (
       <div style={containerStyle}>
         <div style={errorStyle}>
           <p>{error}</p>
           <button 
-            onClick={() => window.location.reload()}
+            onClick={() => setRefreshKey((current) => current + 1)}
             style={{
               marginTop: '16px',
               padding: '8px 16px',
@@ -134,7 +169,7 @@ const DashboardPage = () => {
               cursor: 'pointer',
             }}
           >
-            Retry
+            {RETRY_BUTTON_LABEL}
           </button>
         </div>
       </div>
@@ -147,11 +182,24 @@ const DashboardPage = () => {
       <div style={headerStyle}>
         <h1 style={titleStyle}>Dashboard Overview</h1>
         <p style={subtitleStyle}>
-          Welcome back, here's what's happening with your valuation jobs today.
+          Showing valuation jobs assigned to your bank credit officer account.
         </p>
+        {warning && (
+          <p
+            style={{
+              marginTop: '12px',
+              marginBottom: 0,
+              color: '#d97706',
+              fontSize: '13px',
+              fontWeight: 500,
+            }}
+          >
+            {warning}
+          </p>
+        )}
       </div>
 
-      {/* Stats Cards - ✅ Using REAL data from backend */}
+      {/* Stats Cards */}
       <div style={statsGridStyle}>
         <StatCard
           title="Total Valuation Jobs"
@@ -185,7 +233,7 @@ const DashboardPage = () => {
         />
       </div>
 
-      {/* Valuation Jobs Table - ✅ Using REAL data from backend */}
+      {/* Valuation Jobs Table */}
       <ProjectsTable 
         projects={recentValuationJobs} 
         showSearch 

@@ -7,6 +7,9 @@ interface ValuationJobDetailProps {
   onBack: () => void;
 }
 
+/**
+ * Reuses the shared valuation detail implementation to keep owner and bank flows behaviorally aligned.
+ */
 const ValuationJobDetail = ({ projectId, initialProject, onBack }: ValuationJobDetailProps) => (
   <BankValuationJobDetail
     projectId={projectId}

@@ -2,6 +2,7 @@
 import type { CSSProperties, ReactNode } from "react";
 import Sidebar from "./Sidebar";
 import Header from "./Header";
+import FloatingChatWidget from "../components/organisms/FloatingChatWidget";
 import { theme } from "../styles/theme";
 import FloatingChatWidget from "../components/organisms/FloatingChatWidget";
 import "./AppLayout.css";

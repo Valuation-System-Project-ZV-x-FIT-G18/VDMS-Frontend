@@ -5,9 +5,14 @@ import ValuationJobDetail from './ValuationJobDetail';
 import { projectService } from '../../../services/projectService';
 import type { Project } from '../../../services/projectService';
 import { theme } from '../../../styles/theme';
+import { getPortalClientId } from '../../../config/portalConfig';
 
-const DEFAULT_OWNER_CLIENT_ID = 'client-001';
+const OWNER_CLIENT_ID = getPortalClientId('owner');
+const retryButtonLabel = 'Retry';
 
+/**
+ * Manages owner project discovery with server-backed filtering and detail-page transition.
+ */
 const AllProjectsPage = () => {
   const [statusFilter, setStatusFilter] = useState<string>('All');
   const [paymentFilter, setPaymentFilter] = useState<string>('All');
@@ -19,17 +24,19 @@ const AllProjectsPage = () => {
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
+    /**
+     * Re-queries the backend for each filter change to keep server-side filtering authoritative.
+     */
     const fetchOwnerValuationJobs = async () => {
       try {
         setLoading(true);
         setError(null);
 
-        const clientId = localStorage.getItem('ownerClientId') || DEFAULT_OWNER_CLIENT_ID;
         const ownerValuationJobs = await projectService.getAll({
           status: statusFilter !== 'All' ? statusFilter : undefined,
           paymentStatus: paymentFilter !== 'All' ? paymentFilter : undefined,
           search: searchQuery || undefined,
-          clientId,
+          clientId: OWNER_CLIENT_ID,
         });
 
         setValuationJobs(ownerValuationJobs);
@@ -197,7 +204,7 @@ const AllProjectsPage = () => {
               cursor: 'pointer',
             }}
           >
-            Retry
+            {retryButtonLabel}
           </button>
         </div>
       )}

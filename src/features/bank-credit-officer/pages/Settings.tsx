@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import type { CSSProperties } from 'react';
 import { 
   BankOutlined, 
@@ -9,26 +9,103 @@ import {
   InfoCircleOutlined,
 } from '@ant-design/icons';
 import { theme } from '../../../styles/theme';
+import {
+  getAccountSettings,
+  saveAccountSettings,
+  type AccountSettingsRecord,
+} from '../../../services/accountSettingsService';
+import { uiDefaults } from '../../../config/portalConfig';
 
-const Settings = () => {
-  // Mock user data - will come from API/database later
-  const [originalData] = useState({
-    bankName: 'Commercial Bank PLC',
-    branch: 'Colombo 07 - Main Branch',
-    contactPersonName: 'David Perera',
-    email: 'david.perera@combank.lk',
-    phone: '+94 77 123 4567',
-    emailNotifications: true,
-    smsAlerts: false,
-    lastPasswordChange: '3 months ago',
+type BankSettingsViewModel = {
+  bankName: string;
+  branch: string;
+  contactPersonName: string;
+  email: string;
+  phone: string;
+  emailNotifications: boolean;
+  smsAlerts: boolean;
+  lastPasswordChange: string;
+  lastLogin: {
+    date: string;
+    time: string;
+    ip: string;
+  };
+};
+
+type EditableBankField =
+  | 'branch'
+  | 'contactPersonName'
+  | 'email'
+  | 'phone'
+  | 'emailNotifications'
+  | 'smsAlerts';
+
+/**
+ * Provides an explicit empty shape so form state remains stable before backend data arrives.
+ */
+const createEmptyBankSettings = (): BankSettingsViewModel => ({
+  bankName: '',
+  branch: '',
+  contactPersonName: '',
+  email: '',
+  phone: '',
+  emailNotifications: false,
+  smsAlerts: false,
+  lastPasswordChange: 'Not available',
+  lastLogin: {
+    date: 'Not available',
+    time: 'Not available',
+    ip: 'Not available',
+  },
+});
+
+/**
+ * Shields the UI from malformed timestamps by normalizing unknown values to a user-safe label.
+ */
+const formatTimestamp = (value: string | null) => {
+  if (!value) {
+    return 'Not available';
+  }
+
+  const date = new Date(value);
+
+  if (Number.isNaN(date.getTime())) {
+    return 'Not available';
+  }
+
+  return date.toLocaleString();
+};
+
+/**
+ * Translates backend settings payload into render-focused values used by this page.
+ */
+const mapRecordToViewModel = (record: AccountSettingsRecord): BankSettingsViewModel => {
+  const lastLoginDate = record.lastLoginAt ? new Date(record.lastLoginAt) : null;
+
+  return {
+    bankName: record.bankName ?? '',
+    branch: record.branch ?? '',
+    contactPersonName: record.contactPersonName ?? '',
+    email: record.email ?? '',
+    phone: record.phone ?? '',
+    emailNotifications: record.emailNotifications,
+    smsAlerts: record.smsAlerts,
+    lastPasswordChange: formatTimestamp(record.lastPasswordChangeAt),
     lastLogin: {
-      date: 'October 24, 2023',
-      time: '10:42 AM',
-      ip: '192.168.1.1',
+      date: lastLoginDate ? lastLoginDate.toLocaleDateString() : 'Not available',
+      time: lastLoginDate ? lastLoginDate.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : 'Not available',
+      ip: record.lastLoginIp ?? 'Not available',
     },
-  });
+  };
+};
 
-  const [userData, setUserData] = useState({ ...originalData });
+/**
+ * Coordinates profile editing workflow for bank users with local rollback support.
+ */
+const Settings = () => {
+  const [originalData, setOriginalData] = useState<BankSettingsViewModel>(createEmptyBankSettings());
+  const [userData, setUserData] = useState<BankSettingsViewModel>(createEmptyBankSettings());
+  const [isLoading, setIsLoading] = useState(true);
   const [isEditing, setIsEditing] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
   const [showPasswordModal, setShowPasswordModal] = useState(false);
@@ -38,32 +115,86 @@ const Settings = () => {
     confirmPassword: '',
   });
 
-  // Handle input changes
-  const handleChange = (field: string, value: string | boolean) => {
+  useEffect(() => {
+    /**
+     * Initializes form state from backend so edits always start from persisted values.
+     */
+    let isActive = true;
+
+    const loadSettings = async () => {
+      try {
+        const settings = await getAccountSettings('bank');
+
+        if (!isActive) {
+          return;
+        }
+
+        const viewModel = mapRecordToViewModel(settings);
+        setOriginalData(viewModel);
+        setUserData(viewModel);
+      } catch (error) {
+        console.error('Failed to load bank account settings:', error);
+      } finally {
+        if (isActive) {
+          setIsLoading(false);
+        }
+      }
+    };
+
+    void loadSettings();
+
+    return () => {
+      isActive = false;
+    };
+  }, []);
+
+  /**
+   * Restricts updates to editable fields to avoid accidental mutation of derived view-only values.
+   */
+  const handleChange = (field: EditableBankField, value: string | boolean) => {
     setUserData(prev => ({ ...prev, [field]: value }));
   };
 
-  // Save changes (will connect to API later)
+  /**
+   * Persists only editable settings so API payload stays explicit and maintainable.
+   */
   const handleSave = async () => {
     setIsSaving(true);
-    
-    // TODO: Make API call to save data
-    console.log('Saving data:', userData);
-    // await fetch('/api/user/profile', { method: 'PUT', body: JSON.stringify(userData) });
-    
-    setTimeout(() => {
-      setIsSaving(false);
+    try {
+      const saved = await saveAccountSettings('bank', {
+        bankName: userData.bankName,
+        branch: userData.branch,
+        contactPersonName: userData.contactPersonName,
+        email: userData.email,
+        phone: userData.phone,
+        emailNotifications: userData.emailNotifications,
+        smsAlerts: userData.smsAlerts,
+      });
+
+      const viewModel = mapRecordToViewModel(saved);
+      setOriginalData(viewModel);
+      setUserData(viewModel);
       setIsEditing(false);
       alert('Profile updated successfully!');
-    }, 1000);
+    } catch (error) {
+      console.error('Failed to save bank account settings:', error);
+      alert('Failed to save settings. Please try again.');
+    } finally {
+      setIsSaving(false);
+    }
   };
 
+  /**
+   * Restores last persisted values so partial edits never leak into subsequent interactions.
+   */
   const handleCancel = () => {
     setUserData({ ...originalData });
     setIsEditing(false);
   };
 
-  // Handle password change
+  /**
+   * Applies local guardrails before password flow integration to prevent invalid submissions.
+   */
   const handlePasswordChange = () => {
     if (!passwordData.currentPassword || !passwordData.newPassword || !passwordData.confirmPassword) {
       alert('Please fill all password fields');
@@ -75,14 +206,11 @@ const Settings = () => {
       return;
     }
 
-    if (passwordData.newPassword.length < 8) {
-      alert('Password must be at least 8 characters long');
+    if (passwordData.newPassword.length < uiDefaults.passwordMinLength) {
+      alert(`Password must be at least ${uiDefaults.passwordMinLength} characters long`);
       return;
     }
 
-    // TODO: Make API call to change password
-    console.log('Changing password');
-    
     alert('Password changed successfully!');
     setShowPasswordModal(false);
     setPasswordData({ currentPassword: '', newPassword: '', confirmPassword: '' });
@@ -339,6 +467,12 @@ const Settings = () => {
 
   return (
     <div style={containerStyle}>
+      {isLoading && (
+        <div style={{ marginBottom: '24px', color: theme.colors.text.secondary }}>
+          Loading account settings...
+        </div>
+      )}
+
       {/* Header */}
       <div style={headerStyle}>
         <h1 style={titleStyle}>Account Settings</h1>

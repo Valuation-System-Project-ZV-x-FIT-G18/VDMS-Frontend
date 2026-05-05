@@ -5,7 +5,14 @@ import ValuationJobDetail from './ValuationJobDetail';
 import { projectService } from '../../../services/projectService';
 import type { Project } from '../types';
 import { theme } from '../../../styles/theme';
+import { getPortalClientId } from '../../../config/portalConfig';
 
+const BANK_CLIENT_ID = getPortalClientId('bank');
+const retryButtonLabel = 'Retry';
+
+/**
+ * Hosts bank-side project filtering and drill-down while keeping filtering owned by backend query parameters.
+ */
 const AllProjectsPage = () => {
   const [statusFilter, setStatusFilter] = useState<string>('All');
   const [paymentFilter, setPaymentFilter] = useState<string>('All');
@@ -13,13 +20,14 @@ const AllProjectsPage = () => {
   const [dateFormat, setDateFormat] = useState<string>('mm/dd/yy');
   const [selectedValuationJob, setSelectedValuationJob] = useState<Project | null>(null);
   
-  // ✅ NEW: State for API data
   const [valuationJobs, setValuationJobs] = useState<Project[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  // ✅ NEW: Fetch valuation jobs from backend
   useEffect(() => {
+    /**
+     * Re-fetches whenever filters change so table data reflects the selected criteria.
+     */
     const fetchValuationJobs = async () => {
       try {
         setLoading(true);
@@ -29,6 +37,7 @@ const AllProjectsPage = () => {
           status: statusFilter !== 'All' ? statusFilter : undefined,
           paymentStatus: paymentFilter !== 'All' ? paymentFilter : undefined,
           search: searchQuery || undefined,
+          clientId: BANK_CLIENT_ID,
         });
         
         setValuationJobs(data);
@@ -144,7 +153,7 @@ const AllProjectsPage = () => {
       <div style={headerStyle}>
         <h1 style={titleStyle}>Valuation Jobs</h1>
         <p style={subtitleStyle}>
-          Manage and track your valuation jobs
+          Full valuation job list for your bank credit officer account.
         </p>
       </div>
 
@@ -195,12 +204,12 @@ const AllProjectsPage = () => {
         </select>
       </div>
 
-      {/* ✅ Loading State */}
+      {/* Loading State */}
       {loading && (
         <div style={loadingStyle}>Loading valuation jobs...</div>
       )}
 
-      {/* ✅ Error State */}
+      {/* Error State */}
       {error && (
         <div style={errorStyle}>
           <p>{error}</p>
@@ -216,17 +225,17 @@ const AllProjectsPage = () => {
               cursor: 'pointer',
             }}
           >
-            Retry
+            {retryButtonLabel}
           </button>
         </div>
       )}
 
-      {/* ✅ Projects Table - Using REAL data */}
+      {/* Projects Table */}
       {!loading && !error && valuationJobs.length > 0 && (
         <ProjectsTable
           projects={valuationJobs}
           showSearch={false}
-          title="Recent valuation jobs"
+          title="All valuation jobs"
           idLabel="Valuation Job ID"
           onProjectClick={(valuationJobId) => {
             const selected = valuationJobs.find(
@@ -239,7 +248,7 @@ const AllProjectsPage = () => {
         />
       )}
 
-      {/* ✅ Empty State */}
+      {/* Empty State */}
       {!loading && !error && valuationJobs.length === 0 && (
         <div style={emptyStyle}>No valuation jobs found.</div>
       )}
