@@ -16,7 +16,7 @@ import './LegalDetailsPage.css';
 
 const empty: LegalFormData = {
   deedNumber: '', deedType: '', registrationDate: '',
-  notaryDetails: '', ownershipType: '', usageRegulations: [], file: null,
+  notaryDetails: '', ownershipType: '', usageRegulations: ['', '', '', ''], file: null,
 };
 
 /* Legal details page — step after survey plan */
@@ -29,41 +29,58 @@ const LegalDetailsPage = () => {
 
   const handleChange = useCallback((name: string, value: string) => {
     setErrors((prev) => {
-      if (!prev[name]) return prev;
+      if (!prev[name] && !prev.form) return prev;
       const next = { ...prev };
       delete next[name];
+      delete next.form;
       return next;
     });
 
     setForm(prev => ({ ...prev, [name]: value }));                 // update field by name
   }, []);
 
-  const handleToggle = useCallback((reg: string) => {              // toggle regulation checkbox
+  const handleRegulationChange = useCallback((index: number, value: string) => {  // update regulation text
     setErrors((prev) => {
-      if (!prev.usageRegulations) return prev;
+      if (!prev.usageRegulations && !prev.form) return prev;
       const next = { ...prev };
       delete next.usageRegulations;
+      delete next.form;
       return next;
     });
 
     setForm(prev => {
-      const regs = prev.usageRegulations.includes(reg)
-        ? prev.usageRegulations.filter(r => r !== reg)             // remove if checked
-        : [...prev.usageRegulations, reg];                         // add if unchecked
+      const regs = [...prev.usageRegulations];
+      regs[index] = value;
       return { ...prev, usageRegulations: regs };
     });
   }, []);
 
   const handleFile = useCallback((file: File | null) => {
     setErrors((prev) => {
-      if (!prev.file) return prev;
+      if (!prev.file && !prev.form) return prev;
       const next = { ...prev };
       delete next.file;
+      delete next.form;
       return next;
     });
 
-    setForm(prev => ({ ...prev, file }));
+    setForm(prev => ({ ...prev, file: file ? { name: file.name } : null }));
   }, []);
+
+  const handleFieldBlur = useCallback((event: React.FocusEvent<HTMLFormElement>) => {
+    const target = event.target as unknown as HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement;
+    const field = target.name;
+    if (!field) return;
+
+    const validation = validateLegalDetailsForm(form);
+    const fieldError = validation.errors[field];
+    setErrors((prev) => {
+      const next = { ...prev };
+      if (fieldError) next[field] = fieldError;
+      else delete next[field];
+      return next;
+    });
+  }, [form]);
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -85,7 +102,7 @@ const LegalDetailsPage = () => {
       navigate('/coordinator/document-upload'); // go to document upload
     } catch (error) {
       const message = error instanceof Error ? error.message : 'Failed to save legal details';
-      alert(message);
+      setErrors((prev) => ({ ...prev, form: message }));
     }
     finally { setLoading(false); }
   };
@@ -95,12 +112,13 @@ const LegalDetailsPage = () => {
       <div className="legal-details-card">
         <h1 className="legal-heading">Legal details</h1>
         <p className="legal-sub">Enter deed and legal information</p>
-        <form onSubmit={handleSubmit} noValidate>
+        <form onSubmit={handleSubmit} onBlurCapture={handleFieldBlur} noValidate>
           <DeedInfoSection form={form} onChange={handleChange} errors={errors} />
           <NotarySection form={form} onChange={handleChange} error={errors.notaryDetails} />
           <OwnershipSection value={form.ownershipType} onChange={handleChange} error={errors.ownershipType} />
-          <RegulationsSection selected={form.usageRegulations} onToggle={handleToggle} error={errors.usageRegulations} />
+          <RegulationsSection regulations={form.usageRegulations} onChange={handleRegulationChange} error={errors.usageRegulations} />
           <DeedUploadSection file={form.file} onFile={handleFile} error={errors.file} />
+          {errors.form && <span className="field-error">{errors.form}</span>}
           <LegalFormActions onBack={() => navigate(-1)} loading={loading} />
         </form>
       </div>

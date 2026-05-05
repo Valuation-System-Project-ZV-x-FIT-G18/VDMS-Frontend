@@ -8,23 +8,39 @@
 .field-label {
   font-size: 0.85rem;
   font-weight: 600;
-  color: #555;
+  color: #2b4a67;
+  text-shadow: none;
 }
-.required { color: #c0392b; }       /* red asterisk */
+.required { color: #d92d20; }
 .field-input {
+  width: 100%;
   padding: 10px 12px;
   border: 1px solid #ccc;
   border-radius: 6px;
   font-size: 0.95rem;
+  line-height: 1.4;
   background: #fff;
+  color: #1a2f45;
   outline: none;
+  box-sizing: border-box;
+  min-height: 42px;
+  height: auto;
+}
+
+select.field-input option {
+  font-size: 0.95rem;
+  line-height: 1.4;
+}
+.field-input::placeholder {
+  color: #72849a;
 }
 .field-input:focus { border-color: #7c6f5b; } /* warm brown focus ring */
 .field-hint {
   font-size: 0.78rem;
-  color: #999;
+  color: #5f7b97;
 }
 .field-error {
   font-size: 0.78rem;
-  color: #c0392b;
+  color: #ff4d4f;
+  font-weight: 600;
 }

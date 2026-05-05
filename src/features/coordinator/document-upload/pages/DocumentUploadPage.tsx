@@ -1,8 +1,8 @@
-import { useState, useCallback, useEffect } from 'react';                    // React hooks
+import { useState, useCallback } from 'react';                    // React hooks
 import { useNavigate } from 'react-router-dom';                    // navigation
 import type { DocumentFiles } from '../types/documents';           // form shape
+import usePersistedState from '../../hooks/usePersistedState';
 import { saveDocuments } from '../api/document-upload';            // API call
-import { fetchDocuments } from '../api/fetch-documents';           // fetch API
 import NicUpload from '../components/NicUpload';
 import TaxUpload from '../components/TaxUpload';
 import UtilityUpload from '../components/UtilityUpload';
@@ -10,56 +10,88 @@ import OtherUpload from '../components/OtherUpload';
 import DocFormActions from '../components/DocFormActions';
 import ConfirmModal from '../components/ConfirmModal'; // red warning modal
 import './DocumentUploadPage.css';
-import usePersistedState from '../../hooks/usePersistedState'; // persist form on refresh
 import { validateDocumentUploadForm } from '../../validation/document-upload.validation';
 import type { FieldErrors } from '../../validation/shared';
 
 const empty: DocumentFiles = {
-  nicCopy: null, taxReceipts: null, utilityBills: null, otherDocs: null,
+  nicCopy: null, taxReceipts: [], utilityBills: [], otherDocs: [],
+};
+
+const STORAGE_KEY = 'document-upload';
+const LEGACY_STORAGE_KEY = 'document-upload-files';
+
+const readDraftDocuments = (): DocumentFiles => {
+  try {
+    const raw = localStorage.getItem(STORAGE_KEY) ?? localStorage.getItem(LEGACY_STORAGE_KEY);
+    if (!raw) return empty;
+    const parsed = JSON.parse(raw) as Partial<DocumentFiles>;
+    return {
+      nicCopy: parsed.nicCopy ?? null,
+      taxReceipts: Array.isArray(parsed.taxReceipts) ? parsed.taxReceipts : [],
+      utilityBills: Array.isArray(parsed.utilityBills) ? parsed.utilityBills : [],
+      otherDocs: Array.isArray(parsed.otherDocs) ? parsed.otherDocs : [],
+    };
+  } catch {
+    return empty;
+  }
 };
 
 /* Document upload page — final step, saves all data to DB */
 
 const DocumentUploadPage = () => {
   const navigate = useNavigate();
-  const [files, setFiles] = usePersistedState<DocumentFiles>('document-upload', empty);
-  const [rawFiles, setRawFiles] = useState<Record<keyof DocumentFiles, File | null>>({
-    nicCopy: null, taxReceipts: null, utilityBills: null, otherDocs: null,
+  const [files, setFiles] = usePersistedState<DocumentFiles>(STORAGE_KEY, readDraftDocuments());
+  const [rawFiles, setRawFiles] = useState<{
+    nicCopy: File | null;
+    taxReceipts: File[];
+    utilityBills: File[];
+    otherDocs: File[];
+  }>({
+    nicCopy: null, taxReceipts: [], utilityBills: [], otherDocs: [],
   });
   const [loading, setLoading] = useState(false);
   const [showConfirm, setShowConfirm] = useState(false); // controls warning modal
   const [errors, setErrors] = useState<FieldErrors>({});
 
-  // Fetch uploaded documents on mount
-  useEffect(() => {
-    const stored = localStorage.getItem('register-client');
-    const nic = stored ? JSON.parse(stored).nic : '';
-    if (!nic) return;
+  const handleFile = useCallback((key: keyof DocumentFiles, selected: File[] | null) => {
+    let nextFiles: DocumentFiles = files;
 
-    fetchDocuments(nic)
-      .then(fetched => {
-        // Only update if backend has data
-        if (fetched && Object.values(fetched).some(Boolean)) {
-          setFiles(prev => ({ ...prev, ...fetched }));
-        }
-      })
-      .catch(() => {}); // ignore errors
-  }, [setFiles]);
+    if (key === 'nicCopy') {
+      const file = selected?.[0] ?? null;
+      nextFiles = {
+        ...files,
+        nicCopy: file ? { name: file.name, path: file.name } : null,
+      };
+      setRawFiles(prev => ({ ...prev, nicCopy: file }));
+      setFiles(nextFiles);
+    } else {
+      const picked = (selected ?? []).slice(0, 10);
+      const mapped = picked.map((f) => ({ name: f.name, path: f.name }));
 
-  const handleFile = useCallback((key: keyof DocumentFiles, file: File | null) => {
+      if (key === 'taxReceipts') {
+        nextFiles = { ...files, taxReceipts: mapped };
+        setRawFiles(prev => ({ ...prev, taxReceipts: picked }));
+      } else if (key === 'utilityBills') {
+        nextFiles = { ...files, utilityBills: mapped };
+        setRawFiles(prev => ({ ...prev, utilityBills: picked }));
+      } else {
+        nextFiles = { ...files, otherDocs: mapped };
+        setRawFiles(prev => ({ ...prev, otherDocs: picked }));
+      }
+
+      setFiles(nextFiles);
+    }
+
+    const validation = validateDocumentUploadForm(nextFiles);
+    const fieldError = validation.errors[key];
     setErrors((prev) => {
-      if (!prev[key]) return prev;
       const next = { ...prev };
-      delete next[key];
+      if (fieldError) next[key] = fieldError;
+      else delete next[key];
+      delete next.form;
       return next;
     });
-
-    setRawFiles(prev => ({ ...prev, [key]: file }));
-    setFiles(prev => ({
-      ...prev,
-      [key]: file ? { name: file.name, path: file.name } : null,
-    }));
-  }, [setFiles]);
+  }, [files]);
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -81,7 +113,7 @@ const DocumentUploadPage = () => {
       navigate('/coordinator/new-valuation'); // go to new valuation page
     } catch (error) {
       const message = error instanceof Error ? error.message : 'Failed to save documents';
-      alert(message);
+      setErrors((prev) => ({ ...prev, form: message }));
     }
     finally { setLoading(false); }
   };
@@ -96,6 +128,7 @@ const DocumentUploadPage = () => {
           <TaxUpload files={files} onFile={handleFile} error={errors.taxReceipts} />
           <UtilityUpload files={files} onFile={handleFile} error={errors.utilityBills} />
           <OtherUpload files={files} onFile={handleFile} error={errors.otherDocs} />
+          {errors.form && <span className="field-error">{errors.form}</span>}
           <DocFormActions onBack={() => navigate(-1)} loading={loading} />
         </form>
       </div>

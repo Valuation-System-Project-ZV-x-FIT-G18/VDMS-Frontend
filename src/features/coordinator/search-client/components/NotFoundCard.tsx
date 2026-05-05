@@ -15,11 +15,12 @@ const NotFoundCard = ({ mode }: Props) => {
 
   return (
     <div className="not-found-card">
+      <div className="nf-icon">⚠️</div>
       <h3 className="not-found-title">No Results Found</h3>
-      <p>The {label} you entered does not exist.</p>
-
+      <p className="nf-sub">The {label} you entered doesn’t match any loan applicant in the system.</p>
+      <p className="nf-hint">Want to add them?</p>
       <button className="register-btn" onClick={() => navigate('/coordinator/register')}>
-        Register Now
+        ➕ Register New Applicant
       </button>
     </div>
   );

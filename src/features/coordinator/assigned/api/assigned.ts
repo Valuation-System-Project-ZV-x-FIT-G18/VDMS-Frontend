@@ -1,6 +1,6 @@
-import axios from 'axios';
+﻿import axios from 'axios';
 
-const API = axios.create({ baseURL: 'http://localhost:3000' });
+const API = axios.create({ baseURL: import.meta.env.VITE_API_BASE_URL ?? 'http://localhost:3000' });
 
 // Fetch all assigned officers
 export const fetchAssignedOfficers = async () => {
@@ -21,3 +21,4 @@ export const fetchByProject = async (projectId: string) => {
     throw error instanceof Error ? error.message : 'Failed to fetch project assignments';
   }
 };
+

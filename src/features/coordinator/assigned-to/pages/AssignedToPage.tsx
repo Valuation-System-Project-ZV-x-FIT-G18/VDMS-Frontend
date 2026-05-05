@@ -12,11 +12,14 @@ const AssignedToPage = () => {
   const navigate = useNavigate();
   const [data, setData] = useState<AssignedOfficer[]>([]);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState('');
 
   useEffect(() => {
     fetchAssigned()
       .then(setData)
-      .catch(() => {})
+      .catch((err) => {
+        setError(err instanceof Error ? err.message : 'Failed to load assigned officers');
+      })
       .finally(() => setLoading(false));
   }, []);
 
@@ -25,6 +28,7 @@ const AssignedToPage = () => {
       <div className="to-card">
         <PageHeader title="Assigned technical officers" subtitle="Officers currently assigned to valuations" />
         <button className="to-back-btn" onClick={() => navigate(-1)}>← Back</button>
+        {error && <div className="error-message">{error}</div>}
         {loading ? <p>Loading...</p> :
           data.length === 0 ? <EmptyState message="No assigned officers found" /> :
           <AssignedTable data={data} />}

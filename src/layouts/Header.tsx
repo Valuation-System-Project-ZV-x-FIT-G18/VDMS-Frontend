@@ -6,7 +6,7 @@ import {
   MenuOutlined,
   CloseOutlined,
 } from "@ant-design/icons";
-import NotificationsDropdown from "../components/organisms/NotificationsDropdown";
+// import NotificationsDropdown from "../components/organisms/NotificationsDropdown";
 import MessagingSystem from "../components/organisms/MessagingSystem";
 
 interface HeaderProps {
@@ -153,7 +153,7 @@ const Header = ({
         </div>
 
         <div style={rightStyle}>
-          <NotificationsDropdown />
+          {/* <NotificationsDropdown /> */}
 
           {/* Message Icon - Opens Messaging System */}
           <button

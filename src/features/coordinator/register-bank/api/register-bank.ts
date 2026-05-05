@@ -1,13 +1,11 @@
-import type { BankOfficerFormData } from '../types/bank-officer';
+﻿import type { BankOfficerFormData } from '../types/bank-officer';
+import { getActiveClientNic } from '../../common/storage';
 
-const API_BASE = 'http://localhost:3000';
+const API_BASE = import.meta.env.VITE_API_BASE_URL ?? 'http://localhost:3000';
 
-/* POST /register-bank — registers a bank officer linked to a bank */
+/* POST /register-bank â€” registers a bank officer linked to a bank */
 export async function registerBankOfficer(data: BankOfficerFormData) {
-  const stored = localStorage.getItem('register-client');
-  const applicantNic = stored
-    ? (JSON.parse(stored) as { nic?: string }).nic ?? ''
-    : '';
+  const applicantNic = getActiveClientNic();
 
   const payload = {
     ...data,
@@ -26,3 +24,23 @@ export async function registerBankOfficer(data: BankOfficerFormData) {
   }
   return body;
 }
+
+export async function registerRevaluationBankOfficer(data: BankOfficerFormData, applicantNic: string) {
+  const payload = {
+    ...data,
+    applicantNic,
+  };
+
+  const res = await fetch(`${API_BASE}/register-bank/revaluation`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(payload),
+  });
+  const body = await res.json().catch(() => null);
+  if (!res.ok) {
+    const msg = body?.message;
+    throw new Error(Array.isArray(msg) ? msg.join('\n') : (msg ?? 'Revaluation bank save failed'));
+  }
+  return body;
+}
+

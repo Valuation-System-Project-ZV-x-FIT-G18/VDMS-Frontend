@@ -1,8 +1,9 @@
 .name-section { display: flex; flex-direction: column; gap: 0.75rem; }
 .section-label {
   font-size: 0.78rem;
-  font-weight: 600;
-  color: #9a8c7a;             /* warm brown label colour */
+  font-weight: 700;
+  color: #3f5f7d;
+  text-shadow: none;
   letter-spacing: 0.5px;
   text-transform: uppercase;
   margin-top: 0.5rem;

@@ -13,6 +13,30 @@ import { validateRegisterBankForm } from '../../validation/register-bank.validat
 import type { FieldErrors } from '../../validation/shared';
 import './RegisterBankPage.css';
 
+const mapApiErrorsToFields = (raw: string): FieldErrors => {
+  const fieldErrors: FieldErrors = {};
+  const messages = raw
+    .split('\n')
+    .map((message) => message.trim())
+    .filter(Boolean);
+
+  for (const message of messages) {
+    const lower = message.toLowerCase();
+
+    if (lower.includes('full name')) fieldErrors.fullName = message;
+    else if (lower.includes('nic')) fieldErrors.nic = message;
+    else if (lower.includes('designation')) fieldErrors.designation = message;
+    else if (lower.includes('contact number') || lower.includes('phone')) fieldErrors.phone = message;
+    else if (lower.includes('email')) fieldErrors.email = message;
+    else if (lower.includes('bank')) fieldErrors.bankName = message;
+    else if (lower.includes('branch code')) fieldErrors.branchCode = message;
+    else if (lower.includes('branch')) fieldErrors.branch = message;
+    else fieldErrors.form = message;
+  }
+
+  return fieldErrors;
+};
+
 const empty: BankOfficerFormData = {
   fullName: '', firstName: '', lastName: '', nameWithInitials: '',
   nic: '', designation: '', phone: '', email: '',
@@ -29,9 +53,10 @@ const RegisterBankPage = () => {
 
   const handleChange = useCallback((name: string, value: string) => {
     setErrors((prev) => {
-      if (!prev[name]) return prev;
+      if (!prev[name] && !prev.form) return prev;
       const next = { ...prev };
       delete next[name];
+      delete next.form;
       return next;
     });
 
@@ -41,6 +66,21 @@ const RegisterBankPage = () => {
       return next;
     });
   }, []);
+
+  const handleFieldBlur = useCallback((event: React.FocusEvent<HTMLFormElement>) => {
+    const target = event.target as unknown as HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement;
+    const field = target.name;
+    if (!field) return;
+
+    const validation = validateRegisterBankForm(form);
+    const fieldError = validation.errors[field];
+    setErrors((prev) => {
+      const next = { ...prev };
+      if (fieldError) next[field] = fieldError;
+      else delete next[field];
+      return next;
+    });
+  }, [form]);
 
   /* Show confirmation modal instead of submitting directly */
   const handleSubmit = (e: React.FormEvent) => {
@@ -64,7 +104,7 @@ const RegisterBankPage = () => {
       navigate('/coordinator/property-information');    // next step: property info
     } catch (error) {
       const message = error instanceof Error ? error.message : 'Bank registration failed';
-      alert(message);
+      setErrors(mapApiErrorsToFields(message));
     }
     finally { setLoading(false); }
   };
@@ -74,10 +114,11 @@ const RegisterBankPage = () => {
       <div className="register-bank-card">
         <h1 className="bank-heading">Register bank &amp; officer</h1>
         <p className="bank-sub">Enter bank officer details for the valuation</p>
-        <form onSubmit={handleSubmit} noValidate>
+        <form onSubmit={handleSubmit} onBlurCapture={handleFieldBlur} noValidate>
           <OfficerNameSection form={form} onChange={handleChange} errors={errors} />
           <OfficerContactSection form={form} onChange={handleChange} errors={errors} />
           <BankDetailsSection form={form} onChange={handleChange} errors={errors} />
+          {errors.form && <span className="field-error">{errors.form}</span>}
           <BankFormActions onBack={() => navigate(-1)} loading={loading} />
         </form>
       </div>

@@ -7,18 +7,20 @@ interface Props {
 }
 
 /* Upload field for the request letter document */
+
 const RequestLetterUpload = ({ value, onChange, error }: Props) => (
   <div className="nv-section">
-    <h3 className="nv-section-title">Request letter</h3>  {/* section heading */}
+    <h3 className="nv-section-title">Request letter</h3>
     <input
-      type="file"                                          // file picker input
-      accept=".pdf,.jpg,.png"                              // common document formats
-      onChange={e => {                                     // extract only the name so it's serializable
+      type="file"
+      name="requestLetter"
+      accept=".pdf,.jpg,.png"
+      onChange={e => {
         const f = e.target.files?.[0];
-        onChange(f ? { name: f.name } : null);             // store {name} not the raw File object
+        onChange(f ? f : null); // pass File object up for upload
       }}
     />
-    {value && <p className="nv-file-name">{value.name}</p>} {/* show filename if selected */}
+    {value && <p className="nv-file-name">{value.name}</p>}
     {error && <span className="field-error">{error}</span>}
   </div>
 );

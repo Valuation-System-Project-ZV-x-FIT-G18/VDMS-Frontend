@@ -7,7 +7,7 @@ export interface StoredDocument {
 /* Shape of the document upload form */
 export interface DocumentFiles {
   nicCopy: StoredDocument | null;
-  taxReceipts: StoredDocument | null;
-  utilityBills: StoredDocument | null;
-  otherDocs: StoredDocument | null;
+  taxReceipts: StoredDocument[];
+  utilityBills: StoredDocument[];
+  otherDocs: StoredDocument[];
 }

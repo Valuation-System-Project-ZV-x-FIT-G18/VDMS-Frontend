@@ -13,8 +13,33 @@ import { validateSurveyPlanForm } from '../../validation/survey-plan.validation'
 import type { FieldErrors } from '../../validation/shared';
 import './SurveyPlanPage.css';
 
+const mapApiErrorsToFields = (raw: string): FieldErrors => {
+  const fieldErrors: FieldErrors = {};
+  const messages = raw
+    .split('\n')
+    .map((message) => message.trim())
+    .filter(Boolean);
+
+  for (const message of messages) {
+    const lower = message.toLowerCase();
+
+    if (lower.includes('plan number')) fieldErrors.planNumber = message;
+    else if (lower.includes('surveyor')) fieldErrors.surveyorName = message;
+    else if (lower.includes('north boundary')) fieldErrors.northBoundary = message;
+    else if (lower.includes('south boundary')) fieldErrors.southBoundary = message;
+    else if (lower.includes('east boundary')) fieldErrors.eastBoundary = message;
+    else if (lower.includes('west boundary')) fieldErrors.westBoundary = message;
+    else if (lower.includes('lot number')) fieldErrors.lotNumber = message;
+    else if (lower.includes('land shape')) fieldErrors.landShape = message;
+    else if (lower.includes('file')) fieldErrors.file = message;
+    else fieldErrors.form = message;
+  }
+
+  return fieldErrors;
+};
+
 const empty: SurveyFormData = {
-  planNumber: '', surveyorName: '', boundaryDetails: '',
+  planNumber: '', surveyorName: '', northBoundary: '', southBoundary: '', eastBoundary: '', westBoundary: '',
   lotNumber: '', landShape: '', file: null,
 };
 
@@ -28,9 +53,10 @@ const SurveyPlanPage = () => {
 
   const handleChange = useCallback((name: string, value: string) => {
     setErrors((prev) => {
-      if (!prev[name]) return prev;
+      if (!prev[name] && !prev.form) return prev;
       const next = { ...prev };
       delete next[name];
+      delete next.form;
       return next;
     });
 
@@ -39,14 +65,30 @@ const SurveyPlanPage = () => {
 
   const handleFile = useCallback((file: File | null) => {
     setErrors((prev) => {
-      if (!prev.file) return prev;
+      if (!prev.file && !prev.form) return prev;
       const next = { ...prev };
       delete next.file;
+      delete next.form;
       return next;
     });
 
-    setForm(prev => ({ ...prev, file }));                          // store selected file
+    setForm(prev => ({ ...prev, file: file ? { name: file.name } : null })); // store selected filename
   }, []);
+
+  const handleFieldBlur = useCallback((event: React.FocusEvent<HTMLFormElement>) => {
+    const target = event.target as unknown as HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement;
+    const field = target.name;
+    if (!field) return;
+
+    const validation = validateSurveyPlanForm(form);
+    const fieldError = validation.errors[field];
+    setErrors((prev) => {
+      const next = { ...prev };
+      if (fieldError) next[field] = fieldError;
+      else delete next[field];
+      return next;
+    });
+  }, [form]);
 
   /* Show confirmation modal instead of saving directly */
   const handleSubmit = (e: React.FormEvent) => {
@@ -68,7 +110,10 @@ const SurveyPlanPage = () => {
       await saveSurveyPlan(form);                                  // save to DB
       setShowConfirm(false);                                       // close modal
       navigate('/coordinator/legal-details');                      // redirect to legal details page
-    } catch { alert('Failed to save survey plan'); }
+    } catch (error) {
+      const message = error instanceof Error ? error.message : 'Failed to save survey plan';
+      setErrors(mapApiErrorsToFields(message));
+    }
     finally { setLoading(false); }
   };
 
@@ -77,11 +122,12 @@ const SurveyPlanPage = () => {
       <div className="survey-plan-card">
         <h1 className="survey-heading">Survey plan & details</h1>
         <p className="survey-sub">Enter survey plan information</p>
-        <form onSubmit={handleSubmit} noValidate>
+        <form onSubmit={handleSubmit} onBlurCapture={handleFieldBlur} noValidate>
           <PlanDetailsSection form={form} onChange={handleChange} errors={errors} />
-          <BoundarySection form={form} onChange={handleChange} error={errors.boundaryDetails} />
+          <BoundarySection form={form} onChange={handleChange} errors={errors} />
           <LandShapeSection value={form.landShape} onChange={handleChange} error={errors.landShape} />
           <FileUploadSection file={form.file} onFile={handleFile} error={errors.file} />
+          {errors.form && <span className="field-error">{errors.form}</span>}
           <SurveyFormActions onBack={() => navigate(-1)} loading={loading} />
         </form>
       </div>

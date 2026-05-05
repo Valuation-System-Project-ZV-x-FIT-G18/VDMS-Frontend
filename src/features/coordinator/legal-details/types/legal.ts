@@ -1,3 +1,7 @@
+export interface StoredDeedFile {
+  name: string;
+}
+
 /* Shape of the legal details form */
 export interface LegalFormData {
   deedNumber: string;              // official deed number
@@ -6,5 +10,5 @@ export interface LegalFormData {
   notaryDetails: string;           // notary name and info
   ownershipType: string;           // Single Owner | Joint Ownership
   usageRegulations: string[];      // checked restrictions
-  file: File | null;               // uploaded deed copy
+  file: StoredDeedFile | null;     // uploaded deed copy (serializable)
 }

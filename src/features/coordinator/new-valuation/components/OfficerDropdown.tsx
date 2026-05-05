@@ -12,6 +12,7 @@ const OfficerDropdown = ({ officers, value, onChange, error }: Props) => (
   <div className="nv-section">
     <h3 className="nv-section-title">Assign technical officer</h3>
     <select
+      name="toId"
       className="nv-select"                                // styled via page CSS
       value={value}
       onChange={e => onChange(e.target.value)}              // pass selected ID up

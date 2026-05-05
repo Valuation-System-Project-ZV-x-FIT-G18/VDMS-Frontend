@@ -30,6 +30,7 @@ const ProjectSummaryPage = () => {
 
   return (
     <div className="ps-page">
+       <div className="ps-inner">
       <h1 className="ps-heading">Project Summary</h1>
       <p className="ps-sub">Review existing details before creating a new valuation</p>
       <ClientSection data={data.client} />
@@ -41,6 +42,7 @@ const ProjectSummaryPage = () => {
       <button className="ps-valuation-btn" onClick={() => navigate('/coordinator/new-valuation')}>
         New Valuation
       </button>
+       </div>
     </div>
   );
 };

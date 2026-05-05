@@ -1,27 +1,28 @@
 /* Styles for the SearchModeToggle radio buttons */
 .search-mode-toggle {
-  display: flex;                    /* radios side-by-side */
-  gap: 1.5rem;                     /* space between options */
-  margin-bottom: 1rem;             /* gap before the search bar */
+  display: flex;
+  gap: 1.5rem;
+  margin-bottom: 1rem;
 }
 
 .mode-option {
   display: flex;
   align-items: center;
-  gap: 0.4rem;                     /* space between radio circle and text */
-  color: #355672;
+  gap: 0.4rem;
+  color: rgba(228, 242, 255, 0.92);
   font-size: 0.95rem;
+  font-weight: 500;
   cursor: pointer;
-  transition: color 0.2s;          /* smooth color change */
+  transition: color 0.2s;
 }
 
 .mode-option.active {
-  color: #183f61;
+  color: #ffffff;
   font-weight: 600;
 }
 
 .mode-option input[type='radio'] {
-  accent-color: #2f73b3;
+  accent-color: #56b4f5;
   width: 16px;
   height: 16px;
   cursor: pointer;

@@ -1,29 +1,113 @@
+import { useState } from 'react';
 import type { DataMap } from '../types/revaluation';
 
-interface Props {
-  docs?: DataMap[];
-}
+const API_BASE = import.meta.env.VITE_API_BASE_URL ?? 'http://localhost:3000';
 
-const pick = (d: DataMap, a: string, b: string) => d[a] || d[b] || '-';
-const isUrl = (v: unknown) => /^https?:\/\//i.test(String(v || ''));
-const ext = (v: unknown) => String(v || '').toLowerCase();
+interface Props { docs?: DataMap[]; }
+interface DocEntry { label: string; name: string; url: string; }
+
+/* Converts a stored value (filename or full URL) to a viewable URL */
+const toUrl = (v: unknown): string => {
+  const s = String(v ?? '').trim();
+  if (!s || s === '-') return '';
+  if (/^https?:\/\//i.test(s)) return s;
+  return `${API_BASE}/uploads/${s}`;
+};
+
+/* Parse stored value: could be JSON array, ||‑separated list, or plain string */
+const parseStored = (raw: unknown): string[] => {
+  const s = String(raw ?? '').trim();
+  if (!s || s === '-') return [];
+  if (s.startsWith('[')) {
+    try { return (JSON.parse(s) as unknown[]).map(String).filter(Boolean); } catch { /* fall through */ }
+  }
+  if (s.includes('||')) return s.split('||').map(v => v.trim()).filter(Boolean);
+  return [s];
+};
+
+const isPdf  = (url: string) => url.toLowerCase().endsWith('.pdf');
+const isImage = (url: string) => /\.(png|jpg|jpeg|webp|gif)$/i.test(url);
 
 const DocumentsSection = ({ docs = [] }: Props) => {
-  const d = docs[0] || {};
-  const rows = [
-    ['NIC Copy', pick(d, 'nic_file_name', 'nic_file_path')],
-    ['Tax Receipt', pick(d, 'tax_file_name', 'tax_file_path')],
-    ['Utility Bill', pick(d, 'utility_file_name', 'utility_file_path')],
-    ['Other Doc', pick(d, 'other_file_name', 'other_file_path')],
+  const [selected, setSelected] = useState<DocEntry | null>(null);
+  const d = docs[0] ?? {};
+
+  /* Build flat list of { label, name, url } for every uploaded file */
+  const buildEntries = (label: string, namesRaw: unknown, pathsRaw: unknown): DocEntry[] => {
+    const names = parseStored(namesRaw);
+    const paths = parseStored(pathsRaw);
+    const total = Math.max(names.length, paths.length);
+    return Array.from({ length: total }, (_, i) => {
+      const name = names[i] ?? paths[i] ?? '';
+      const url  = toUrl(paths[i]) || toUrl(names[i]);
+      return { label, name, url };
+    }).filter(e => Boolean(e.url));
+  };
+
+  const entries: DocEntry[] = [
+    ...buildEntries('NIC Copy',     d.nic_file_name,     d.nic_file_path),
+    ...buildEntries('Tax Receipt',  d.tax_file_name,     d.tax_file_path),
+    ...buildEntries('Utility Bill', d.utility_file_name, d.utility_file_path),
+    ...buildEntries('Other Doc',    d.other_file_name,   d.other_file_path),
   ];
-  const hasAny = rows.some(([, v]) => v !== '-');
-  const src = String(rows[0][1]);
-  return <section className="rv-card"><h3>Documents</h3>
-    {!hasAny && <p className="rv-empty">No chosen files</p>}
-    {isUrl(src) && ext(src).endsWith('.pdf') && <iframe className="rv-pdf" title="nic-pdf" src={src} loading="lazy" />}
-    {isUrl(src) && /\.(png|jpg|jpeg|webp)$/i.test(src) && <img className="rv-img" src={src} alt="NIC" />}
-    <div className="rv-doc">{rows.map(([k, v]) => <p key={k}>{k}: {String(v)}</p>)}</div>
-  </section>;
+
+  /* Default to the first entry if nothing has been clicked yet */
+  const active = selected ?? entries[0] ?? null;
+
+  return (
+    <section className="rv-card rv-card--full">
+      <h3>Documents</h3>
+      {entries.length === 0 ? (
+        <p className="rv-empty">No documents uploaded</p>
+      ) : (
+        <div className="rv-dv-container">
+          {/* ─── Left: clickable file list ─── */}
+          <ul className="rv-dv-list">
+            {entries.map((e, i) => (
+              <li key={i}>
+                <button
+                  className={`rv-dv-btn${active?.url === e.url ? ' rv-dv-btn--active' : ''}`}
+                  onClick={() => setSelected(e)}
+                >
+                  <span className="rv-dv-icon">📄</span>
+                  <span className="rv-dv-info">
+                    <span className="rv-dv-type">{e.label}</span>
+                    <span className="rv-dv-name">{e.name}</span>
+                  </span>
+                </button>
+              </li>
+            ))}
+          </ul>
+
+          {/* ─── Right: embedded viewer ─── */}
+          {active && (
+            <div className="rv-dv-viewer">
+              <div className="rv-dv-header">
+                <span className="rv-dv-header-title">{active.label}: {active.name}</span>
+                <a href={active.url} target="_blank" rel="noopener noreferrer" className="rv-dv-download">
+                  ⬇ Download
+                </a>
+              </div>
+              {isPdf(active.url) ? (
+                <iframe
+                  src={`${active.url}#toolbar=1`}
+                  className="rv-dv-frame"
+                  title={active.name}
+                />
+              ) : isImage(active.url) ? (
+                <img src={active.url} alt={active.name} className="rv-dv-img" />
+              ) : (
+                <div className="rv-dv-no-preview">
+                  <p>Cannot preview this file type.</p>
+                  <a href={active.url} target="_blank" rel="noopener noreferrer">Open file ↗</a>
+                </div>
+              )}
+            </div>
+          )}
+        </div>
+      )}
+    </section>
+  );
 };
 
 export default DocumentsSection;

@@ -1,6 +1,7 @@
-import type { FreeOfficerItem, NewValuationForm } from '../types/new-valuation';
+﻿import type { FreeOfficerItem, NewValuationForm } from '../types/new-valuation';
+import { getActiveClientNic } from '../../common/storage';
 
-const API = 'http://localhost:3000';
+const API = import.meta.env.VITE_API_BASE_URL ?? 'http://localhost:3000';
 
 /* Fetch all free (available) technical officers for the dropdown */
 export const fetchFreeOfficers = async (): Promise<FreeOfficerItem[]> => {
@@ -17,8 +18,7 @@ export const submitValuation = async (form: NewValuationForm) => {
     throw new Error('Please select a date and time.');
   }
 
-  const stored = localStorage.getItem('register-client');
-  const nic = stored ? (JSON.parse(stored).nic ?? '').trim() : '';
+  const nic = getActiveClientNic();
   if (!nic) {
     throw new Error('Client NIC is missing. Please complete the registration flow first.');
   }
@@ -44,3 +44,4 @@ export const submitValuation = async (form: NewValuationForm) => {
   if (!data?.success) throw new Error(data?.message || 'Failed to submit valuation');
   return data;
 };
+

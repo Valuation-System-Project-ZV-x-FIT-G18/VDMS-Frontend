@@ -1,6 +1,6 @@
-import type { ProjectSummary } from '../types/project-summary';
+﻿import type { ProjectSummary } from '../types/project-summary';
 
-const API = 'http://localhost:3000';       // NestJS backend URL
+const API = import.meta.env.VITE_API_BASE_URL ?? 'http://localhost:3000';       // NestJS backend URL
 
 /* Fetch the full project summary for a client by NIC */
 export async function fetchProjectSummary(nic: string): Promise<ProjectSummary> {
@@ -8,3 +8,4 @@ export async function fetchProjectSummary(nic: string): Promise<ProjectSummary> 
   if (!res.ok) throw new Error('Failed to fetch project summary');  // HTTP error
   return res.json();                       // parse JSON response
 }
+

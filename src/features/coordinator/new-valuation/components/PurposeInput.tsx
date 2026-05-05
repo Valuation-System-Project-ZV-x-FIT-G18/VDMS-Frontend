@@ -9,6 +9,7 @@ const PurposeInput = ({ value, onChange, error }: Props) => (
   <div className="nv-section">
     <h3 className="nv-section-title">Purpose of valuation</h3>
     <textarea
+      name="purpose"
       className="nv-textarea"                              // styled via page CSS
       rows={4}                                             // 4-row text area
       placeholder="Enter the purpose of this valuation..." // placeholder hint

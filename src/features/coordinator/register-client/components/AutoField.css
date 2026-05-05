@@ -8,7 +8,8 @@
 .auto-label {
   font-size: 0.85rem;
   font-weight: 600;
-  color: #555;
+  color: #2b4a67;
+  text-shadow: none;
 }
 .auto-badge {
   font-size: 0.7rem;
@@ -22,7 +23,7 @@
   padding: 10px 12px;
   border: 1px solid #e0e0e0;
   border-radius: 6px;
-  background: #f9f6f0;        /* cream / beige read-only background */
+  background: rgba(255, 255, 255, 0.92);
   font-size: 0.95rem;
-  color: #444;
+  color: #1a2f45;
 }

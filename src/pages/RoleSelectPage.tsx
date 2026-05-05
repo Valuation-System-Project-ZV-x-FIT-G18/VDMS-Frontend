@@ -77,16 +77,16 @@ export default function RoleSelectPage({ onSelectRole }: RoleSelectPageProps) {
 
         {/* ✅ Team portals (blank pages for now) */}
         <button style={btnStyle} onClick={() => onSelectRole("admin")}>
-          Admin (blank for now) →
+          Admin  →
         </button>
         <button style={btnStyle} onClick={() => onSelectRole("coordinator")}>
-          Coordinator (blank for now) →
+          Coordinator  →
         </button>
         <button
           style={btnStyle}
           onClick={() => onSelectRole("technical-officer")}
         >
-          Technical Officer (blank for now) →
+          Technical Officer  →
         </button>
       </div>
     </div>

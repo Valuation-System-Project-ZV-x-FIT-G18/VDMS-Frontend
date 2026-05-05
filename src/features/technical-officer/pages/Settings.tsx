@@ -9,7 +9,6 @@ import {
 
 export default function TechnicalOfficerSettingsPage() {
   const [settings, setSettings] = useState({
-    notifications: true,
     emailAlerts: true,
     jobReminders: true,
     language: "en",
@@ -36,60 +35,7 @@ export default function TechnicalOfficerSettingsPage() {
     <div style={{ padding: "24px", maxWidth: "800px" }}>
       <h1 style={{ marginBottom: "24px" }}>Technical Officer Settings</h1>
 
-      {/* Notification Settings */}
-      <Card
-        title={
-          <span style={{ color: "#3b82f6" }}>
-            <BellOutlined style={{ marginRight: "8px" }} />
-            Notification Settings
-          </span>
-        }
-        style={{ marginBottom: "16px" }}
-      >
-        <div
-          style={{
-            display: "flex",
-            justifyContent: "space-between",
-            alignItems: "center",
-            marginBottom: "16px",
-          }}
-        >
-          <span>Enable All Notifications</span>
-          <Switch
-            checked={settings.notifications}
-            onChange={(value) => handleChange("notifications", value)}
-          />
-        </div>
-        <div
-          style={{
-            display: "flex",
-            justifyContent: "space-between",
-            alignItems: "center",
-            marginBottom: "16px",
-          }}
-        >
-          <span>Email Alerts</span>
-          <Switch
-            checked={settings.emailAlerts}
-            onChange={(value) => handleChange("emailAlerts", value)}
-            disabled={!settings.notifications}
-          />
-        </div>
-        <div
-          style={{
-            display: "flex",
-            justifyContent: "space-between",
-            alignItems: "center",
-          }}
-        >
-          <span>Job Reminders</span>
-          <Switch
-            checked={settings.jobReminders}
-            onChange={(value) => handleChange("jobReminders", value)}
-            disabled={!settings.notifications}
-          />
-        </div>
-      </Card>
+      {/* Notification Settings removed */}
 
       <Divider />
 
@@ -131,40 +77,7 @@ export default function TechnicalOfficerSettingsPage() {
       </Card>
 
       <Divider />
-
-      {/* Security Settings */}
-      <Card
-        title={
-          <span style={{ color: "#3b82f6" }}>
-            <LockOutlined style={{ marginRight: "8px" }} />
-            Security
-          </span>
-        }
-        style={{ marginBottom: "16px" }}
-      >
-        <Space direction="vertical" style={{ width: "100%" }}>
-          <Button block>Change Password</Button>
-          <Button block>Two-Factor Authentication</Button>
-        </Space>
-      </Card>
-
-      <Divider />
-
-      {/* Save Button */}
-      <Space>
-        <Button
-          type="primary"
-          icon={<SaveOutlined />}
-          onClick={handleSaveSettings}
-        >
-          Save Settings
-        </Button>
-        {isSaved && (
-          <span style={{ color: "#10b981" }}>
-            ✓ Settings saved successfully
-          </span>
-        )}
-      </Space>
+      {/* ...existing code... */}
     </div>
   );
 }

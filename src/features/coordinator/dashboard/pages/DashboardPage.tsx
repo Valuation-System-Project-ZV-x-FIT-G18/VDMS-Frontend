@@ -7,6 +7,7 @@ import { fetchRejectedOfficers } from '../../rejected-to/api/rejected';
 import SummaryStatCard from '../components/SummaryStatCard';
 import WorkflowMiniCard from '../components/WorkflowMiniCard';
 import QuickActionTile from '../components/QuickActionTile';
+import DashboardSlideshow from '../components/DashboardSlideshow';
 import './DashboardPage.css';
 
 interface CoordinatorDashboardCounts {
@@ -89,9 +90,16 @@ const DashboardPage = () => {
   return (
     <div className="cd-page">
       <section className="cd-hero">
-        <h1>Coordinator Dashboard</h1>
-        <p>Quick view of valuation pipeline, officer availability, and next actions.</p>
+        <div>
+          <h1>Coordinator Dashboard</h1>
+          <p>Quick view of valuation pipeline, officer availability, and next actions.</p>
+        </div>
+        <span className="cd-hero-badge">
+          {new Date().toLocaleDateString('en-GB', { weekday: 'short', day: 'numeric', month: 'short', year: 'numeric' })}
+        </span>
       </section>
+
+      <DashboardSlideshow />
 
       <section className="cd-grid cd-grid--stats">
         <SummaryStatCard title="Total Officers" value={counts.allOfficers} note="Current fleet size" tone="blue" />

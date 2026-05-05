@@ -4,13 +4,27 @@
   gap: 0.5rem;
 }
 
+.boundary-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 1rem;
+}
+
+.boundary-input-group {
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+  min-width: 0;
+}
+
 .boundary-label {
   font-weight: 600;
   font-size: 0.9rem;
-  color: #444;
+  color: #2b4a67;
+  text-shadow: none;
 }
 .boundary-label .required {
-  color: #e53e3e;
+  color: #d92d20;
 }
 
 .boundary-textarea {
@@ -26,4 +40,10 @@
 .boundary-textarea:focus {
   outline: none;
   border-color: #2563eb;
+}
+
+@media (max-width: 640px) {
+  .boundary-grid {
+    grid-template-columns: 1fr;
+  }
 }
