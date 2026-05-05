@@ -1,16 +1,27 @@
-import type { SurveyFormData } from '../types/survey'; // form shape
+﻿import type { SurveyFormData } from '../types/survey'; // form shape
+import { getActiveClientNic } from '../../common/storage';
 
-const API_BASE = 'http://localhost:3000';
+const API_BASE = import.meta.env.VITE_API_BASE_URL ?? 'http://localhost:3000';
 
-/* POST /survey-plan — saves survey plan details to backend */
+/* POST /survey-plan â€” saves survey plan details to backend */
 export async function saveSurveyPlan(data: SurveyFormData) {
-  const stored = localStorage.getItem('register-client');  // get registered client data
-  const nic = stored ? JSON.parse(stored).nic : '';        // extract NIC from persisted form
+  const nic = getActiveClientNic();                         // extract active client nic
+  if (!nic) {
+    throw new Error('Client NIC is missing. Please complete Register Client first.');
+  }
+
+  const boundaryDetails = [
+    `North: ${data.northBoundary}`,
+    `South: ${data.southBoundary}`,
+    `East: ${data.eastBoundary}`,
+    `West: ${data.westBoundary}`,
+  ].join('; ');
+
   const body = {                                           // extract JSON-safe fields
     nic,                                                   // include NIC to link user
     planNumber: data.planNumber,
     surveyorName: data.surveyorName,
-    boundaryDetails: data.boundaryDetails,
+    boundaryDetails,
     lotNumber: data.lotNumber,
     landShape: data.landShape,
     filePath: data.file ? data.file.name : undefined,      // send filename only for now
@@ -20,6 +31,11 @@ export async function saveSurveyPlan(data: SurveyFormData) {
     headers: { 'Content-Type': 'application/json' },       // send as JSON
     body: JSON.stringify(body),
   });
-  if (!res.ok) throw new Error('Failed to save survey plan');
-  return res.json();
+  const json = await res.json().catch(() => null);
+  if (!res.ok) {
+    const msg = json?.message;
+    throw new Error(Array.isArray(msg) ? msg.join('\n') : (msg ?? 'Failed to save survey plan'));
+  }
+  return json;
 }
+

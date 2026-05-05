@@ -35,3 +35,21 @@ export const validateRequiredFields = (
     errors,
   };
 };
+
+export const addEmailFormatError = (
+  errors: FieldErrors,
+  key: string,
+  value: string,
+) => {
+  const trimmed = value.trim();
+  if (!trimmed) return;
+
+  const atIndex = trimmed.indexOf('@');
+  const dotIndex = trimmed.lastIndexOf('.');
+  const hasValidAt = atIndex > 0;
+  const hasValidDot = dotIndex > atIndex + 1 && dotIndex < trimmed.length - 1;
+
+  if (!hasValidAt || !hasValidDot) {
+    errors[key] = 'Email must include @ and a dot';
+  }
+};

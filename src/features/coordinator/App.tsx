@@ -17,6 +17,7 @@ import FleetDashboard from './fleet-management/pages/FleetDashboard'; // fleet m
 import RejectedToPage from './rejected-to/pages/RejectedToPage'; // rejected officers
 import ProjectSummaryPage from './project-summary/pages/ProjectSummaryPage'; // project summary
 import RevaluationPage from './revaluation/pages/RevaluationPage'; // read-only full details for revaluation
+import BankInfoPage from './revaluation/pages/BankInfoPage'; // read-only bank info for revaluation
 
 /* Root component — defines all application routes */
 const App = () => (
@@ -43,6 +44,7 @@ const App = () => (
         <Route path="rejected-to" element={<RejectedToPage />} />  {/* rejected TOs */}
         <Route path="project-summary" element={<ProjectSummaryPage />} /> {/* project summary */}
         <Route path="revaluation" element={<RevaluationPage />} /> {/* revaluation full details */}
+        <Route path="revaluation-bank" element={<BankInfoPage />} /> {/* revaluation bank info */}
       </Route>
     </Routes>
   </BrowserRouter>

@@ -7,21 +7,35 @@
 .select-label {
   font-size: 0.85rem;
   font-weight: 600;
-  color: #555;
+  color: #2b4a67;
+  text-shadow: none;
 }
-.required { color: #c0392b; }
+.required { color: #d92d20; }
 .select-input {
+  width: 100%;
   padding: 10px 12px;
   border: 1px solid #ccc;
   border-radius: 6px;
   font-size: 0.95rem;
+  line-height: 1.4;
   background: #fff;
+  color: #1a2f45;
   outline: none;
   cursor: pointer;
   appearance: auto;            /* keep native dropdown arrow */
+  box-sizing: border-box;
+  min-width: 0;                /* prevent flex overflow */
+  min-height: 42px;            /* avoids clipping on Windows scaling */
+  height: auto;                /* override any global fixed select height */
+}
+.select-input option {
+  color: #1a2f45;
+  font-size: 0.95rem;
+  line-height: 1.4;
 }
 .select-input:focus { border-color: #7c6f5b; }
 .select-error {
   font-size: 0.78rem;
-  color: #c0392b;
+  color: #ff4d4f;
+  font-weight: 600;
 }

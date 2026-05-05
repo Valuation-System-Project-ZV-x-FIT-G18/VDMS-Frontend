@@ -12,19 +12,32 @@ interface Props {
 
 const deedTypes = ['Transfer', 'Gift', 'Lease', 'Partition', 'Mortgage']; // deed categories
 
+const getYesterdayIsoDate = () => {
+  const date = new Date();
+  date.setDate(date.getDate() - 1);
+  const year = date.getFullYear();
+  const month = String(date.getMonth() + 1).padStart(2, '0');
+  const day = String(date.getDate()).padStart(2, '0');
+  return `${year}-${month}-${day}`;
+};
+
 /* DEED INFO section — deed number, deed type dropdown, registration date */
-const DeedInfoSection = ({ form, onChange, errors = {} }: Props) => (
-  <div className="deed-info-section">
-    <SectionHeader icon="📜" title="Deed information" />
-    <FormField label="Deed number" name="deedNumber" value={form.deedNumber}
-      onChange={onChange} placeholder="e.g. 1234/2024" error={errors.deedNumber} required />
-    <div className="deed-row">
-      <SelectField label="Deed type" name="deedType" value={form.deedType}
-        onChange={onChange} options={deedTypes} placeholder="Select type" error={errors.deedType} required />
-      <FormField label="Registration date" name="registrationDate" value={form.registrationDate}
-        onChange={onChange} type="date" error={errors.registrationDate} required half />
+const DeedInfoSection = ({ form, onChange, errors = {} }: Props) => {
+  const maxRegistrationDate = getYesterdayIsoDate();
+
+  return (
+    <div className="deed-info-section">
+      <SectionHeader icon="📜" title="Deed information" />
+      <FormField label="Deed number" name="deedNumber" value={form.deedNumber}
+        onChange={onChange} placeholder="e.g. 1234/2024" error={errors.deedNumber} required />
+      <div className="deed-row">
+        <SelectField label="Deed type" name="deedType" value={form.deedType}
+          onChange={onChange} options={deedTypes} placeholder="Select type" error={errors.deedType} required />
+        <FormField label="Registration date" name="registrationDate" value={form.registrationDate}
+          onChange={onChange} type="date" max={maxRegistrationDate} error={errors.registrationDate} required half />
+      </div>
     </div>
-  </div>
-);
+  );
+};
 
 export default DeedInfoSection;

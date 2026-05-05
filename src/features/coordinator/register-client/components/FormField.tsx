@@ -10,6 +10,7 @@ interface Props {
   required?: boolean;          // shows red asterisk
   hint?: string;               // helper text below input
   half?: boolean;              // if true, takes 50% width in a row
+  max?: string;
   error?: string;
 }
 
@@ -24,6 +25,7 @@ const FormField = ({
   required,
   hint,
   half,
+  max,
   error,
 }: Props) => (
   <div className={`form-field ${half ? 'half' : ''}`}>
@@ -36,6 +38,7 @@ const FormField = ({
       name={name}
       value={value}
       placeholder={placeholder}
+      max={max}
       onChange={(e) => onChange(name, e.target.value)}   // notify parent of change
     />
     {hint && <span className="field-hint">{hint}</span>} {/* optional helper text */}

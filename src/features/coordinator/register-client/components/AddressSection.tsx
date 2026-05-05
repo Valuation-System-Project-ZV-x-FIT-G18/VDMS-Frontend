@@ -35,6 +35,7 @@ const AddressSection = ({ form, onChange, errors = {} }: Props) => {
           <label className="field-label">District <span className="required">*</span></label>
           <select
             className="field-input"
+            name="district"
             value={form.district}
             onChange={(e) => handleDistrictChange(e.target.value)}  // auto-fill province on change
           >
@@ -52,6 +53,7 @@ const AddressSection = ({ form, onChange, errors = {} }: Props) => {
           <label className="field-label">Province <span className="required">*</span></label>
           <select
             className="field-input"
+            name="province"
             value={form.province}
             onChange={(e) => onChange('province', e.target.value)}  // allow manual override
           >

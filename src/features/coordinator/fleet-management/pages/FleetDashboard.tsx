@@ -25,8 +25,11 @@ const FleetDashboard: React.FC = () => {
 
   return (
     <div className="fleet-dashboard">
-      <h1>Fleet Management Dashboard</h1>
-      <p className="subtitle">Select a category to view technical officers</p>
+      <div className="fleet-hero">
+        <h1>Fleet Management</h1>
+        <p className="subtitle">Select a category to view technical officers</p>
+        <div className="fleet-title-bar" />
+      </div>
       <ButtonGrid buttons={buttons} onButtonClick={handleButtonClick} />
     </div>
   );

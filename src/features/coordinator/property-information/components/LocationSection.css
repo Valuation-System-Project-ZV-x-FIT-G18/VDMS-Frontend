@@ -11,4 +11,5 @@
 }
 .location-row > * {
   flex: 1;                   /* each child takes 50% width */
+  min-width: 0;              /* prevent flex overflow */
 }

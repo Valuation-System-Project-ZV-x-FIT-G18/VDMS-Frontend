@@ -10,17 +10,47 @@ interface Props {
 const ResultCard = ({ data }: Props) => {
   const navigate = useNavigate();
 
+  // Avatar letter from first character of name
+  const avatarLetter = data.name ? data.name.charAt(0).toUpperCase() : '?';
+
+  const fields = [
+    { icon: '🪪', label: 'NIC',        value: data.nic       ?? '—' },
+    { icon: '📧', label: 'Email',      value: data.email     ?? '—' },
+    { icon: '📁', label: 'Project ID', value: data.projectId ?? 'Not assigned' },
+  ];
+
   return (
     <div className="result-card">
-      <h3 className="result-title">Applicant Found</h3>
-      <p><strong>Name:</strong> {data.name}</p>
-      <p><strong>NIC:</strong> {data.nic}</p>
-      <p><strong>Email:</strong> {data.email}</p>
-      <p><strong>Project ID:</strong> {data.projectId ?? 'N/A'}</p>
+      {/* Found badge */}
+      <div className="result-badge">✔ Applicant Found</div>
 
-      <button className="valuation-btn" onClick={() => navigate(`/coordinator/revaluation?nic=${data.nic}`)}>
-        New Valuation
-      </button>
+      {/* Avatar + name */}
+      <div className="result-identity">
+        <div className="result-avatar">{avatarLetter}</div>
+        <div>
+          <p className="result-name">{data.name}</p>
+          <p className="result-name-sub">Loan Applicant</p>
+        </div>
+      </div>
+
+      {/* Divider */}
+      <div className="result-divider" />
+
+      {/* Field rows */}
+      <div className="result-fields">
+        {fields.map(f => (
+          <div key={f.label} className="result-field-row">
+            <span className="result-field-icon">{f.icon}</span>
+            <span className="result-field-label">{f.label}</span>
+            <span className="result-field-value">{f.value}</span>
+          </div>
+        ))}
+      </div>
+
+      {/* Actions */}
+      <div className="result-actions">
+        <button className="valuation-btn" onClick={() => navigate(`/coordinator/revaluation?nic=${data.nic}`)}>New Valuation</button>
+      </div>
     </div>
   );
 };

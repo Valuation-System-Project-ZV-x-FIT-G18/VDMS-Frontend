@@ -5,25 +5,38 @@ import './BoundarySection.css';
 interface Props {
   form: SurveyFormData;
   onChange: (name: string, value: string) => void;
-  error?: string;
+  errors?: Record<string, string>;
 }
 
-/* BOUNDARY section — textarea for boundary details */
-const BoundarySection = ({ form, onChange, error }: Props) => (
+const sides: Array<{ key: keyof SurveyFormData; label: string; placeholder: string }> = [
+  { key: 'northBoundary', label: 'North', placeholder: 'What is located on the North side?' },
+  { key: 'southBoundary', label: 'South', placeholder: 'What is located on the South side?' },
+  { key: 'eastBoundary', label: 'East', placeholder: 'What is located on the East side?' },
+  { key: 'westBoundary', label: 'West', placeholder: 'What is located on the West side?' },
+];
+
+/* BOUNDARY section — dedicated inputs for each side of the property */
+const BoundarySection = ({ form, onChange, errors = {} }: Props) => (
   <div className="boundary-section">
     <SectionHeader icon="📐" title="Boundary details" />
-    <label className="boundary-label">
-      Description <span className="required">*</span>
-    </label>
-    <textarea
-      className="boundary-textarea"
-      name="boundaryDetails"
-      value={form.boundaryDetails}
-      onChange={(e) => onChange('boundaryDetails', e.target.value)} // notify parent
-      placeholder="e.g. North: Road, South: Mr. Silva's land, East: Canal, West: Temple land"
-      rows={4}
-    />
-    {error && <span className="field-error">{error}</span>}
+    <div className="boundary-grid">
+      {sides.map((side) => (
+        <div key={side.key} className="boundary-input-group">
+          <label className="boundary-label">
+            {side.label} <span className="required">*</span>
+          </label>
+          <textarea
+            className="boundary-textarea"
+            name={side.key}
+            value={(form[side.key] as string) || ''}
+            onChange={(e) => onChange(side.key, e.target.value)}
+            placeholder={side.placeholder}
+            rows={3}
+          />
+          {errors[side.key] && <span className="field-error">{errors[side.key]}</span>}
+        </div>
+      ))}
+    </div>
   </div>
 );
 

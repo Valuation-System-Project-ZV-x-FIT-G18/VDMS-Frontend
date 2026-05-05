@@ -1,6 +1,6 @@
-import type { OnLeaveOfficer } from '../types/on-leave-to';
+﻿import type { OnLeaveOfficer } from '../types/on-leave-to';
 
-const API = 'http://localhost:3000';                       // backend base URL
+const API = import.meta.env.VITE_API_BASE_URL ?? 'http://localhost:3000';                       // backend base URL
 
 /* Fetch all on-leave technical officers */
 export const fetchOnLeave = async (): Promise<OnLeaveOfficer[]> => {
@@ -8,3 +8,4 @@ export const fetchOnLeave = async (): Promise<OnLeaveOfficer[]> => {
   if (!res.ok) throw new Error('Failed to fetch on-leave officers');
   return res.json();
 };
+

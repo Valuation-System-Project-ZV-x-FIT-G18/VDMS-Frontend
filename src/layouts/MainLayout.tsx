@@ -4,6 +4,7 @@ import Sidebar from "./Sidebar";
 import Header from "./Header";
 import FloatingChatWidget from "../components/organisms/FloatingChatWidget";
 import { theme } from "../styles/theme";
+import FloatingChatWidget from "../components/organisms/FloatingChatWidget";
 import "./AppLayout.css";
 
 interface MainLayoutProps {
@@ -110,7 +111,7 @@ const MainLayout = ({
       {/* Fixed Header */}
       <div style={headerWrapperStyle}>
         <Header
-          userName="John Doe"
+          userName="Radhika Rasangi"
           userRole={getRoleLabel(role)}
           onMenuToggle={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
           isMobile={isMobile}
@@ -144,7 +145,7 @@ const MainLayout = ({
         <main style={contentWrapperStyle}>{children}</main>
       </div>
 
-      <FloatingChatWidget role={role} userNameHint="John Doe" />
+      {/* <FloatingChatWidget role={role} userNameHint="John Doe" /> */}
     </div>
   );
 };

@@ -11,4 +11,5 @@
 }
 .plan-row > * {
   flex: 1;
+  min-width: 0;              /* prevent flex overflow */
 }

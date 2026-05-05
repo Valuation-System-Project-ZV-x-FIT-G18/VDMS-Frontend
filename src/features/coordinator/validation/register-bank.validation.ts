@@ -1,8 +1,8 @@
 import type { BankOfficerFormData } from '../register-bank/types/bank-officer';
-import { validateRequiredFields } from './shared';
+import { addEmailFormatError, validateRequiredFields } from './shared';
 
-export const validateRegisterBankForm = (form: BankOfficerFormData) =>
-  validateRequiredFields([
+export const validateRegisterBankForm = (form: BankOfficerFormData) => {
+  const result = validateRequiredFields([
     { key: 'fullName', label: 'Full name', value: form.fullName },
     { key: 'nic', label: 'NIC', value: form.nic },
     { key: 'designation', label: 'Designation', value: form.designation },
@@ -12,3 +12,11 @@ export const validateRegisterBankForm = (form: BankOfficerFormData) =>
     { key: 'branch', label: 'Branch', value: form.branch },
     { key: 'branchCode', label: 'Branch code', value: form.branchCode },
   ]);
+
+  addEmailFormatError(result.errors, 'email', form.email);
+
+  return {
+    valid: Object.keys(result.errors).length === 0,
+    errors: result.errors,
+  };
+};

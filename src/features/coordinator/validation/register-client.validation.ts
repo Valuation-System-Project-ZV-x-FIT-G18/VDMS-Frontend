@@ -1,8 +1,8 @@
 import type { RegisterFormData } from '../register-client/types/register';
-import { validateRequiredFields } from './shared';
+import { addEmailFormatError, validateRequiredFields } from './shared';
 
-export const validateRegisterClientForm = (form: RegisterFormData) =>
-  validateRequiredFields([
+export const validateRegisterClientForm = (form: RegisterFormData) => {
+  const result = validateRequiredFields([
     { key: 'fullName', label: 'Full name', value: form.fullName },
     { key: 'nic', label: 'NIC', value: form.nic },
     { key: 'dateOfBirth', label: 'Birth day', value: form.dateOfBirth },
@@ -24,3 +24,11 @@ export const validateRegisterClientForm = (form: RegisterFormData) =>
     { key: 'province', label: 'Province', value: form.province },
     { key: 'postalCode', label: 'Postal code', value: form.postalCode },
   ]);
+
+  addEmailFormatError(result.errors, 'email', form.email);
+
+  return {
+    valid: Object.keys(result.errors).length === 0,
+    errors: result.errors,
+  };
+};

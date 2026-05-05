@@ -15,13 +15,13 @@ export interface ProjectSummary {
   };
   bank?: {                                 // bank details
     bank_name: string;
-    branches: string[];
+    branch: string;
+    branch_code: string;
   } | null;
   bankOfficer?: {                          // bank officer details
     name: string;
     email: string;
     phone: string;
-    branch: string;
     designation: string;
   } | null;
   property?: {                             // property details
@@ -50,8 +50,14 @@ export interface ProjectSummary {
     usage_regulations: string[];
   } | null;
   documents?: {                            // uploaded documents
-    document_type: string;
-    file_name: string;
+    nic_file_name?: string;
+    nic_file_path?: string;
+    tax_file_name?: string;
+    tax_file_path?: string;
+    utility_file_name?: string;
+    utility_file_path?: string;
+    other_file_name?: string;
+    other_file_path?: string;
     uploaded_at: string;
   }[];
 }

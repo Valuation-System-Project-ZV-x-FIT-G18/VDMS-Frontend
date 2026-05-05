@@ -21,15 +21,19 @@ const SchedulePicker = ({
     <div className="nv-schedule-row">
       <input
         type="date"                                        // native date picker
+        name="date"
         className="nv-input"
         value={date}
+        min={new Date().toISOString().split('T')[0]}       // disallow past dates
         onChange={e => onDateChange(e.target.value)}       // pass date up
         required
       />
       <input
         type="time"                                        // native time picker
+        name="time"
         className="nv-input"
         value={time}
+        min={date === new Date().toISOString().split('T')[0] ? new Date().toTimeString().slice(0,5) : '08:00'}
         onChange={e => onTimeChange(e.target.value)}       // pass time up
         required
       />

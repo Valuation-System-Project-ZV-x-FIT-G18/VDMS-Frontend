@@ -5,18 +5,36 @@
   flex-direction: column;                     /* stack children vertically */
   align-items: center;                        /* centre horizontally */
   justify-content: center;                    /* centre vertically */
-  background: linear-gradient(135deg, #0f0c29, #302b63, #24243e); /* dark gradient bg */
   padding: 2rem;                              /* breathing room on small screens */
+  position: relative;
+}
+.home-page::before {
+  content: '';
+  position: fixed;
+  inset: 0;
+  background: linear-gradient(160deg, rgba(247, 251, 255, 0.94) 0%, rgba(240, 247, 255, 0.94) 100%);
+  z-index: 0;
+}
+.home-page::after {
+  content: '';
+  position: fixed;
+  inset: 0;
+  background: linear-gradient(160deg, rgba(255,255,255,0.35) 0%, rgba(235, 244, 255, 0.32) 100%);
+  z-index: 1;
+}
+.home-page > * {
+  position: relative;
+  z-index: 2;
 }
 
 .home-title {
-  color: #ffffff;                             /* white heading */
+  color: #1a3653;
   font-size: 2.4rem;                         /* large title */
   margin-bottom: 0.25rem;                    /* tight spacing to subtitle */
 }
 
 .home-subtitle {
-  color: #b0b0b0;                            /* muted grey subtitle */
+  color: #4f6b86;
   font-size: 1.1rem;                         /* slightly smaller than title */
   margin-bottom: 2.5rem;                     /* gap before button grid */
 }

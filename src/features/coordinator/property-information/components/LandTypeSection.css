@@ -7,10 +7,11 @@
 .land-label {
   font-weight: 600;
   font-size: 0.9rem;
-  color: #444;
+  color: #2b4a67;
+  text-shadow: none;
 }
 .land-label .required {
-  color: #e53e3e;
+  color: #d92d20;
 }
 
 /* radio buttons row */
@@ -23,7 +24,7 @@
   align-items: center;
   gap: 0.4rem;
   font-size: 0.95rem;
-  color: #555;
+  color: #3a5a78;
   cursor: pointer;
 }
 .land-option input[type='radio'] {

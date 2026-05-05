@@ -28,9 +28,10 @@ const PropertyInfoPage = () => {
 
   const handleChange = useCallback((name: string, value: string) => {
     setErrors((prev) => {
-      if (!prev[name]) return prev;
+      if (!prev[name] && !prev.form) return prev;
       const next = { ...prev };
       delete next[name];
+      delete next.form;
       return next;
     });
 
@@ -43,6 +44,21 @@ const PropertyInfoPage = () => {
       return next;
     });
   }, []);
+
+  const handleFieldBlur = useCallback((event: React.FocusEvent<HTMLFormElement>) => {
+    const target = event.target as unknown as HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement;
+    const field = target.name;
+    if (!field) return;
+
+    const validation = validatePropertyInfoForm(form);
+    const fieldError = validation.errors[field];
+    setErrors((prev) => {
+      const next = { ...prev };
+      if (fieldError) next[field] = fieldError;
+      else delete next[field];
+      return next;
+    });
+  }, [form]);
 
   /* Show confirmation modal instead of saving directly */
   const handleSubmit = (e: React.FormEvent) => {
@@ -64,7 +80,9 @@ const PropertyInfoPage = () => {
       await saveProperty(form);                                    // save to DB
       setShowConfirm(false);                                       // close modal
       navigate('/coordinator/survey-plan');                         // redirect to survey plan
-    } catch { alert('Failed to save property'); }
+    } catch {
+      setErrors((prev) => ({ ...prev, form: 'Failed to save property' }));
+    }
     finally { setLoading(false); }
   };
 
@@ -73,10 +91,11 @@ const PropertyInfoPage = () => {
       <div className="property-info-card">
         <h1 className="property-heading">Property information</h1>
         <p className="property-sub">Enter property details for the valuation</p>
-        <form onSubmit={handleSubmit} noValidate>
+        <form onSubmit={handleSubmit} onBlurCapture={handleFieldBlur} noValidate>
           <LocationSection form={form} onChange={handleChange} errors={errors} />
           <LandTypeSection form={form} onChange={handleChange} errors={errors} />
           <GpsSection form={form} onChange={handleChange} errors={errors} />
+          {errors.form && <span className="field-error">{errors.form}</span>}
           <PropertyFormActions onBack={() => navigate(-1)} loading={loading} />
         </form>
       </div>

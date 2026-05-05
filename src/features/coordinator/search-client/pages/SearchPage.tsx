@@ -1,10 +1,12 @@
-import { useState } from 'react';                    // state hook
+import { useEffect, useState } from 'react';                    // state hook
 import usePersistedState from '../../hooks/usePersistedState'; // persist form on refresh
 import SearchModeToggle from '../components/SearchModeToggle'; // radio toggle
 import type { SearchMode } from '../components/SearchModeToggle'; // mode type
+import { COORDINATOR_RESET_EVENT } from '../../common/storage';
 import SearchBar from '../components/SearchBar';       // search input component
 import ResultCard from '../components/ResultCard';     // found-result card
 import NotFoundCard from '../components/NotFoundCard'; // not-found card
+import SearchEmptyState from '../components/SearchEmptyState'; // idle illustration
 import { searchLoanApplicant } from '../api/search';   // API call helper
 import type { SearchResult } from '../types/search';   // result type
 import './SearchPage.css';                             // page styles
@@ -14,10 +16,23 @@ import '../responsive/search.responsive.css';
 const SearchPage = () => {
   const [mode, setMode] = usePersistedState<SearchMode>('search-mode', 'nic'); // which field to search by
   const [loading, setLoading] = useState(false);      // tracks fetch state
+  const [hasSearched, setHasSearched] = useState(false); // track if user has searched
   const [result, setResult] = useState<SearchResult | null>(null); // keep results in memory to avoid stale cached cards
+
+  useEffect(() => {
+    const handleCoordinatorReset = () => {
+      setMode('nic');
+      setHasSearched(false);
+      setResult(null);
+    };
+
+    window.addEventListener(COORDINATOR_RESET_EVENT, handleCoordinatorReset);
+    return () => window.removeEventListener(COORDINATOR_RESET_EVENT, handleCoordinatorReset);
+  }, [setMode]);
 
   const handleSearch = async (query: string) => {
     setLoading(true);                                 // show loading indicator
+    setHasSearched(true);
     setResult(null);                                  // clear previous result
     try {
       const data = await searchLoanApplicant(query, mode);  // call backend API with search type
@@ -31,16 +46,20 @@ const SearchPage = () => {
 
   return (
     <div className="search-page">
-      <h1 className="search-title">loan applicant — Search</h1>
+      <div className="search-hero">
+        <h1 className="search-title">Applicant Search</h1>
+        <p className="search-subtitle">Look up a loan applicant by NIC or Project ID.</p>
+      </div>
 
       {/* Card wrapper for the search controls */}
       <div className="search-card">
         <SearchModeToggle mode={mode} onChange={setMode} /> {/* radio toggle */}
-        <SearchBar onSearch={handleSearch} onInputChange={() => setResult(null)} loading={loading} mode={mode} />
+        <SearchBar onSearch={handleSearch} onInputChange={() => { setResult(null); setHasSearched(false); }} loading={loading} mode={mode} />
       </div>
 
       <div className="search-results">
-        {result && (result.found                      // conditionally render card
+        {!hasSearched && !loading && <SearchEmptyState />}
+        {hasSearched && result && (result.found                      // conditionally render card
           ? <ResultCard data={result} />              // show applicant info
           : <NotFoundCard mode={mode} />               // show register prompt
         )}

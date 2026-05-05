@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import usePersistedState from '../../hooks/usePersistedState'; // persist query on refresh
 import type { SearchMode } from './SearchModeToggle'; // mode type for placeholder text
+import { COORDINATOR_RESET_EVENT } from '../../common/storage';
 import './SearchBar.css';                      // scoped search bar styles
 
 interface Props {
@@ -21,6 +22,17 @@ const SearchBar = ({ onSearch, onInputChange, loading, mode }: Props) => {
   useEffect(() => {
     setError('');
   }, [mode]);
+
+  useEffect(() => {
+    const handleCoordinatorReset = () => {
+      setQuery('');
+      setError('');
+      onInputChange?.();
+    };
+
+    window.addEventListener(COORDINATOR_RESET_EVENT, handleCoordinatorReset);
+    return () => window.removeEventListener(COORDINATOR_RESET_EVENT, handleCoordinatorReset);
+  }, [onInputChange]);
 
   const validateQuery = (value: string) => {
     const trimmed = value.trim();

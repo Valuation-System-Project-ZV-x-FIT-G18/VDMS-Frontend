@@ -1,8 +1,8 @@
-import type { RegisterFormData } from '../types/register';
+﻿import type { RegisterFormData } from '../types/register';
 
-const API_BASE = 'http://localhost:3000'; // NestJS backend URL
+const API_BASE = import.meta.env.VITE_API_BASE_URL ?? 'http://localhost:3000'; // NestJS backend URL
 
-/* POST /register — sends form data to create a new loan applicant */
+/* POST /register â€” sends form data to create a new loan applicant */
 export async function registerApplicant(data: RegisterFormData) {
   const res = await fetch(`${API_BASE}/register`, {
     method: 'POST',
@@ -16,3 +16,4 @@ export async function registerApplicant(data: RegisterFormData) {
   }
   return body;                                           // parse response
 }
+

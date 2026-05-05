@@ -7,10 +7,11 @@
 .notary-label {
   font-weight: 600;
   font-size: 0.9rem;
-  color: #444;
+  color: #2b4a67;
+  text-shadow: none;
 }
 .notary-label .required {
-  color: #e53e3e;
+  color: #d92d20;
 }
 
 .notary-textarea {

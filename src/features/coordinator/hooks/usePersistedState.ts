@@ -1,4 +1,22 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
+import { COORDINATOR_RESET_EVENT } from '../common/storage';
+
+const readPersistedValue = <T,>(key: string, initial: T): T => {
+  try {
+    const raw = localStorage.getItem(key);                // read saved JSON string
+    if (raw === null) return initial;                     // nothing saved yet -> use default
+
+    const parsed = JSON.parse(raw) as T;                  // parse the stored value
+
+    if (initial && typeof initial === 'object' && !Array.isArray(initial)) {
+      return { ...initial, ...parsed };                  // merge: stored values win
+    }
+
+    return parsed;                                       // primitives / arrays returned as-is
+  } catch {
+    return initial;                                      // corrupt data -> fall back to default
+  }
+};
 
 /**
  * Drop-in replacement for useState that persists the value in localStorage.
@@ -12,24 +30,7 @@ import { useState, useEffect, useCallback, useRef } from 'react';
  */
 function usePersistedState<T>(key: string, initial: T) {
   /* ---- hydrate from localStorage on first render ---- */
-  const [state, setState] = useState<T>(() => {
-    try {
-      const raw = localStorage.getItem(key);                // read saved JSON string
-      if (raw === null) return initial;                      // nothing saved yet → use default
-
-      const parsed = JSON.parse(raw) as T;                  // parse the stored value
-
-      /* If initial is an object, merge so that any keys missing in
-         storage (e.g. File fields we skipped) get their defaults */
-      if (initial && typeof initial === 'object' && !Array.isArray(initial)) {
-        return { ...initial, ...parsed };                   // merge: stored values win
-      }
-
-      return parsed;                                        // primitives / arrays returned as-is
-    } catch {
-      return initial;                                       // corrupt data → fall back to default
-    }
-  });
+  const [state, setState] = useState<T>(() => readPersistedValue(key, initial));
 
   /* ---- keep a ref so the effect always sees latest state ---- */
   const stateRef = useRef(state);
@@ -53,6 +54,28 @@ function usePersistedState<T>(key: string, initial: T) {
       }
     } catch { /* quota exceeded or private browsing — silently ignore */ }
   }, [key, state]);                                         // re-run on every state change
+
+  /* ---- re-sync when storage changes or page is restored from bfcache ---- */
+  useEffect(() => {
+    const syncFromStorage = () => {
+      setState(readPersistedValue(key, initial));
+    };
+
+    const handleStorage = (event: StorageEvent) => {
+      if (event.key !== null && event.key !== key) return;
+      syncFromStorage();
+    };
+
+    window.addEventListener('storage', handleStorage);
+    window.addEventListener('pageshow', syncFromStorage);
+    window.addEventListener(COORDINATOR_RESET_EVENT, syncFromStorage);
+
+    return () => {
+      window.removeEventListener('storage', handleStorage);
+      window.removeEventListener('pageshow', syncFromStorage);
+      window.removeEventListener(COORDINATOR_RESET_EVENT, syncFromStorage);
+    };
+  }, [initial, key]);
 
   /* ---- wrapped setter that also updates the ref ---- */
   const setPersistedState = useCallback(

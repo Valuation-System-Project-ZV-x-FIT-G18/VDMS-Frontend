@@ -4,19 +4,64 @@
   gap: 0.75rem;
 }
 
-.regulation-list {
-  display: flex;
-  flex-wrap: wrap;
+.regulation-inputs {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
   gap: 1rem;
 }
-.regulation-item {
+
+.regulation-input-group {
   display: flex;
-  align-items: center;
+  flex-direction: column;
   gap: 0.4rem;
-  font-size: 0.95rem;
-  color: #555;
-  cursor: pointer;
 }
-.regulation-item input[type='checkbox'] {
-  accent-color: #2563eb;
+
+.regulation-label {
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: #3a5a78;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.regulation-textarea {
+  padding: 0.7rem 0.9rem;
+  border: 1px solid #c8d9ed;
+  border-radius: 6px;
+  font-size: 0.95rem;
+  color: #1f3f5d;
+  background: #f8fcff;
+  font-family: inherit;
+  resize: vertical;
+  min-height: 150px;
+  transition: all 0.2s ease;
+}
+
+.regulation-textarea:focus {
+  outline: none;
+  border-color: #3a82c5;
+  background: #ffffff;
+  box-shadow: 0 0 0 3px rgba(58, 130, 197, 0.1);
+}
+
+.regulation-textarea::placeholder {
+  color: #8ba4c4;
+}
+
+.regulation-hint {
+  font-size: 0.8rem;
+  color: #7a96b3;
+  margin-top: 0.3rem;
+  display: block;
+}
+
+@media (max-width: 600px) {
+  .regulation-inputs {
+    grid-template-columns: 1fr;
+  }
+
+  .regulation-textarea {
+    min-height: 120px;
+    font-size: 0.9rem;
+  }
 }

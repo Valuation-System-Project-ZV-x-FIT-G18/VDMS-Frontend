@@ -1,8 +1,9 @@
 import SectionHeader from '../../register-client/components/SectionHeader'; // heading
+import type { StoredDeedFile } from '../types/legal';
 import './DeedUploadSection.css';
 
 interface Props {
-  file: File | null;                                       // currently selected file
+  file: StoredDeedFile | null;                             // currently selected file
   onFile: (file: File | null) => void;                     // callback when file changes
   error?: string;
 }
@@ -13,7 +14,8 @@ const DeedUploadSection = ({ file, onFile, error }: Props) => (
     <SectionHeader icon="📎" title="Copy of deed" />
     <label className="deed-upload-area">
       <input type="file" accept=".pdf,.jpg,.jpeg,.png"     /* accepted types */
-        className="deed-file-input"
+          className="deed-file-input"
+          name="file"
         onChange={(e) => onFile(e.target.files?.[0] ?? null)} />
       <span className="deed-upload-text">
         {file ? file.name : 'Click to upload PDF or image'}

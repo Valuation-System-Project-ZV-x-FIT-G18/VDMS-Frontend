@@ -1,15 +1,15 @@
-import type { LegalFormData } from '../types/legal'; // form shape
+﻿import type { LegalFormData } from '../types/legal'; // form shape
+import { getActiveClientNic } from '../../common/storage';
 
-const API_BASE = 'http://localhost:3000';
+const API_BASE = import.meta.env.VITE_API_BASE_URL ?? 'http://localhost:3000';
 
-/* POST /legal-details — saves legal details to backend */
+/* POST /legal-details â€” saves legal details to backend */
 export async function saveLegalDetails(data: LegalFormData) {
-  const stored = localStorage.getItem('register-client');               // read client session
-  const nic = stored ? (JSON.parse(stored) as { nic?: string }).nic ?? '' : '';
+  const nic = getActiveClientNic();
   if (!nic) throw new Error('Client NIC is missing. Please complete Register Client first.');
 
   const body = {
-    nic,                                                 // required — identifies the client
+    nic,                                                 // required â€” identifies the client
     deedNumber: data.deedNumber,
     deedType: data.deedType,
     registrationDate: data.registrationDate,
@@ -30,3 +30,4 @@ export async function saveLegalDetails(data: LegalFormData) {
   }
   return json;
 }
+
