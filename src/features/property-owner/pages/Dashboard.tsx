@@ -6,32 +6,38 @@ import {
   FileTextOutlined,
   CreditCardOutlined,
   FileOutlined,
-} from "@ant-design/icons";
-import StatCard from "../../../components/atoms/StatCard";
-import ProjectsTable from "../../../components/organisms/ProjectsTable";
-import ValuationJobDetail from "./ValuationJobDetail";
-import { projectService } from "../../../services/projectService";
-import type { Project } from "../../bank-credit-officer/types";
-import { theme } from "../../../styles/theme";
+} from '@ant-design/icons'; 
+import StatCard from '../../../components/atoms/StatCard';
+import ProjectsTable from '../../../components/organisms/ProjectsTable';
+import ValuationJobDetail from './ValuationJobDetail';
+import { projectService } from '../../../services/projectService';
+import type { Project } from '../../../services/projectService';
+import { theme } from '../../../styles/theme';
+import { getPortalClientId, uiDefaults } from '../../../config/portalConfig';
 
-const DEFAULT_OWNER_CLIENT_ID = "client-001";
+const OWNER_CLIENT_ID = getPortalClientId('owner');
+const retryButtonLabel = 'Retry';
 
+/**
+ * Builds owner dashboard metrics from the same project list used for recent-row navigation.
+ */
 const DashboardPage = () => {
-  const [selectedProject, setSelectedProject] = useState<Project | null>(null);
-  const [projects, setProjects] = useState<Project[]>([]);
+  const [selectedValuationJob, setSelectedValuationJob] = useState<Project | null>(null);
+  const [valuationJobs, setValuationJobs] = useState<Project[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
+    /**
+     * Uses one data source call so KPI cards and the recent table stay aligned.
+     */
     const fetchOwnerDashboardData = async () => {
       try {
         setLoading(true);
         setError(null);
 
-        const clientId =
-          localStorage.getItem("ownerClientId") || DEFAULT_OWNER_CLIENT_ID;
-        const ownerProjects = await projectService.getRecent();
-        setProjects(ownerProjects);
+        const ownerValuationJobs = await projectService.getAll({ clientId: OWNER_CLIENT_ID });
+        setValuationJobs(ownerValuationJobs);
       } catch (err) {
         setError("Failed to load dashboard data");
         console.error("Owner dashboard error:", err);
@@ -43,32 +49,30 @@ const DashboardPage = () => {
     fetchOwnerDashboardData();
   }, []);
 
-  if (selectedProject) {
+  if (selectedValuationJob) {
     return (
       <ValuationJobDetail
-        projectId={selectedProject.id}
-        initialProject={selectedProject}
-        onBack={() => setSelectedProject(null)}
+        projectId={selectedValuationJob.id}
+        initialProject={selectedValuationJob}
+        onBack={() => setSelectedValuationJob(null)}
       />
     );
   }
 
   const stats = {
-    totalProjects: projects.length,
-    completedProjects: projects.filter((p) => p.status === "Completed").length,
-    activeProjects: projects.filter(
+    totalValuationJobs: valuationJobs.length,
+    completedValuationJobs: valuationJobs.filter((p) => p.status === 'Completed').length,
+    activeValuationJobs: valuationJobs.filter(
       (p) =>
         p.status === "In Progress" ||
         p.status === "Site Inspected" ||
         p.status === "Report Prepared",
     ).length,
-    pendingPayment: projects.filter((p) => p.paymentStatus === "Pending")
-      .length,
-    pendingDocuments: projects.filter((p) => p.status === "Awaiting Docs")
-      .length,
+    pendingPayment: valuationJobs.filter((p) => p.paymentStatus === 'Pending').length,
+    pendingDocuments: valuationJobs.filter((p) => p.status === 'Awaiting Docs').length,
   };
 
-  const recentProjects = projects.slice(0, 5);
+  const recentValuationJobs = valuationJobs.slice(0, uiDefaults.recentItemsLimit);
 
   const containerStyle: CSSProperties = {
     maxWidth: "1400px",
@@ -137,7 +141,7 @@ const DashboardPage = () => {
               cursor: "pointer",
             }}
           >
-            Retry
+            {retryButtonLabel}
           </button>
         </div>
       </div>
@@ -149,26 +153,26 @@ const DashboardPage = () => {
       <div style={headerStyle}>
         <h1 style={titleStyle}>Dashboard Overview</h1>
         <p style={subtitleStyle}>
-          welcome back, here's what's happening with your valuation job today
+          Welcome back, here's what's happening with your valuation jobs today.
         </p>
       </div>
 
       <div style={statsGridStyle}>
         <StatCard
-          title="Total Project"
-          value={stats.totalProjects}
+          title="Total Valuation Jobs"
+          value={stats.totalValuationJobs}
           icon={<FolderOutlined />}
           iconBgColor="#1890ff"
         />
         <StatCard
-          title="Completed Project"
-          value={stats.completedProjects}
+          title="Completed Valuation Jobs"
+          value={stats.completedValuationJobs}
           icon={<CheckCircleOutlined />}
           iconBgColor="#52c41a"
         />
         <StatCard
-          title="Active Project"
-          value={stats.activeProjects}
+          title="Active Valuation Jobs"
+          value={stats.activeValuationJobs}
           icon={<FileTextOutlined />}
           iconBgColor="#13c2c2"
         />
@@ -187,15 +191,20 @@ const DashboardPage = () => {
       </div>
 
       <ProjectsTable
-        projects={recentProjects}
+        projects={recentValuationJobs}
         showSearch
-        onProjectClick={(projectId) => {
-          const selected = recentProjects.find(
-            (project) =>
-              project.id === projectId || project.projectId === projectId,
+        title="Recent valuation jobs"
+        idLabel="Valuation Job ID"
+        searchPlaceholder="Search valuation jobs..."
+        onProjectClick={(valuationJobId) => {
+          const selected = recentValuationJobs.find(
+            (valuationJob) =>
+              valuationJob.id === valuationJobId ||
+              valuationJob.valuationJobId === valuationJobId ||
+              valuationJob.projectId === valuationJobId,
           );
           if (selected) {
-            setSelectedProject(selected);
+            setSelectedValuationJob(selected);
           }
         }}
       />

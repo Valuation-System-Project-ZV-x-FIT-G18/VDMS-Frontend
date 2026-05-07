@@ -592,7 +592,6 @@ const DraftReportDetail = ({
                 <button
                   style={buttonStyle("primary")}
                   onClick={onApproveDraft}
-                  disabled={draft?.isLocked}
                 >
                   ✓ Approve Draft
                 </button>

@@ -1,13 +1,18 @@
-import { Dropdown, Modal } from "antd";
-import { BellOutlined, CloseOutlined } from "@ant-design/icons";
-import { useState, useEffect } from "react";
-import { theme } from "../../styles/theme";
-import { notificationService } from "../../services/notificationService";
-import type { Notification } from "../../services/notificationService";
+import { Dropdown, Modal } from 'antd';
+import { BellOutlined, CloseOutlined } from '@ant-design/icons';
+import { useState, useEffect } from 'react';
+import { theme } from '../../styles/theme';
+import { notificationService } from '../../services/notificationService';
+import type { Notification } from '../../services/notificationService';
+import { getCurrentUserId, uiDefaults } from '../../config/portalConfig';
+import { formatRelativeTime } from '../../utils/formatters';
 
-// Hardcoded for now — later this will come from auth/login
-const CURRENT_USER_ID = "client-001";
+const notificationCardWidthPx = '380px';
+const currentUserId = getCurrentUserId('bank');
 
+/**
+ * Consolidates notification preview, read-state updates, and detail modal behavior for the global bell menu.
+ */
 const NotificationsDropdown = () => {
   const [isOpen, setIsOpen] = useState(false);
   const [selectedNotification, setSelectedNotification] =
@@ -16,12 +21,14 @@ const NotificationsDropdown = () => {
   const [notifications, setNotifications] = useState<Notification[]>([]);
   const [loading, setLoading] = useState(true);
 
-  // ── Fetch notifications from backend ──────────────
   useEffect(() => {
+    /**
+     * Fetches the latest notifications once on mount to keep dropdown interactions fast.
+     */
     const fetchNotifications = async () => {
       try {
         setLoading(true);
-        const data = await notificationService.getAll();
+        const data = await notificationService.getForUser(currentUserId);
         setNotifications(data);
       } catch (error) {
         console.error("Failed to fetch notifications:", error);
@@ -35,7 +42,9 @@ const NotificationsDropdown = () => {
 
   const unreadCount = notifications.filter((n) => !n.isRead).length;
 
-  // ── Mark one as read ──────────────────────────────
+  /**
+   * Updates read state optimistically so the badge count reacts immediately.
+   */
   const markAsRead = async (id: string) => {
     try {
       await notificationService.markRead(id);
@@ -47,59 +56,49 @@ const NotificationsDropdown = () => {
     }
   };
 
-  // ── Mark all as read ──────────────────────────────
+  /**
+   * Uses bulk update to reduce API round trips when clearing unread notifications.
+   */
   const markAllAsRead = async () => {
     try {
-      await notificationService.markAllRead();
+      await notificationService.markAllAsRead(currentUserId);
       setNotifications((prev) => prev.map((n) => ({ ...n, isRead: true })));
     } catch (error) {
       console.error("Failed to mark all as read:", error);
     }
   };
 
+  /**
+   * Marks an item as read and opens detail immediately to keep user flow single-click.
+   */
   const handleNotificationClick = (notification: Notification) => {
     markAsRead(notification.id);
     setSelectedNotification(notification);
     setIsOpen(false);
   };
 
-  // ── Format timestamp ──────────────────────────────
-  const formatTime = (createdAt: string): string => {
-    const now = new Date();
-    const created = new Date(createdAt);
-    const diffMs = now.getTime() - created.getTime();
-    const diffMins = Math.floor(diffMs / 60000);
-    const diffHours = Math.floor(diffMs / 3600000);
-    const diffDays = Math.floor(diffMs / 86400000);
-
-    if (diffMins < 1) return "Just now";
-    if (diffMins < 60) return `${diffMins} minutes ago`;
-    if (diffHours < 24)
-      return `${diffHours} hour${diffHours > 1 ? "s" : ""} ago`;
-    if (diffDays === 1) return "Yesterday";
-    return `${diffDays} days ago`;
-  };
-
-  const getColorByType = (type: string) => {
-    const colors: Record<string, string> = {
-      success: "#52c41a",
-      warning: "#faad14",
-      error: "#ff4d4f",
-      info: "#1890ff",
+  /**
+   * Maps semantic notification types to consistent UI colors.
+   */
+  const getColorByType = (type: Notification['type']) => {
+    const colors = {
+      success: '#52c41a',
+      warning: '#faad14',
+      error: '#ff4d4f',
+      info: '#1890ff',
     };
     return colors[type] || "#1890ff";
   };
 
-  // ── Dropdown content ──────────────────────────────
   const dropdownContent = (
     <div
       style={{
-        width: "380px",
-        backgroundColor: "white",
-        border: "1px solid #000",
-        borderRadius: "8px",
-        boxShadow: "0 4px 12px rgba(0, 0, 0, 0.15)",
-        overflow: "hidden",
+        width: notificationCardWidthPx,
+        backgroundColor: 'white',
+        border: '1px solid #000',
+        borderRadius: '8px',
+        boxShadow: '0 4px 12px rgba(0, 0, 0, 0.15)',
+        overflow: 'hidden',
       }}
     >
       {/* Header */}
@@ -183,7 +182,7 @@ const NotificationsDropdown = () => {
             No notifications
           </div>
         ) : (
-          notifications.slice(0, 5).map((notification) => (
+          notifications.slice(0, uiDefaults.notificationPreviewLimit).map((notification) => (
             <div
               key={notification.id}
               onClick={() => handleNotificationClick(notification)}
@@ -234,7 +233,7 @@ const NotificationsDropdown = () => {
                     color: theme.colors.text.secondary,
                   }}
                 >
-                  {formatTime(notification.created_at)}
+                  {formatRelativeTime(notification.createdAt)}
                 </div>
               </div>
               <div style={{ color: theme.colors.text.secondary }}>›</div>
@@ -390,7 +389,7 @@ const NotificationsDropdown = () => {
                     color: theme.colors.text.secondary,
                   }}
                 >
-                  {formatTime(notification.created_at)}
+                  {formatRelativeTime(notification.createdAt)}
                 </div>
               </div>
             </div>
@@ -446,7 +445,7 @@ const NotificationsDropdown = () => {
                 marginBottom: "20px",
               }}
             >
-              {formatTime(selectedNotification.created_at)}
+              {formatRelativeTime(selectedNotification.createdAt)}
             </p>
             <div
               style={{

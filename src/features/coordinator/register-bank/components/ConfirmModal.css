@@ -1,0 +1,45 @@
+/* Full-screen dark overlay behind the modal */
+.modal-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.55);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+}
+
+/* White card centered on screen */
+.modal-box {
+  background: #fff;
+  border: 2px solid #c0392b;
+  border-radius: 12px;
+  padding: 2rem 2.5rem;
+  max-width: 420px;
+  width: 90%;
+  text-align: center;
+}
+
+.modal-title { color: #c0392b; font-size: 1.4rem; margin-bottom: 0.75rem; }
+.modal-msg { color: #333; font-size: 0.95rem; line-height: 1.6; margin-bottom: 1.5rem; }
+.modal-actions { display: flex; justify-content: center; gap: 1rem; }
+
+.modal-cancel {
+  padding: 10px 24px;
+  border: 1px solid #aaa;
+  border-radius: 6px;
+  background: #fff;
+  cursor: pointer;
+  font-size: 0.9rem;
+}
+
+.modal-ok {
+  padding: 10px 24px;
+  border: none;
+  border-radius: 6px;
+  background: #c0392b;
+  color: #fff;
+  font-weight: 600;
+  cursor: pointer;
+  font-size: 0.9rem;
+}

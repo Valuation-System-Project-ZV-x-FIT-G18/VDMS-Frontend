@@ -1,49 +1,86 @@
-import { useState, useEffect } from "react";
-import type { CSSProperties } from "react";
-import {
-  FolderOutlined,
-  CheckCircleOutlined,
-  FileTextOutlined,
-  CreditCardOutlined,
-  FileOutlined,
-} from "@ant-design/icons";
-import StatCard from "../../../components/atoms/StatCard";
-import ProjectsTable from "../../../components/organisms/ProjectsTable";
-import ValuationJobDetail from "./ValuationJobDetail";
-import { dashboardService } from "../../../services/dashboardService";
-import type { DashboardStats } from "../../../services/dashboardService";
-import type { Project } from "../types";
-import { theme } from "../../../styles/theme";
+import { useState, useEffect } from 'react';
+import type { CSSProperties } from 'react';
+import { 
+  FolderOutlined, 
+  CheckCircleOutlined, 
+  FileTextOutlined, 
+  CreditCardOutlined, 
+  FileOutlined 
+} from '@ant-design/icons';
+import StatCard from '../../../components/atoms/StatCard';
+import ProjectsTable from '../../../components/organisms/ProjectsTable';
+import ValuationJobDetail from './ValuationJobDetail';
+import { dashboardService } from '../../../services/dashboardService';
+import type { DashboardStats } from '../../../services/dashboardService';
+import type { Project } from '../types';
+import { theme } from '../../../styles/theme';
+import { getPortalClientId, uiDefaults } from '../../../config/portalConfig';
 
+const BANK_CLIENT_ID = getPortalClientId('bank');
+const RETRY_BUTTON_LABEL = 'Retry';
+
+const EMPTY_STATS: DashboardStats = {
+  totalProjects: 0,
+  completedProjects: 0,
+  activeProjects: 0,
+  pendingPayments: 0,
+  pendingDocuments: 0,
+};
+
+/**
+ * Aggregates bank dashboard concerns so summary cards and recent jobs are loaded from one cohesive view model.
+ */
 const DashboardPage = () => {
-  const [selectedProject, setSelectedProject] = useState<Project | null>(null);
+  const [selectedValuationJob, setSelectedValuationJob] = useState<Project | null>(null);
 
   // ✅ NEW: State for API data
-  const [stats, setStats] = useState<DashboardStats>({
-    totalProjects: 0,
-    completedProjects: 0,
-    pendingApprovals: 0,
-    bottlenecks: 0,
-    recentProjects: [],
-  });
-  const [recentProjects, setRecentProjects] = useState<Project[]>([]);
+  const [stats, setStats] = useState<DashboardStats>(EMPTY_STATS);
+  const [recentValuationJobs, setRecentValuationJobs] = useState<Project[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [warning, setWarning] = useState<string | null>(null);
+  const [refreshKey, setRefreshKey] = useState(0);
 
-  // ✅ NEW: Fetch data from backend
   useEffect(() => {
+    /**
+     * Loads both summary and table data together so dashboard cards and list stay in sync.
+     */
     const fetchDashboardData = async () => {
       try {
         setLoading(true);
         setError(null);
+        setWarning(null);
 
-        const [statsData, projectsData] = await Promise.all([
-          dashboardService.getStats(),
-          dashboardService.getRecentProjects(5),
+        const [statsResult, valuationJobsResult] = await Promise.allSettled([
+          dashboardService.getStats(BANK_CLIENT_ID),
+          dashboardService.getRecentProjects(uiDefaults.recentItemsLimit, BANK_CLIENT_ID),
         ]);
 
-        setStats(statsData);
-        setRecentProjects(projectsData);
+        const statsLoaded = statsResult.status === 'fulfilled';
+        const jobsLoaded = valuationJobsResult.status === 'fulfilled';
+
+        if (statsLoaded) {
+          setStats(statsResult.value);
+        } else {
+          setStats(EMPTY_STATS);
+          console.error('Dashboard stats error:', statsResult.reason);
+        }
+
+        if (jobsLoaded) {
+          setRecentValuationJobs(valuationJobsResult.value);
+        } else {
+          setRecentValuationJobs([]);
+          console.error('Recent valuation jobs error:', valuationJobsResult.reason);
+        }
+
+        if (!statsLoaded && !jobsLoaded) {
+          setError('Failed to load dashboard data');
+          return;
+        }
+
+        if (!statsLoaded || !jobsLoaded) {
+          setWarning('Some dashboard sections could not be loaded.');
+        }
       } catch (err) {
         setError("Failed to load dashboard data");
         console.error("Dashboard error:", err);
@@ -53,14 +90,14 @@ const DashboardPage = () => {
     };
 
     fetchDashboardData();
-  }, []);
+  }, [refreshKey]);
 
-  if (selectedProject) {
+  if (selectedValuationJob) {
     return (
-      <ValuationJobDetail
-        projectId={selectedProject.id}
-        initialProject={selectedProject}
-        onBack={() => setSelectedProject(null)}
+      <ValuationJobDetail 
+        projectId={selectedValuationJob.id} 
+        initialProject={selectedValuationJob}
+        onBack={() => setSelectedValuationJob(null)} 
       />
     );
   }
@@ -107,7 +144,6 @@ const DashboardPage = () => {
     color: "#dc2626",
   };
 
-  // ✅ Loading state
   if (loading) {
     return (
       <div style={containerStyle}>
@@ -116,14 +152,13 @@ const DashboardPage = () => {
     );
   }
 
-  // ✅ Error state
   if (error) {
     return (
       <div style={containerStyle}>
         <div style={errorStyle}>
           <p>{error}</p>
-          <button
-            onClick={() => window.location.reload()}
+          <button 
+            onClick={() => setRefreshKey((current) => current + 1)}
             style={{
               marginTop: "16px",
               padding: "8px 16px",
@@ -134,7 +169,7 @@ const DashboardPage = () => {
               cursor: "pointer",
             }}
           >
-            Retry
+            {RETRY_BUTTON_LABEL}
           </button>
         </div>
       </div>
@@ -147,26 +182,39 @@ const DashboardPage = () => {
       <div style={headerStyle}>
         <h1 style={titleStyle}>Dashboard Overview</h1>
         <p style={subtitleStyle}>
-          welcome back, here's what's happening with your valuation job today
+          Showing valuation jobs assigned to your bank credit officer account.
         </p>
+        {warning && (
+          <p
+            style={{
+              marginTop: '12px',
+              marginBottom: 0,
+              color: '#d97706',
+              fontSize: '13px',
+              fontWeight: 500,
+            }}
+          >
+            {warning}
+          </p>
+        )}
       </div>
 
-      {/* Stats Cards - ✅ Using REAL data from backend */}
+      {/* Stats Cards */}
       <div style={statsGridStyle}>
         <StatCard
-          title="Total Project"
+          title="Total Valuation Jobs"
           value={stats.totalProjects}
           icon={<FolderOutlined />}
           iconBgColor="#1890ff"
         />
         <StatCard
-          title="Completed Project"
+          title="Completed Valuation Jobs"
           value={stats.completedProjects}
           icon={<CheckCircleOutlined />}
           iconBgColor="#52c41a"
         />
         <StatCard
-          title="Active Project"
+          title="Active Valuation Jobs"
           value={stats.activeProjects}
           icon={<FileTextOutlined />}
           iconBgColor="#13c2c2"
@@ -178,24 +226,29 @@ const DashboardPage = () => {
           iconBgColor="#722ed1"
         />
         <StatCard
-          title="Pending Document"
+          title="Pending Documents"
           value={stats.pendingDocuments}
           icon={<FileOutlined />}
           iconBgColor="#fa8c16"
         />
       </div>
 
-      {/* Projects Table - ✅ Using REAL data from backend */}
-      <ProjectsTable
-        projects={recentProjects}
-        showSearch
-        onProjectClick={(projectId) => {
-          const selected = recentProjects.find(
-            (project) =>
-              project.id === projectId || project.projectId === projectId,
+      {/* Valuation Jobs Table */}
+      <ProjectsTable 
+        projects={recentValuationJobs} 
+        showSearch 
+        title="Recent valuation jobs"
+        idLabel="Valuation Job ID"
+        searchPlaceholder="Search valuation jobs..."
+        onProjectClick={(valuationJobId) => {
+          const selected = recentValuationJobs.find(
+            (valuationJob) =>
+              valuationJob.id === valuationJobId ||
+              valuationJob.valuationJobId === valuationJobId ||
+              valuationJob.projectId === valuationJobId,
           );
           if (selected) {
-            setSelectedProject(selected);
+            setSelectedValuationJob(selected);
           }
         }}
       />

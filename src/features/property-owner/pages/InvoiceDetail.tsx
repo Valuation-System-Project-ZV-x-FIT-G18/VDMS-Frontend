@@ -14,6 +14,7 @@ import {
 import { theme } from '../../../styles/theme';
 import { invoiceService } from '../../../services/invoiceService';
 import type { Invoice } from '../../../services/invoiceService';
+import { formatAmountLkr, formatDateShort, getDaysRemaining } from '../../../utils/formatters';
 
 interface InvoiceDetailProps {
   invoiceId: string;
@@ -25,8 +26,11 @@ const bankTransfer = {
   bank: 'Sampath Bank',
   branch: 'Colombo Super Branch',
   accountNumber: '1000-234-567',
-};
+} as const;
 
+/**
+ * Encapsulates invoice payment actions and proof-upload flows in one owner-facing detail screen.
+ */
 const InvoiceDetail = ({ invoiceId, onBack }: InvoiceDetailProps) => {
   const [invoice, setInvoice] = useState<Invoice | null>(null);
   const [isDragging, setIsDragging] = useState(false);
@@ -37,6 +41,9 @@ const InvoiceDetail = ({ invoiceId, onBack }: InvoiceDetailProps) => {
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
+    /**
+     * Loads invoice once for this route so all dependent cards derive from the same record.
+     */
     const loadInvoice = async () => {
       try {
         setLoading(true);
@@ -54,6 +61,9 @@ const InvoiceDetail = ({ invoiceId, onBack }: InvoiceDetailProps) => {
     loadInvoice();
   }, [invoiceId]);
 
+  /**
+   * Keeps payment status visuals consistent wherever status color is reused.
+   */
   const getPaymentStatusColor = () => {
     const status = invoice?.status || 'Pending';
     const colors = {
@@ -64,25 +74,9 @@ const InvoiceDetail = ({ invoiceId, onBack }: InvoiceDetailProps) => {
     return colors[status];
   };
 
-  const formatAmount = (amount: string | number) => {
-    const value = typeof amount === 'string' ? Number(amount) : amount;
-    return value.toLocaleString('en-US', { minimumFractionDigits: 2 });
-  };
-
-  const formatDate = (date: string) =>
-    new Date(date).toLocaleDateString('en-US', {
-      month: 'short',
-      day: '2-digit',
-      year: 'numeric',
-    });
-
-  const getDaysRemaining = (dueDate: string) => {
-    const due = new Date(dueDate);
-    const now = new Date();
-    const diff = Math.ceil((due.getTime() - now.getTime()) / (1000 * 60 * 60 * 24));
-    return diff;
-  };
-
+  /**
+   * Uses backend invoice update endpoint and updates local state so upload feedback is immediate.
+   */
   const handleFileUpload = async (file: File) => {
     if (!invoice) return;
 
@@ -98,6 +92,9 @@ const InvoiceDetail = ({ invoiceId, onBack }: InvoiceDetailProps) => {
     }
   };
 
+  /**
+   * Allows drag-and-drop uploads to match the same processing path as file picker uploads.
+   */
   const handleDrop = (e: React.DragEvent) => {
     e.preventDefault();
     setIsDragging(false);
@@ -107,15 +104,24 @@ const InvoiceDetail = ({ invoiceId, onBack }: InvoiceDetailProps) => {
     }
   };
 
+  /**
+   * Activates visual drop-state feedback without triggering browser-default file open behavior.
+   */
   const handleDragOver = (e: React.DragEvent) => {
     e.preventDefault();
     setIsDragging(true);
   };
 
+  /**
+   * Resets drop-state styling as soon as pointer leaves drop target.
+   */
   const handleDragLeave = () => {
     setIsDragging(false);
   };
 
+  /**
+   * Uses a transient file input to keep this screen dependency-free and lightweight.
+   */
   const handleBrowseFile = () => {
     const input = document.createElement('input');
     input.type = 'file';
@@ -129,21 +135,27 @@ const InvoiceDetail = ({ invoiceId, onBack }: InvoiceDetailProps) => {
     input.click();
   };
 
+  /**
+   * Gives quick copy feedback so users know the transfer account number was captured.
+   */
   const handleCopyAccount = () => {
     navigator.clipboard.writeText(bankTransfer.accountNumber);
     setCopiedAccount(true);
     setTimeout(() => setCopiedAccount(false), 2000);
   };
 
+  /**
+   * Exports a text summary as a fallback so users can still keep invoice details offline.
+   */
   const handleDownloadInvoice = () => {
     if (!invoice) return;
 
-    const amount = formatAmount(invoice.amount);
+    const amount = formatAmountLkr(invoice.amount);
     const text = [
       `Invoice: ${invoice.invoiceId}`,
       `Project: ${invoice.project?.projectId || '-'}`,
       `Amount: LKR ${amount}`,
-      `Due Date: ${formatDate(invoice.dueDate)}`,
+      `Due Date: ${formatDateShort(invoice.dueDate)}`,
       `Status: ${invoice.status}`,
     ].join('\n');
 
@@ -156,6 +168,9 @@ const InvoiceDetail = ({ invoiceId, onBack }: InvoiceDetailProps) => {
     URL.revokeObjectURL(url);
   };
 
+  /**
+   * Calls notification workflow endpoint and exposes a short success state to prevent duplicate clicks.
+   */
   const handleNotifyCoordinator = async () => {
     if (!invoice) return;
 
@@ -447,7 +462,7 @@ const InvoiceDetail = ({ invoiceId, onBack }: InvoiceDetailProps) => {
             <span style={{ fontSize: '16px' }}>💳</span>
             Valuation Fee (LKR)
           </div>
-          <div style={feeValueStyle}>{formatAmount(invoice.amount)}</div>
+          <div style={feeValueStyle}>{formatAmountLkr(invoice.amount)}</div>
         </div>
 
         <div style={cardStyle}>
@@ -455,7 +470,7 @@ const InvoiceDetail = ({ invoiceId, onBack }: InvoiceDetailProps) => {
             <CalendarOutlined />
             Due Date
           </div>
-          <div style={dueDateStyle}>{formatDate(invoice.dueDate)}</div>
+          <div style={dueDateStyle}>{formatDateShort(invoice.dueDate)}</div>
           <div style={daysRemainingStyle}>
             <ClockCircleOutlined />
             {daysRemaining >= 0 ? `${daysRemaining} Days Remaining` : `${Math.abs(daysRemaining)} Days Overdue`}

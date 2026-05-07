@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import {
   Routes,
   Route,
@@ -7,27 +7,24 @@ import {
   useParams,
 } from "react-router-dom";
 import MainLayout from "./layouts/MainLayout";
+import CoordinatorLayout from "./layouts/CoordinatorLayout";
 import RoleSelectPage from "./pages/RoleSelectPage";
-
-// ✅ Technical Officer pages
+// Technical Officer pages
 import TechnicalOfficerDashboard from "./features/technical-officer/pages/Dashboard";
 import AssignedProject from "./features/technical-officer/pages/AssignedProject";
 import Report from "./features/technical-officer/pages/Report";
 import Documents from "./features/technical-officer/pages/Documents";
 import Attendance from "./features/technical-officer/pages/Attendance";
 import TechnicalOfficerSettingsPage from "./features/technical-officer/pages/Settings";
-
-// ✅ Bank Credit Officer pages
+// Bank Credit Officer pages
 import BankDashboardPage from "./features/bank-credit-officer/pages/Dashboard";
 import BankAllProjectsPage from "./features/bank-credit-officer/pages/AllProjects";
 import BankSettingsPage from "./features/bank-credit-officer/pages/Settings";
-
 // Property Owner pages
 import OwnerDashboardPage from "./features/property-owner/pages/Dashboard";
 import OwnerAllProjectsPage from "./features/property-owner/pages/AllProjects";
 import OwnerPaymentPage from "./features/property-owner/pages/Payment";
 import OwnerSettingsPage from "./features/property-owner/pages/Settings";
-
 // L3 Manager pages
 import L3DashboardPage from "./features/l3/pages/Dashboard";
 import L3PendingReviews from "./features/l3/pages/PendingReviews";
@@ -43,7 +40,6 @@ import L3RequestClarification from "./features/l3/pages/RequestClarification";
 import L3SettingsPage from "./features/l3/pages/Settings";
 import L3AllProjectsAndBottlenecks from "./features/l3/pages/AllProjectsAndBottlenecks";
 import L3DailyMorningReport from "./features/l3/pages/DailyMorningReport";
-
 // L2 Manager pages
 import L2DashboardPage from "./features/l2/pages/Dashboard";
 import L2AllProjectsPage from "./features/l2/pages/AllProjects";
@@ -62,7 +58,6 @@ import L2DraftReportDetail from "./features/l2/pages/DraftReportDetail";
 import L2EditDraftReport from "./features/l2/pages/EditDraftReport";
 import L2RejectReportDraft from "./features/l2/pages/RejectReportDraft";
 import L2RequestClarification from "./features/l2/pages/RequestClarification";
-
 // L1 Manager pages
 import L1DashboardPage from "./features/l1/pages/Dashboard";
 import L1AllProjectsPage from "./features/l1/pages/AllProjects";
@@ -81,21 +76,24 @@ import L1DraftReportDetail from "./features/l1/pages/DraftReportDetail";
 import L1EditDraftReport from "./features/l1/pages/EditDraftReport";
 import L1RejectReportDraft from "./features/l1/pages/RejectReportDraft";
 import L1RequestClarification from "./features/l1/pages/RequestClarification";
-
-// COORDINATOR pages
-import CoordinatorDashboard from "./features/coordinator/pages/Dashboard";
-import CoordinatorSettings from "./features/coordinator/pages/Settings";
-
-// COORDINATOR Workflow pages
-import CoordinatorClientSearch from "./features/coordinator/pages/Workflow/ClientSearch";
-import CoordinatorRegisterClient from "./features/coordinator/pages/Workflow/RegisterClient";
-import CoordinatorCreateProject from "./features/coordinator/pages/Workflow/CreateProject";
-import CoordinatorNewValuation from "./features/coordinator/pages/Workflow/NewValuation";
-import CoordinatorAssignTO from "./features/coordinator/pages/Workflow/AssignTO";
-import CoordinatorFleetManagement from "./features/coordinator/pages/FleetManagement";
-import CoordinatorProjectStatus from "./features/coordinator/pages/ProjectStatus";
-import CoordinatorMessages from "./features/coordinator/pages/Messages";
-
+import CoordinatorDashboardPage from "./features/coordinator/dashboard/pages/DashboardPage";
+import CoordinatorSearchPage from "./features/coordinator/search-client/pages/SearchPage";
+import CoordinatorRegisterPage from "./features/coordinator/register-client/pages/RegisterPage";
+import CoordinatorRegisterBankPage from "./features/coordinator/register-bank/pages/RegisterBankPage";
+import CoordinatorPropertyInfoPage from "./features/coordinator/property-information/pages/PropertyInfoPage";
+import CoordinatorSurveyPlanPage from "./features/coordinator/survey-plan/pages/SurveyPlanPage";
+import CoordinatorLegalDetailsPage from "./features/coordinator/legal-details/pages/LegalDetailsPage";
+import CoordinatorDocumentUploadPage from "./features/coordinator/document-upload/pages/DocumentUploadPage";
+import CoordinatorNewValuationPage from "./features/coordinator/new-valuation/pages/NewValuationPage";
+import CoordinatorAvailableToPage from "./features/coordinator/available-to/pages/AvailableToPage";
+import CoordinatorOnLeaveToPage from "./features/coordinator/on-leave-to/pages/OnLeaveToPage";
+import CoordinatorAssignedToPage from "./features/coordinator/assigned-to/pages/AssignedToPage";
+import CoordinatorFleetDashboard from "./features/coordinator/fleet-management/pages/FleetDashboard";
+import CoordinatorAllToPage from "./features/coordinator/fleet-management/pages/AllToPage";
+import CoordinatorRejectedToPage from "./features/coordinator/rejected-to/pages/RejectedToPage";
+import CoordinatorProjectSummaryPage from "./features/coordinator/project-summary/pages/ProjectSummaryPage";
+import CoordinatorRevaluationPage from "./features/coordinator/revaluation/pages/RevaluationPage";
+import CoordinatorBankInfoPage from "./features/coordinator/revaluation/pages/BankInfoPage";
 type Role =
   | "bank"
   | "owner"
@@ -106,7 +104,6 @@ type Role =
   | "coordinator"
   | "technical-officer"
   | "senior-valuator";
-
 function BlankRolePage({ title }: { title: string }) {
   return (
     <div
@@ -127,7 +124,6 @@ function BlankRolePage({ title }: { title: string }) {
     </div>
   );
 }
-
 // Wrapper components to extract projectId from URL and pass to DraftReportDetail
 function L3DraftReportDetailPage() {
   const { projectId } = useParams<{ projectId: string }>();
@@ -147,7 +143,6 @@ function L3DraftReportDetailPage() {
     />
   );
 }
-
 function L2DraftReportDetailPage() {
   const { projectId } = useParams<{ projectId: string }>();
   const navigate = useNavigate();
@@ -166,7 +161,6 @@ function L2DraftReportDetailPage() {
     />
   );
 }
-
 function L1DraftReportDetailPage() {
   const { projectId } = useParams<{ projectId: string }>();
   const navigate = useNavigate();
@@ -185,7 +179,6 @@ function L1DraftReportDetailPage() {
     />
   );
 }
-
 // Approval page wrapper components
 function L3ApproveFinalReportPage() {
   const { projectId } = useParams<{ projectId: string }>();
@@ -222,12 +215,12 @@ function L3ApproveFinalReportPage() {
             color: "#4b5563",
           }}
         >
-          <div style={{ color: "#16a34a" }}>✓ Step 1: L3 Approval</div>
+          <div style={{ color: "#16a34a" }}>[Done] Step 1: L3 Approval</div>
           <div style={{ color: "#d4d4d4" }}>Step 2: L2 Review</div>
           <div style={{ color: "#d4d4d4" }}>Step 3: L1 Final Decision</div>
         </div>
         <h1 style={{ color: "#16a34a", marginBottom: "16px" }}>
-          ✓ Step 1 of 3 - Approved
+          Step 1 of 3 - Approved
         </h1>
         <p style={{ color: "#4b5563", marginBottom: "24px", fontSize: "14px" }}>
           Project {projectId} has been successfully approved at L3 management
@@ -252,7 +245,6 @@ function L3ApproveFinalReportPage() {
     </div>
   );
 }
-
 function L2ApproveFinalReportPage() {
   const { projectId } = useParams<{ projectId: string }>();
   const navigate = useNavigate();
@@ -288,12 +280,12 @@ function L2ApproveFinalReportPage() {
             color: "#4b5563",
           }}
         >
-          <div style={{ color: "#16a34a" }}>✓ Step 1: L3 Approval</div>
-          <div style={{ color: "#16a34a" }}>✓ Step 2: L2 Approval</div>
+          <div style={{ color: "#16a34a" }}>[Done] Step 1: L3 Approval</div>
+          <div style={{ color: "#16a34a" }}>[Done] Step 2: L2 Approval</div>
           <div style={{ color: "#d4d4d4" }}>Step 3: L1 Final Decision</div>
         </div>
         <h1 style={{ color: "#16a34a", marginBottom: "16px" }}>
-          ✓ Step 2 of 3 - Approved
+          Step 2 of 3 - Approved
         </h1>
         <p style={{ color: "#4b5563", marginBottom: "24px", fontSize: "14px" }}>
           Project {projectId} has been successfully approved at L2 management
@@ -319,15 +311,12 @@ function L2ApproveFinalReportPage() {
     </div>
   );
 }
-
 function L1ApproveFinalReportPage() {
   const { projectId } = useParams<{ projectId: string }>();
   const [isLocked, setIsLocked] = useState(false);
-
   const handleLockReport = () => {
     setIsLocked(true);
   };
-
   return (
     <div
       style={{
@@ -354,7 +343,7 @@ function L1ApproveFinalReportPage() {
           <h1
             style={{ color: "#991b1b", marginBottom: "16px", fontSize: "28px" }}
           >
-            🔒 REPORT LOCKED
+            Ã°Å¸â€â€™ REPORT LOCKED
           </h1>
           <p
             style={{
@@ -399,7 +388,7 @@ function L1ApproveFinalReportPage() {
           }}
         >
           <h1 style={{ color: "#16a34a", marginBottom: "16px" }}>
-            ✓ Report Approved
+            Report Approved
           </h1>
           <p
             style={{ color: "#4b5563", marginBottom: "24px", fontSize: "14px" }}
@@ -443,7 +432,7 @@ function L1ApproveFinalReportPage() {
                 cursor: "pointer",
               }}
             >
-              🔒 Lock Final Report
+              Ã°Å¸â€â€™ Lock Final Report
             </button>
           </div>
         </div>
@@ -451,22 +440,17 @@ function L1ApproveFinalReportPage() {
     </div>
   );
 }
-
 function BankManager() {
   const navigate = useNavigate();
   const location = useLocation();
-
   const getCurrentPage = () => {
     const path = location.pathname.split("/").pop();
     return path || "dashboard";
   };
-
   const handleNavigation = (page: string) => {
     navigate(`/bank/${page}`);
   };
-
   const activePage = getCurrentPage();
-
   return (
     <MainLayout
       role="bank"
@@ -482,22 +466,17 @@ function BankManager() {
     </MainLayout>
   );
 }
-
 function OwnerManager() {
   const navigate = useNavigate();
   const location = useLocation();
-
   const getCurrentPage = () => {
     const path = location.pathname.split("/").pop();
     return path || "dashboard";
   };
-
   const handleNavigation = (page: string) => {
     navigate(`/owner/${page}`);
   };
-
   const activePage = getCurrentPage();
-
   return (
     <MainLayout
       role="owner"
@@ -514,16 +493,13 @@ function OwnerManager() {
     </MainLayout>
   );
 }
-
 function L3Manager() {
   const navigate = useNavigate();
   const location = useLocation();
-
   const getCurrentPage = () => {
     const path = location.pathname.split("/").pop();
     return path || "dashboard";
   };
-
   const handleNavigation = (page: string, projectId?: string) => {
     if (projectId) {
       navigate(`/l3-manager/${page}/${projectId}`);
@@ -531,9 +507,7 @@ function L3Manager() {
       navigate(`/l3-manager/${page}`);
     }
   };
-
   const activePage = getCurrentPage();
-
   return (
     <MainLayout
       role="l3-manager"
@@ -612,16 +586,13 @@ function L3Manager() {
     </MainLayout>
   );
 }
-
 function L2Manager() {
   const navigate = useNavigate();
   const location = useLocation();
-
   const getCurrentPage = () => {
     const path = location.pathname.split("/").pop();
     return path || "dashboard";
   };
-
   const handleNavigation = (page: string, projectId?: string) => {
     if (projectId) {
       navigate(`/l2-manager/${page}/${projectId}`);
@@ -629,9 +600,7 @@ function L2Manager() {
       navigate(`/l2-manager/${page}`);
     }
   };
-
   const activePage = getCurrentPage();
-
   return (
     <MainLayout
       role="l2-manager"
@@ -713,16 +682,13 @@ function L2Manager() {
     </MainLayout>
   );
 }
-
 function L1Manager() {
   const navigate = useNavigate();
   const location = useLocation();
-
   const getCurrentPage = () => {
     const path = location.pathname.split("/").pop();
     return path || "dashboard";
   };
-
   const handleNavigation = (page: string, projectId?: string) => {
     if (projectId) {
       navigate(`/l1-manager/${page}/${projectId}`);
@@ -730,9 +696,7 @@ function L1Manager() {
       navigate(`/l1-manager/${page}`);
     }
   };
-
   const activePage = getCurrentPage();
-
   return (
     <MainLayout
       role="l1-manager"
@@ -817,69 +781,17 @@ function L1Manager() {
     </MainLayout>
   );
 }
-
-function Coordinator() {
-  const navigate = useNavigate();
-  const location = useLocation();
-
-  const getCurrentPage = () => {
-    const path = location.pathname.split("/").pop();
-    return path || "dashboard";
-  };
-
-  const handleNavigation = (page: string) => {
-    navigate(`/coordinator/${page}`);
-  };
-
-  const activePage = getCurrentPage();
-
-  return (
-    <MainLayout
-      role="coordinator"
-      onNavigate={handleNavigation}
-      activePage={activePage}
-    >
-      <Routes>
-        <Route path="/" element={<CoordinatorDashboard />} />
-        <Route path="/dashboard" element={<CoordinatorDashboard />} />
-        <Route path="/create-project" element={<CoordinatorClientSearch />} />
-        <Route
-          path="/workflow-register"
-          element={<CoordinatorRegisterClient />}
-        />
-        <Route path="/workflow-create" element={<CoordinatorCreateProject />} />
-        <Route
-          path="/workflow-valuation"
-          element={<CoordinatorNewValuation />}
-        />
-        <Route path="/workflow-assign" element={<CoordinatorAssignTO />} />
-        <Route path="/settings" element={<CoordinatorSettings />} />
-        <Route
-          path="/fleet-management"
-          element={<CoordinatorFleetManagement />}
-        />
-        <Route path="/project-status" element={<CoordinatorProjectStatus />} />
-        <Route path="/messages" element={<CoordinatorMessages />} />
-      </Routes>
-    </MainLayout>
-  );
-}
-
 function TechnicalOfficer() {
   const navigate = useNavigate();
   const location = useLocation();
-
   const getCurrentPage = () => {
     const path = location.pathname.split("/").pop();
     return path || "dashboard";
   };
-
   const handleNavigation = (page: string) => {
     navigate(`/technical-officer/${page}`);
   };
-
   const activePage = getCurrentPage();
-
   return (
     <MainLayout
       role="technical-officer"
@@ -898,44 +810,24 @@ function TechnicalOfficer() {
     </MainLayout>
   );
 }
-
 function AppContent() {
   const [role, setRole] = useState<Role | null>(null);
   const navigate = useNavigate();
   const location = useLocation();
-
-  // Check if role is stored in localStorage on mount
-  useEffect(() => {
-    const savedRole = localStorage.getItem("selectedRole") as Role | null;
-    if (savedRole) {
-      setRole(savedRole);
-    }
-  }, []);
-
-  // Extract role from URL path on mount and route changes
-  useEffect(() => {
-    const pathSegments = location.pathname.split("/").filter(Boolean);
-    if (pathSegments.length > 0) {
-      const potentialRole = pathSegments[0] as Role;
-      const validRoles: Role[] = [
-        "bank",
-        "owner",
-        "l3-manager",
-        "l2-manager",
-        "l1-manager",
-        "admin",
-        "coordinator",
-        "technical-officer",
-        "senior-valuator",
-      ];
-
-      if (validRoles.includes(potentialRole)) {
-        setRole(potentialRole);
-      }
-    }
-  }, [location]);
-
-  // Role select page
+  const validRoles: Role[] = [
+    "bank",
+    "owner",
+    "l3-manager",
+    "l2-manager",
+    "l1-manager",
+    "admin",
+    "coordinator",
+    "technical-officer",
+    "senior-valuator",
+  ];
+  const pathSegments = location.pathname.split("/").filter(Boolean);
+  const potentialRole = pathSegments[0] as Role | undefined;
+  const role = potentialRole && validRoles.includes(potentialRole) ? potentialRole : null;
   if (!role) {
     return (
       <RoleSelectPage
@@ -948,9 +840,6 @@ function AppContent() {
       />
     );
   }
-
-  // ✅ For bank/owner show layout
-  // Route-based rendering
   return (
     <Routes>
       <Route path="/bank/*" element={<BankManager />} />
@@ -958,7 +847,27 @@ function AppContent() {
       <Route path="/l3-manager/*" element={<L3Manager />} />
       <Route path="/l2-manager/*" element={<L2Manager />} />
       <Route path="/l1-manager/*" element={<L1Manager />} />
-      <Route path="/coordinator/*" element={<Coordinator />} />
+      <Route path="/coordinator" element={<CoordinatorLayout />}>
+        <Route index element={<CoordinatorDashboardPage />} />
+        <Route path="dashboard" element={<CoordinatorDashboardPage />} />
+        <Route path="search" element={<CoordinatorSearchPage />} />
+        <Route path="register" element={<CoordinatorRegisterPage />} />
+        <Route path="register-bank" element={<CoordinatorRegisterBankPage />} />
+        <Route path="property-information" element={<CoordinatorPropertyInfoPage />} />
+        <Route path="survey-plan" element={<CoordinatorSurveyPlanPage />} />
+        <Route path="legal-details" element={<CoordinatorLegalDetailsPage />} />
+        <Route path="document-upload" element={<CoordinatorDocumentUploadPage />} />
+        <Route path="new-valuation" element={<CoordinatorNewValuationPage />} />
+        <Route path="available-to" element={<CoordinatorAvailableToPage />} />
+        <Route path="on-leave-to" element={<CoordinatorOnLeaveToPage />} />
+        <Route path="assigned-to" element={<CoordinatorAssignedToPage />} />
+        <Route path="fleet-management" element={<CoordinatorFleetDashboard />} />
+        <Route path="all-to" element={<CoordinatorAllToPage />} />
+        <Route path="rejected-to" element={<CoordinatorRejectedToPage />} />
+        <Route path="project-summary" element={<CoordinatorProjectSummaryPage />} />
+        <Route path="revaluation" element={<CoordinatorRevaluationPage />} />
+        <Route path="revaluation-bank" element={<CoordinatorBankInfoPage />} />
+      </Route>
       <Route path="/technical-officer/*" element={<TechnicalOfficer />} />
       <Route path="/admin" element={<BlankRolePage title="Admin Portal" />} />
       <Route
@@ -972,9 +881,7 @@ function AppContent() {
     </Routes>
   );
 }
-
 function App() {
   return <AppContent />;
 }
-
 export default App;

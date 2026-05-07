@@ -1,0 +1,180 @@
+/* ===== App Layout — top bar + sidebar + main content grid ===== */
+
+:root {
+  --vdms-topbar-bg: #d7e6f1;
+  --vdms-topbar-border: #b9cfdf;
+  --vdms-sidebar-bg: #eef4fa;
+  --vdms-sidebar-border: #d4e1ec;
+  --vdms-item-text: #1f3b57;
+  --vdms-item-hover: #deebf5;
+  --vdms-item-active-bg: #cfe2f3;
+  --vdms-item-active-border: #2b7ecf;
+  --vdms-content-bg: #f6f9fc;
+}
+
+.app-layout {
+  display: flex;
+  flex-direction: column;          /* top bar on top, body below */
+  height: 100vh;                   /* fill entire viewport */
+  overflow: hidden;                /* prevent double scrollbars */
+}
+
+/* ===== Top Bar ===== */
+
+.topbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;  /* logo left, role+profile right */
+  height: 56px;
+  padding: 0 1.5rem;
+  background: #1e293b;            /* dark slate background */
+  color: white;
+  flex-shrink: 0;                  /* don't compress the top bar */
+  z-index: 10;
+}
+
+.topbar-logo {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 1.1rem;
+}
+
+.topbar-logo-text {
+  font-weight: 700;
+  letter-spacing: 0.3px;
+}
+
+.topbar-right {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+}
+
+.topbar-role {
+  text-transform: capitalize;     /* "coordinator" → "Coordinator" */
+  font-size: 0.9rem;
+  background: rgba(255,255,255,0.15); /* translucent badge */
+  padding: 0.25rem 0.75rem;
+  border-radius: 20px;
+}
+
+.topbar-profile {
+  background: none;
+  border: 2px solid rgba(255,255,255,0.3);
+  border-radius: 50%;             /* circular button */
+  width: 36px;
+  height: 36px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  font-size: 1.1rem;
+}
+
+.topbar-profile:hover {
+  border-color: white;
+}
+
+/* ===== Body — sidebar + content side by side ===== */
+
+.app-body {
+  display: flex;
+  flex: 1;                         /* fill remaining height */
+  overflow: hidden;
+}
+
+/* ===== Sidebar ===== */
+
+.sidebar {
+  width: 240px;
+  background: linear-gradient(180deg, #eff5fb 0%, var(--vdms-sidebar-bg) 100%);
+  border-right: 1px solid var(--vdms-sidebar-border);
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;  /* menu on top, logout at bottom */
+  flex-shrink: 0;                  /* don't compress sidebar */
+  overflow-y: auto;                /* scroll if many items */
+}
+
+.sidebar-menu {
+  display: flex;
+  flex-direction: column;
+  padding: 0.9rem 0.5rem;
+  gap: 0.35rem;
+}
+
+.sidebar-item {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 0.72rem 0.85rem;
+  background: transparent;
+  border: none;
+  border-radius: 10px;
+  text-align: left;
+  font-size: 0.93rem;
+  color: var(--vdms-item-text);
+  font-weight: 500;
+  cursor: pointer;
+  transition: background-color 0.18s ease, transform 0.18s ease;
+  width: 100%;
+}
+
+.sidebar-item:hover {
+  background: var(--vdms-item-hover);
+  transform: translateX(1px);
+}
+
+.sidebar-item--active {
+  background: var(--vdms-item-active-bg);
+  color: #124779;
+  font-weight: 600;
+  border-left: 4px solid var(--vdms-item-active-border);
+}
+
+.sidebar-icon {
+  font-size: 1.15rem;
+  width: 24px;
+  text-align: center;
+}
+
+.sidebar-label {
+  white-space: nowrap;
+}
+
+.sidebar-logout {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 0.8rem 1rem;
+  background: none;
+  border: none;
+  border-top: 1px solid var(--vdms-sidebar-border);  /* separator above logout */
+  border-radius: 10px;
+  color: #ef4444;                  /* red text for logout */
+  cursor: pointer;
+  font-size: 0.92rem;
+  width: 100%;
+  text-align: left;
+}
+
+.sidebar-logout:hover {
+  background: #fef2f2;            /* light red hover */
+}
+
+/* ===== Sidebar Bottom Section — settings + logout pinned at bottom ===== */
+
+.sidebar-bottom {
+  border-top: 1px solid var(--vdms-sidebar-border);  /* separator line above bottom section */
+  margin-top: auto;               /* push to the very bottom of sidebar */
+  padding: 0.5rem;
+}
+
+/* ===== Main Content Area ===== */
+
+.app-content {
+  flex: 1;                         /* fill remaining width */
+  overflow-y: auto;                /* scroll page content */
+  background: var(--vdms-content-bg);
+}

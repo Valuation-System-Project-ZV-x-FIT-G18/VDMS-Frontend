@@ -10,14 +10,20 @@ import {
   WarningOutlined,
   UserOutlined,
   DownloadOutlined,
-} from "@ant-design/icons";
-import { theme } from "../../../styles/theme";
-import { projectService } from "../../../services/projectService";
-import type { ProjectDetails } from "../../../services/projectService";
-import { documentService } from "../../../services/documentService";
-import { teamService } from "../../../services/teamService";
-import type { TeamMember as TeamType } from "../../../services/teamService";
-import type { Project } from "../types";
+} from '@ant-design/icons';
+import { theme } from '../../../styles/theme';
+import { projectService } from '../../../services/projectService';
+import type { ProjectDetails } from '../../../services/projectService';
+import { documentService } from '../../../services/documentService';
+import { teamService } from '../../../services/teamService';
+import type { TeamMember as TeamType } from '../../../services/teamService';
+import type { Project } from '../types';
+import TeamMemberChatPopup from '../../../components/organisms/TeamMemberChatPopup';
+import { getChatIdentity } from '../../../services/chatIdentity';
+import {
+  getCurrentUserName,
+  projectDetailDefaults,
+} from '../../../config/portalConfig';
 
 interface ValuationJobDetailProps {
   projectId: string;
@@ -35,34 +41,34 @@ interface JobDocument {
   note?: string;
 }
 
-const ValuationJobDetail = ({
-  projectId,
-  initialProject,
-  onBack,
-}: ValuationJobDetailProps) => {
+/**
+ * Renders bank-side valuation detail by combining project, document, and team data into one operational workspace.
+ */
+const ValuationJobDetail = ({ projectId, initialProject, onBack }: ValuationJobDetailProps) => {
   const [showAllTeam, setShowAllTeam] = useState(false);
+  const [selectedTeamMember, setSelectedTeamMember] = useState<TeamType | null>(null);
   const [uploadingDoc, setUploadingDoc] = useState<string | null>(null);
   const [selectedUploadDocId, setSelectedUploadDocId] = useState<string | null>(
     null,
   );
   const documentUploadInputRef = useRef<HTMLInputElement | null>(null);
+  const chatIdentity = getChatIdentity('bank', 'Bank Credit Officer');
 
-  // ✅ NEW: State for API data
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [project, setProject] = useState<ProjectDetails | null>(null);
   const [documents, setDocuments] = useState<JobDocument[]>([]);
   const [teamMembers, setTeamMembers] = useState<TeamType[]>([]);
 
-  // ✅ NEW: Fetch project details from backend
   useEffect(() => {
+    /**
+     * Hydrates detail view while tolerating partial endpoint failures to keep the page usable.
+     */
     const fetchProjectDetails = async () => {
       try {
         setLoading(true);
         setError(null);
 
-        // Prefer the selected row data so the page opens even if the
-        // project-by-id endpoint is failing in the running backend process.
         let projectData: ProjectDetails;
         if (initialProject) {
           projectData = initialProject as ProjectDetails;
@@ -88,20 +94,15 @@ const ValuationJobDetail = ({
 
         const resolvedId = projectData.id || projectId;
 
-        // Load related data independently so a single endpoint failure
-        // does not block the detail page from rendering.
         const [docsResult, teamResult] = await Promise.allSettled([
           documentService.getByProject(resolvedId),
           teamService.getByProject(resolvedId),
         ]);
 
-        const docsData =
-          docsResult.status === "fulfilled" ? docsResult.value : [];
-        const teamData =
-          teamResult.status === "fulfilled" ? teamResult.value : [];
-
-        // Transform documents to match component interface
-        const transformedDocs: JobDocument[] = docsData.map((doc) => ({
+        const docsData = docsResult.status === 'fulfilled' ? docsResult.value : [];
+        const teamData = teamResult.status === 'fulfilled' ? teamResult.value : [];
+        
+        const transformedDocs: JobDocument[] = docsData.map(doc => ({
           id: doc.id,
           name: doc.name,
           uploadDate: doc.uploadDate
@@ -133,11 +134,17 @@ const ValuationJobDetail = ({
     fetchProjectDetails();
   }, [projectId, initialProject]);
 
+  /**
+   * Routes upload intent through a hidden input so pending document rows can open native file selection.
+   */
   const handleDocumentUpload = (docId: string) => {
     setSelectedUploadDocId(docId);
     documentUploadInputRef.current?.click();
   };
 
+  /**
+   * Applies local optimistic state updates so users see upload feedback immediately.
+   */
   const handleDocumentFileChange = (event: ChangeEvent<HTMLInputElement>) => {
     const selectedFile = event.target.files?.[0];
     if (!selectedFile || !selectedUploadDocId) return;
@@ -157,7 +164,7 @@ const ValuationJobDetail = ({
               ...doc,
               status: "submitted",
               uploadDate,
-              uploadedBy: "John Doe",
+              uploadedBy: getCurrentUserName('bank'),
               note: undefined,
             }
           : doc,
@@ -169,39 +176,33 @@ const ValuationJobDetail = ({
     event.target.value = "";
   };
 
-  // ✅ Loading state
   if (loading) {
     return (
-      <div
-        style={{
-          display: "flex",
-          justifyContent: "center",
-          alignItems: "center",
-          minHeight: "400px",
-        }}
-      >
-        <div style={{ fontSize: "16px", color: theme.colors.text.secondary }}>
-          Loading project details...
+      <div style={{
+        display: 'flex',
+        justifyContent: 'center',
+        alignItems: 'center',
+        minHeight: '400px',
+      }}>
+        <div style={{ fontSize: '16px', color: theme.colors.text.secondary }}>
+          Loading valuation job details...
         </div>
       </div>
     );
   }
 
-  // ✅ Error state
   if (error || !project) {
     return (
-      <div
-        style={{
-          display: "flex",
-          justifyContent: "center",
-          alignItems: "center",
-          minHeight: "400px",
-          flexDirection: "column",
-          gap: "16px",
-        }}
-      >
-        <div style={{ color: "#ff4d4f", fontSize: "16px" }}>
-          {error || "Project not found"}
+      <div style={{
+        display: 'flex',
+        justifyContent: 'center',
+        alignItems: 'center',
+        minHeight: '400px',
+        flexDirection: 'column',
+        gap: '16px',
+      }}>
+        <div style={{ color: '#ff4d4f', fontSize: '16px' }}>
+          {error || 'Valuation job not found'}
         </div>
         <button
           onClick={onBack}
@@ -221,19 +222,17 @@ const ValuationJobDetail = ({
     );
   }
 
-  // ✅ Transform backend data to match UI
-  const uploadedCount = documents.filter(
-    (d) => d.status === "submitted",
-  ).length;
+  const uploadedCount = documents.filter(d => d.status === 'submitted').length;
   const totalCount = documents.length;
 
-  // Calculate days remaining
   const expectedDate = new Date(project.expectedCompletion);
   const today = new Date();
   const diffTime = expectedDate.getTime() - today.getTime();
   const daysRemaining = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
 
-  // Map project status to stages
+  /**
+   * Normalizes stage rendering from status text so timeline behavior remains deterministic.
+   */
   const getStages = (status: string) => {
     const stageOrder = [
       "Awaiting Docs",
@@ -276,21 +275,23 @@ const ValuationJobDetail = ({
   const jobData = {
     id: project.projectId,
     address: project.propertyAddress,
-    client: "Abeywickrama Holdings Pvt Ltd", // TODO: Get from backend when client table exists
-    projectId: project.projectId,
-    propertyType: "Residential Land & House", // TODO: Add to project entity
-    valuationType: "Market Valuation", // TODO: Add to project entity
-    bankBranch: "Colombo 07 - Main", // TODO: Add to project entity
-    creditOfficer: "You (John Doe)", // TODO: Get from auth
-    applicant:
-      project.applicants && project.applicants.length > 0
-        ? project.applicants[0]
-        : "N/A",
-    applicantContact: "+94 77 123 4567", // TODO: Add to project entity
-    requestedDate: new Date(project.requestedDate).toLocaleDateString("en-US", {
-      month: "short",
-      day: "2-digit",
-      year: "numeric",
+    client: projectDetailDefaults.clientDisplayName,
+    valuationJobId: project.valuationJobId ?? project.projectId,
+    propertyType: projectDetailDefaults.propertyType,
+    valuationType: projectDetailDefaults.valuationType,
+    bankBranch: projectDetailDefaults.bankBranch,
+    creditOfficer: `You (${getCurrentUserName('bank')})`,
+    applicant: project.applicants && project.applicants.length > 0 ? project.applicants[0] : 'N/A',
+    applicantContact: projectDetailDefaults.applicantContact,
+    requestedDate: new Date(project.requestedDate).toLocaleDateString('en-US', {
+      month: 'short',
+      day: '2-digit',
+      year: 'numeric',
+    }),
+    expectedCompletion: new Date(project.expectedCompletion).toLocaleDateString('en-US', {
+      month: 'short',
+      day: '2-digit',
+      year: 'numeric',
     }),
     expectedCompletion: new Date(project.expectedCompletion).toLocaleDateString(
       "en-US",
@@ -718,16 +719,17 @@ const ValuationJobDetail = ({
       {/* Main Content Grid */}
       <div style={contentGridStyle}>
         {/* LEFT COLUMN */}
-        <div style={{ display: "flex", flexDirection: "column", gap: "20px" }}>
-          {/* Project Details Card */}
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
+
+          {/* Valuation Job Details Card */}
           <div style={cardStyle}>
             <div style={cardHeaderStyle}>
-              <span style={sectionHeaderTitleStyle}>Project Details</span>
+              <span style={sectionHeaderTitleStyle}>Valuation Job Details</span>
             </div>
             <div style={detailsGridStyle}>
               <div style={detailCellStyle}>
-                <div style={detailLabelStyle}>Project ID</div>
-                <div style={detailValueStyle}>{jobData.projectId}</div>
+                <div style={detailLabelStyle}>Valuation Job ID</div>
+                <div style={detailValueStyle}>{jobData.valuationJobId}</div>
               </div>
               <div style={detailCellStyle}>
                 <div style={detailLabelStyle}>Property Type</div>
@@ -922,11 +924,9 @@ const ValuationJobDetail = ({
                   </div>
                   <div>
                     <div
-                      style={{
-                        fontSize: "13px",
-                        fontWeight: 500,
-                        color: theme.colors.text.primary,
-                      }}
+                      style={{ fontSize: '13px', fontWeight: 500, color: theme.colors.primary.main, cursor: 'pointer' }}
+                      onClick={() => setSelectedTeamMember(member)}
+                      title="Open chat"
                     >
                       {member.name}
                     </div>
@@ -996,31 +996,36 @@ const ValuationJobDetail = ({
                   <UserOutlined />
                 </div>
                 <div>
-                  <div style={{ fontSize: "13px", fontWeight: 500 }}>
+                  <div
+                    style={{ fontSize: '13px', fontWeight: 500, color: theme.colors.primary.main, cursor: 'pointer' }}
+                    onClick={() => {
+                      setSelectedTeamMember(member);
+                      setShowAllTeam(false);
+                    }}
+                    title="Open chat"
+                  >
                     {member.name}
                   </div>
-                  <div
-                    style={{
-                      fontSize: "12px",
-                      color: theme.colors.text.secondary,
-                    }}
-                  >
-                    {member.role}
-                  </div>
-                  <div
-                    style={{
-                      fontSize: "12px",
-                      color: theme.colors.primary.main,
-                    }}
-                  >
-                    {member.email}
-                  </div>
+                  <div style={{ fontSize: '12px', color: theme.colors.text.secondary }}>{member.role}</div>
+                  <div style={{ fontSize: '12px', color: theme.colors.primary.main }}>{member.email}</div>
                 </div>
               </div>
             ))}
           </div>
         </div>
       )}
+
+      <TeamMemberChatPopup
+        open={Boolean(selectedTeamMember)}
+        valuationJobId={project?.valuationJobId ?? project?.projectId ?? projectId}
+        currentUserId={chatIdentity.id}
+        currentUserName={chatIdentity.name}
+        currentUserRole={chatIdentity.role}
+        recipientId={selectedTeamMember?.id || ''}
+        recipientName={selectedTeamMember?.name || ''}
+        recipientRole={selectedTeamMember?.role || ''}
+        onClose={() => setSelectedTeamMember(null)}
+      />
     </div>
   );
 };

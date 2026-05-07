@@ -1,0 +1,15 @@
+.deed-info-section {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+/* side-by-side row for deed type + registration date */
+.deed-row {
+  display: flex;
+  gap: 1rem;
+}
+.deed-row > * {
+  flex: 1;
+  min-width: 0;                 /* prevent flex overflow */
+}

@@ -10,12 +10,18 @@ interface ProjectsTableProps {
   projects: Project[];
   showSearch?: boolean;
   onProjectClick?: (projectId: string) => void;
+  title?: string;
+  idLabel?: string;
+  searchPlaceholder?: string;
 }
 
 const ProjectsTable = ({
   projects,
   showSearch = false,
   onProjectClick,
+  title = 'Recent project',
+  idLabel = 'Job ID',
+  searchPlaceholder = 'Search projects...',
 }: ProjectsTableProps) => {
   const [searchQuery, setSearchQuery] = useState("");
   const [currentPage, setCurrentPage] = useState(1);
@@ -37,7 +43,7 @@ const ProjectsTable = ({
     const query = searchQuery.toLowerCase();
     return projects.filter(
       (project) =>
-        project.projectId.toLowerCase().includes(query) ||
+        (project.valuationJobId ?? project.projectId).toLowerCase().includes(query) ||
         project.propertyAddress.toLowerCase().includes(query) ||
         project.status.toLowerCase().includes(query),
     );
@@ -165,11 +171,11 @@ const ProjectsTable = ({
   return (
     <div>
       <div style={headerStyle}>
-        <h3 style={titleStyle}>Recent project</h3>
+        <h3 style={titleStyle}>{title}</h3>
         {showSearch && (
           <input
             type="text"
-            placeholder="Search projects..."
+            placeholder={searchPlaceholder}
             value={searchQuery}
             onChange={(e) => handleSearchChange(e.target.value)}
             style={searchInputStyle}
@@ -183,7 +189,7 @@ const ProjectsTable = ({
             <table style={tableStyle}>
               <thead>
                 <tr>
-                  <th style={thStyle}>Job ID</th>
+                  <th style={thStyle}>{idLabel}</th>
                   <th style={thStyle}>Address</th>
                   {!isMobile && <th style={thStyle}>Applicant</th>}
                   <th style={thStyle}>Status</th>
@@ -210,13 +216,13 @@ const ProjectsTable = ({
                       <span
                         style={projectIdStyle}
                         onClick={() => {
-                          const selectedId = project.id || project.projectId;
+                          const selectedId = project.id || project.valuationJobId || project.projectId;
                           if (onProjectClick) {
                             onProjectClick(selectedId);
                           }
                         }}
                       >
-                        {project.projectId}
+                        {project.valuationJobId ?? project.projectId}
                       </span>
                       {isMobile && (
                         <div

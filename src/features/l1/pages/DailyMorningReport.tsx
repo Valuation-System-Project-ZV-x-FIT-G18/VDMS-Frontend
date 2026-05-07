@@ -7,45 +7,7 @@ interface DailyMorningReportProps {
 }
 
 const DailyMorningReport = ({ onNavigate: _ }: DailyMorningReportProps) => {
-  const [selectedDate, setSelectedDate] = useState(
-    new Date().toLocaleDateString("en-US"),
-  );
-  const [report, setReport] = useState<any>({
-    completedProjects: 0,
-    activeProjects: 0,
-    criticalIssues: 0,
-    meetings: 0,
-  });
-  const [shareLinks, setShareLinks] = useState<any[]>([
-    {
-      projectId: "PID-0042",
-      createdDate: "Oct 26, 2023",
-      expires: "In 2 days",
-      accessCount: 12,
-    },
-    {
-      projectId: "PID-0089",
-      createdDate: "Oct 27, 2023",
-      expires: "Expires today",
-      accessCount: 8,
-    },
-  ]);
-  const [loading, setLoading] = useState(true);
-
-  useEffect(() => {
-    const fetchReport = async () => {
-      try {
-        setLoading(true);
-        const data = await dashboardService.getMorningReport();
-        setReport(data);
-      } catch (error) {
-        console.error("Failed to fetch morning report:", error);
-      } finally {
-        setLoading(false);
-      }
-    };
-    fetchReport();
-  }, []);
+  const [selectedDate, setSelectedDate] = useState("10/28/2023");
 
   const containerStyle: CSSProperties = {
     padding: "32px",
@@ -223,35 +185,37 @@ const DailyMorningReport = ({ onNavigate: _ }: DailyMorningReportProps) => {
         />
       </div>
 
-      {/* Summary Cards — now from backend */}
+      {/* Yesterday's Workflow Summary - Visual Cards */}
       <div style={summaryGridStyle}>
+        {/* Projects Completed */}
         <div style={summaryCardStyle}>
           <div style={summaryIconStyle}>✅</div>
           <div style={summaryLabelStyle}>Projects Completed</div>
-          <div style={summaryValueStyle}>{report.completedProjects}</div>
+          <div style={summaryValueStyle}>2</div>
           <div style={summaryDescStyle}>Successfully finalized</div>
         </div>
 
+        {/* Active Projects */}
         <div style={summaryCardStyle}>
           <div style={summaryIconStyle}>⚡</div>
           <div style={summaryLabelStyle}>Active Projects</div>
-          <div style={summaryValueStyle}>{report.activeProjects}</div>
+          <div style={summaryValueStyle}>4</div>
           <div style={summaryDescStyle}>Advanced to next phase</div>
         </div>
 
-        <div
-          style={{ ...summaryCardStyle, borderLeft: "4px solid #ef4444" }}
-        >
+        {/* Issues Found */}
+        <div style={{ ...summaryCardStyle, borderLeft: "4px solid #ef4444" }}>
           <div style={summaryIconStyle}>⚠️</div>
           <div style={summaryLabelStyle}>Critical Issues</div>
-          <div style={summaryValueStyle}>{report.criticalIssues}</div>
+          <div style={summaryValueStyle}>2</div>
           <div style={summaryDescStyle}>Require attention</div>
         </div>
 
+        {/* Meetings Completed */}
         <div style={summaryCardStyle}>
           <div style={summaryIconStyle}>📅</div>
           <div style={summaryLabelStyle}>Meetings</div>
-          <div style={summaryValueStyle}>{report.meetings}</div>
+          <div style={summaryValueStyle}>1</div>
           <div style={summaryDescStyle}>Morning briefing with HR</div>
         </div>
       </div>

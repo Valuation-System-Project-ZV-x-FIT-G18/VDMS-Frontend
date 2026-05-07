@@ -1,0 +1,32 @@
+.land-type-section {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.land-label {
+  font-weight: 600;
+  font-size: 0.9rem;
+  color: #2b4a67;
+  text-shadow: none;
+}
+.land-label .required {
+  color: #d92d20;
+}
+
+/* radio buttons row */
+.land-options {
+  display: flex;
+  gap: 1.5rem;
+}
+.land-option {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  font-size: 0.95rem;
+  color: #3a5a78;
+  cursor: pointer;
+}
+.land-option input[type='radio'] {
+  accent-color: #2563eb;    /* blue accent for radio */
+}

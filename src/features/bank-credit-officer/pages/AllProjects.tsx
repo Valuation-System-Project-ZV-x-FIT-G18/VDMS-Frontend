@@ -1,53 +1,63 @@
-import { useState, useEffect } from "react";
-import type { CSSProperties } from "react";
-import ProjectsTable from "../../../components/organisms/ProjectsTable";
-import ValuationJobDetail from "./ValuationJobDetail";
-import { projectService } from "../../../services/projectService";
-import type { Project } from "../types";
-import { theme } from "../../../styles/theme";
+import { useState, useEffect } from 'react';
+import type { CSSProperties } from 'react';
+import ProjectsTable from '../../../components/organisms/ProjectsTable';
+import ValuationJobDetail from './ValuationJobDetail';
+import { projectService } from '../../../services/projectService';
+import type { Project } from '../types';
+import { theme } from '../../../styles/theme';
+import { getPortalClientId } from '../../../config/portalConfig';
 
+const BANK_CLIENT_ID = getPortalClientId('bank');
+const retryButtonLabel = 'Retry';
+
+/**
+ * Hosts bank-side project filtering and drill-down while keeping filtering owned by backend query parameters.
+ */
 const AllProjectsPage = () => {
-  const [statusFilter, setStatusFilter] = useState<string>("All");
-  const [paymentFilter, setPaymentFilter] = useState<string>("All");
-  const [searchQuery, setSearchQuery] = useState<string>("");
-  const [dateFormat, setDateFormat] = useState<string>("mm/dd/yy");
-  const [selectedProject, setSelectedProject] = useState<Project | null>(null);
-
-  // ✅ NEW: State for API data
-  const [projects, setProjects] = useState<Project[]>([]);
+  const [statusFilter, setStatusFilter] = useState<string>('All');
+  const [paymentFilter, setPaymentFilter] = useState<string>('All');
+  const [searchQuery, setSearchQuery] = useState<string>('');
+  const [dateFormat, setDateFormat] = useState<string>('mm/dd/yy');
+  const [selectedValuationJob, setSelectedValuationJob] = useState<Project | null>(null);
+  
+  const [valuationJobs, setValuationJobs] = useState<Project[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  // ✅ NEW: Fetch projects from backend
   useEffect(() => {
-    const fetchProjects = async () => {
+    /**
+     * Re-fetches whenever filters change so table data reflects the selected criteria.
+     */
+    const fetchValuationJobs = async () => {
       try {
         setLoading(true);
         setError(null);
-
-        const data = await projectService.getAll(
-          statusFilter !== "All" ? statusFilter : undefined,
-          searchQuery || undefined,
-        );
-
-        setProjects(data);
+        
+        const data = await projectService.getAll({
+          status: statusFilter !== 'All' ? statusFilter : undefined,
+          paymentStatus: paymentFilter !== 'All' ? paymentFilter : undefined,
+          search: searchQuery || undefined,
+          clientId: BANK_CLIENT_ID,
+        });
+        
+        setValuationJobs(data);
       } catch (err) {
-        setError("Failed to load projects");
-        console.error("Error:", err);
+        setError('Failed to load valuation jobs');
+        console.error('Error:', err);
       } finally {
         setLoading(false);
       }
     };
 
-    fetchProjects();
+    fetchValuationJobs();
   }, [statusFilter, paymentFilter, searchQuery]);
 
-  if (selectedProject) {
+  if (selectedValuationJob) {
     return (
       <ValuationJobDetail
-        projectId={selectedProject.id}
-        initialProject={selectedProject}
-        onBack={() => setSelectedProject(null)}
+        projectId={selectedValuationJob.id}
+        initialProject={selectedValuationJob}
+        onBack={() => setSelectedValuationJob(null)}
       />
     );
   }
@@ -142,7 +152,9 @@ const AllProjectsPage = () => {
       {/* Header */}
       <div style={headerStyle}>
         <h1 style={titleStyle}>Valuation Jobs</h1>
-        <p style={subtitleStyle}>Manage and track your valuation requests</p>
+        <p style={subtitleStyle}>
+          Full valuation job list for your bank credit officer account.
+        </p>
       </div>
 
       {/* Filters */}
@@ -150,7 +162,7 @@ const AllProjectsPage = () => {
         <div style={searchWrapperStyle}>
           <input
             type="text"
-            placeholder="search by project id or location"
+            placeholder="search by valuation job id or location"
             style={searchInputStyle}
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
@@ -192,10 +204,12 @@ const AllProjectsPage = () => {
         </select>
       </div>
 
-      {/* ✅ Loading State */}
-      {loading && <div style={loadingStyle}>Loading projects...</div>}
+      {/* Loading State */}
+      {loading && (
+        <div style={loadingStyle}>Loading valuation jobs...</div>
+      )}
 
-      {/* ✅ Error State */}
+      {/* Error State */}
       {error && (
         <div style={errorStyle}>
           <p>{error}</p>
@@ -211,31 +225,32 @@ const AllProjectsPage = () => {
               cursor: "pointer",
             }}
           >
-            Retry
+            {retryButtonLabel}
           </button>
         </div>
       )}
 
-      {/* ✅ Projects Table - Using REAL data */}
-      {!loading && !error && projects.length > 0 && (
+      {/* Projects Table */}
+      {!loading && !error && valuationJobs.length > 0 && (
         <ProjectsTable
-          projects={projects}
+          projects={valuationJobs}
           showSearch={false}
-          onProjectClick={(projectId) => {
-            const selected = projects.find(
-              (project) =>
-                project.id === projectId || project.projectId === projectId,
+          title="All valuation jobs"
+          idLabel="Valuation Job ID"
+          onProjectClick={(valuationJobId) => {
+            const selected = valuationJobs.find(
+              (valuationJob) => valuationJob.id === valuationJobId || valuationJob.projectId === valuationJobId,
             );
             if (selected) {
-              setSelectedProject(selected);
+              setSelectedValuationJob(selected);
             }
           }}
         />
       )}
 
-      {/* ✅ Empty State */}
-      {!loading && !error && projects.length === 0 && (
-        <div style={emptyStyle}>No projects found.</div>
+      {/* Empty State */}
+      {!loading && !error && valuationJobs.length === 0 && (
+        <div style={emptyStyle}>No valuation jobs found.</div>
       )}
     </div>
   );
