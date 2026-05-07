@@ -1,23 +1,12 @@
-import api from './api';
-import type { PaymentStatus, ProjectStatus } from '../features/bank-credit-officer/types';
-import type { Document } from './documentService';
-import type { TeamMember } from './teamService';
+import axiosInstance from '../api/axios';
 
-// Type definitions
-interface ApiProject {
+export interface ProjectDetails {
   id: string;
   valuationJobId?: string;
   projectId: string;
-  propertyAddress: string;
-  applicant?: string | null;
-  applicants?: string[];
   status: string;
-  requestedDate: string;
-  expectedCompletion: string;
   paymentStatus: string;
-  clientId: string | null;
-  createdAt: string;
-  updatedAt: string;
+  [key: string]: any;
 }
 
 export interface Project {
@@ -59,11 +48,14 @@ const PROJECT_STATUSES: ProjectStatus[] = [
 
 const PAYMENT_STATUSES: PaymentStatus[] = ['Paid', 'Pending'];
 
-const isProjectStatus = (value: string): value is ProjectStatus =>
-  PROJECT_STATUSES.includes(value as ProjectStatus);
-
-const isPaymentStatus = (value: string): value is PaymentStatus =>
-  PAYMENT_STATUSES.includes(value as PaymentStatus);
+export const projectService = {
+  async getAll(status?: string, search?: string) {
+    const params: any = {};
+    if (status) params.status = status;
+    if (search) params.search = search;
+    const response = await axiosInstance.get('/projects', { params });
+    return response.data;
+  },
 
 const normalizeValuationJobId = (id?: string): string => {
   if (!id) return '';
@@ -79,72 +71,44 @@ const toProject = (project: ApiProject): Project => ({
   paymentStatus: isPaymentStatus(project.paymentStatus) ? project.paymentStatus : 'Pending',
 });
 
-// API Functions
-export const projectService = {
-  // Get all projects with optional filters
-  getAll: async (filters?: ProjectFilters): Promise<Project[]> => {
-    try {
-      const params: Record<string, string> = {};
-      
-      if (filters?.status && filters.status !== 'All') {
-        params.status = filters.status;
-      }
-      
-      if (filters?.paymentStatus && filters.paymentStatus !== 'All') {
-        params.paymentStatus = filters.paymentStatus;
-      }
-      
-      if (filters?.search) {
-        params.search = filters.search;
-      }
-
-      if (filters?.clientId) {
-        params.clientId = filters.clientId;
-      }
-
-      const response = await api.get<ApiProject[]>('/projects', { params });
-      return response.data.map(toProject);
-    } catch (error) {
-      console.error('Error fetching projects:', error);
-      throw error;
-    }
+  async getRecent() {
+    const response = await axiosInstance.get('/projects/recent');
+    return response.data;
   },
 
-  // Get single project by ID
-  getById: async (id: string): Promise<Project> => {
-    try {
-      const response = await api.get<ApiProject>(`/projects/${id}`);
-      return toProject(response.data);
-    } catch (error) {
-      console.error('Error fetching project:', error);
-      throw error;
-    }
+  async getOne(id: string) {
+    const response = await axiosInstance.get(`/projects/${id}`);
+    return response.data;
   },
 
-  // ✅ NEW: Get project with full details (documents, team members)
-  getDetails: async (id: string): Promise<ProjectDetails> => {
-    try {
-      const response = await api.get<ApiProject>(`/projects/${id}`);
-      return toProject(response.data) as ProjectDetails;
-    } catch (error) {
-      console.error('Error fetching project details:', error);
-      throw error;
-    }
+  async getPending() {
+    const response = await axiosInstance.get('/projects', {
+      params: { status: 'Needs Review,Payment Pending' },
+    });
+    return response.data;
   },
 
-  // Get recent projects (for dashboard)
-  getRecent: async (limit: number = 5, filters?: Pick<ProjectFilters, 'clientId'>): Promise<Project[]> => {
-    try {
-      const params: Record<string, string | number> = { limit };
-      if (filters?.clientId) {
-        params.clientId = filters.clientId;
-      }
+  async getCompleted() {
+    const response = await axiosInstance.get('/projects', {
+      params: { status: 'Completed' },
+    });
+    return response.data;
+  },
 
-      const response = await api.get<ApiProject[]>('/projects/recent', { params });
-      return response.data.map(toProject);
-    } catch (error) {
-      console.error('Error fetching recent projects:', error);
-      throw error;
-    }
+  async getRejected() {
+    const response = await axiosInstance.get('/projects', {
+      params: { status: 'Rejected' },
+    });
+    return response.data;
+  },
+
+  async create(data: any) {
+    const response = await axiosInstance.post('/projects', data);
+    return response.data;
+  },
+
+  async update(id: string, data: any) {
+    const response = await axiosInstance.patch(`/projects/${id}`, data);
+    return response.data;
   },
 };

@@ -1,12 +1,12 @@
-import type { Project } from './projectService';
-import { projectService } from './projectService';
+import axiosInstance from '../api/axios';
 
 export interface DashboardStats {
   totalProjects: number;
   completedProjects: number;
-  activeProjects: number;
-  pendingPayments: number;
-  pendingDocuments: number;
+  pendingApprovals: number;
+  bottlenecks: number;
+  recentProjects: any[];
+  [key: string]: any;
 }
 
 export const dashboardService = {
@@ -28,11 +28,9 @@ export const dashboardService = {
         pendingDocuments: projects.filter(p => p.status === 'Awaiting Docs').length,
       };
 
-      return stats;
-    } catch (error) {
-      console.error('Error fetching dashboard stats:', error);
-      throw error;
-    }
+  async getMorningReport() {
+    const response = await axiosInstance.get('/dashboard/morning-report');
+    return response.data;
   },
 
   // Get recent projects

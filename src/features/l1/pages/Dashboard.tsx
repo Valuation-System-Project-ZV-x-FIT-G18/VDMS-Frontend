@@ -1,7 +1,7 @@
 import type { CSSProperties } from "react";
 import { useState, useMemo, useRef, useEffect } from "react";
-import { mockProjects } from "../utils/mockData";
 import { formatDate, getStatusColor } from "../utils/helpers";
+import { projectService } from "../../../services/projectService";
 
 interface L3DashboardProps {
   onNavigate?: (page: string, projectId?: string) => void;
@@ -15,7 +15,28 @@ const L3Dashboard = ({
   const pendingReviewsRef = useRef<HTMLDivElement>(null);
   const [searchQuery, setSearchQuery] = useState("");
   const [currentPage, setCurrentPage] = useState(1);
+  const [projects, setProjects] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
   const itemsPerPage = 5;
+
+  // Fetch projects from API
+  useEffect(() => {
+    const fetchProjects = async () => {
+      try {
+        setLoading(true);
+        const data = await projectService.getPending();
+        setProjects(Array.isArray(data) ? data : []);
+      } catch (err) {
+        console.error('Error fetching projects:', err);
+        setError('Failed to load projects');
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchProjects();
+  }, []);
 
   // Scroll to pending reviews only when shouldScrollToPending is true
   useEffect(() => {
@@ -32,7 +53,7 @@ const L3Dashboard = ({
 
   // Filter for pending reviews only
   const filteredProjects = useMemo(() => {
-    const pendingReviews = mockProjects.filter((p) =>
+    const pendingReviews = projects.filter((p) =>
       ["Needs Review", "Payment Pending"].includes(p.status),
     );
 
@@ -45,7 +66,7 @@ const L3Dashboard = ({
         project.propertyAddress.toLowerCase().includes(query) ||
         project.status.toLowerCase().includes(query),
     );
-  }, [searchQuery]);
+  }, [searchQuery, projects]);
 
   // Pagination
   const totalPages = Math.ceil(filteredProjects.length / itemsPerPage);

@@ -1,5 +1,6 @@
 import type { CSSProperties } from "react";
-import { useState } from "react";
+import { useState, useEffect } from "react";
+import { bottleneckService } from "../../../services/bottleneckservice";
 
 interface AllProjectsAndBottlenecksProps {
   onNavigate?: (page: string, projectId?: string) => void;
@@ -9,55 +10,34 @@ const AllProjectsAndBottlenecks = ({
   onNavigate,
 }: AllProjectsAndBottlenecksProps) => {
   const [currentPage, setCurrentPage] = useState(1);
+  const [issuesData, setIssuesData] = useState<any[]>([]);
+  const [stats, setStats] = useState({
+    overdue: 0,
+    missingDocs: 0,
+    stuckApprovals: 0,
+    paymentOverdue: 0,
+  });
+  const [loading, setLoading] = useState(true);
   const itemsPerPage = 5;
 
-  const issuesData = [
-    {
-      id: 1,
-      projectId: "PRJ-1024",
-      propertyAddress: "123 Oak Street, Downtown District",
-      issueType: "Overdue",
-      dayStuck: 24,
-      stage: "Document Collection",
-      client: "Apex Global Holdings",
-    },
-    {
-      id: 2,
-      projectId: "PRJ-1025",
-      propertyAddress: "456 Maple Avenue, Suburban Plaza",
-      issueType: "Missing Docs",
-      dayStuck: 8,
-      stage: "Legal Review",
-      client: "Heritage Properties Inc.",
-    },
-    {
-      id: 3,
-      projectId: "PRJ-1026",
-      propertyAddress: "789 Pine Road, Commercial Zone",
-      issueType: "Stuck Approval",
-      dayStuck: 15,
-      stage: "Final Approval",
-      client: "Metro Development Corp.",
-    },
-    {
-      id: 4,
-      projectId: "PRJ-1027",
-      propertyAddress: "321 Elm Street, Residential Area",
-      issueType: "Payment Overdue",
-      dayStuck: 12,
-      stage: "Report Finalization",
-      client: "Urban Real Estate Solutions",
-    },
-    {
-      id: 5,
-      projectId: "PRJ-1028",
-      propertyAddress: "654 Birch Lane, Waterfront District",
-      issueType: "Overdue",
-      dayStuck: 18,
-      stage: "Technical Review",
-      client: "Coastal Properties Ltd.",
-    },
-  ];
+  useEffect(() => {
+    const fetchData = async () => {
+      try {
+        setLoading(true);
+        const [issues, bottleneckStats] = await Promise.all([
+          bottleneckService.getAll(),
+          bottleneckService.getStats(),
+        ]);
+        setIssuesData(issues);
+        setStats(bottleneckStats);
+      } catch (error) {
+        console.error("Failed to fetch bottlenecks:", error);
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchData();
+  }, []);
 
   const totalPages = Math.ceil(issuesData.length / itemsPerPage);
   const startIndex = (currentPage - 1) * itemsPerPage;
@@ -181,7 +161,6 @@ const AllProjectsAndBottlenecks = ({
     if (type === "Missing Docs") color = "#f59e0b";
     if (type === "Stuck Approval") color = "#ec4899";
     if (type === "Payment Overdue") color = "#6366f1";
-
     return {
       display: "inline-block",
       padding: "4px 10px",
@@ -254,9 +233,23 @@ const AllProjectsAndBottlenecks = ({
     return pages;
   };
 
+  if (loading) {
+    return (
+      <div
+        style={{
+          display: "flex",
+          justifyContent: "center",
+          alignItems: "center",
+          minHeight: "100vh",
+        }}
+      >
+        <p>Loading...</p>
+      </div>
+    );
+  }
+
   return (
     <div style={containerStyle}>
-      {/* Header */}
       <div style={headerStyle}>
         <h1 style={titleStyle}>All Projects and Bottlenecks</h1>
         <p style={subtitleStyle}>
@@ -265,62 +258,31 @@ const AllProjectsAndBottlenecks = ({
         </p>
       </div>
 
-      {/* Stats Cards */}
       <div style={statsGridStyle}>
-        {/* Overdue Projects */}
         <div style={statBoxStyle}>
           <div style={statLabelStyle}>Overdue Projects</div>
-          <div style={statValueStyle}>1</div>
-          <span
-            style={statBadgeStyle("#ef4444")}
-            onClick={() => console.log("View Details")}
-          >
-            View Details
-          </span>
+          <div style={statValueStyle}>{stats.overdue}</div>
+          <span style={statBadgeStyle("#ef4444")}>View Details</span>
         </div>
-
-        {/* Missing Documents */}
         <div style={statBoxStyle}>
           <div style={statLabelStyle}>Missing Documents</div>
-          <div style={statValueStyle}>8</div>
-          <span
-            style={statBadgeStyle("#f59e0b")}
-            onClick={() => console.log("Request")}
-          >
-            Request
-          </span>
+          <div style={statValueStyle}>{stats.missingDocs}</div>
+          <span style={statBadgeStyle("#f59e0b")}>Request</span>
         </div>
-
-        {/* Stuck Approvals */}
         <div style={statBoxStyle}>
           <div style={statLabelStyle}>Stuck Approvals</div>
-          <div style={statValueStyle}>5</div>
-          <span
-            style={statBadgeStyle("#ec4899")}
-            onClick={() => console.log("Follow Up")}
-          >
-            Follow Up
-          </span>
+          <div style={statValueStyle}>{stats.stuckApprovals}</div>
+          <span style={statBadgeStyle("#ec4899")}>Follow Up</span>
         </div>
-
-        {/* Payment Overdue */}
         <div style={statBoxStyle}>
           <div style={statLabelStyle}>Payment Overdue</div>
-          <div style={statValueStyle}>6</div>
-          <span
-            style={statBadgeStyle("#6366f1")}
-            onClick={() => console.log("Send Invoice")}
-          >
-            Send Invoice
-          </span>
+          <div style={statValueStyle}>{stats.paymentOverdue}</div>
+          <span style={statBadgeStyle("#6366f1")}>Send Invoice</span>
         </div>
       </div>
 
-      {/* Issues Table Section */}
       <div style={sectionStyle}>
         <h2 style={sectionTitleStyle}>All Projects with Issues</h2>
-
-        {/* Table */}
         <table style={tableStyle}>
           <thead style={theadStyle}>
             <tr>
@@ -334,7 +296,7 @@ const AllProjectsAndBottlenecks = ({
             </tr>
           </thead>
           <tbody>
-            {currentIssues.map((issue) => (
+            {currentIssues.map((issue: any) => (
               <tr key={issue.id}>
                 <td style={tdStyle}>
                   <span style={projectIdStyle}>{issue.projectId}</span>
@@ -363,7 +325,14 @@ const AllProjectsAndBottlenecks = ({
           </tbody>
         </table>
 
-        {/* Pagination */}
+        {issuesData.length === 0 && (
+          <div
+            style={{ textAlign: "center", padding: "32px", color: "#9ca3af" }}
+          >
+            No bottlenecks found
+          </div>
+        )}
+
         <div style={paginationStyle}>
           <div style={paginationInfoStyle}>
             Showing {startIndex + 1} to {Math.min(endIndex, issuesData.length)}{" "}

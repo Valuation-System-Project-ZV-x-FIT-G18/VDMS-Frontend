@@ -1,5 +1,6 @@
 import type { CSSProperties } from "react";
-import { useState } from "react";
+import { useState, useEffect } from "react";
+import { dashboardService } from "../../../services/dashboardService";
 
 interface DailyMorningReportProps {
   onNavigate?: (page: string) => void;
@@ -156,6 +157,21 @@ const DailyMorningReport = ({ onNavigate: _ }: DailyMorningReportProps) => {
     cursor: "pointer",
   };
 
+  if (loading) {
+    return (
+      <div
+        style={{
+          display: "flex",
+          justifyContent: "center",
+          alignItems: "center",
+          minHeight: "100vh",
+        }}
+      >
+        <p>Loading morning report...</p>
+      </div>
+    );
+  }
+
   return (
     <div style={containerStyle}>
       {/* Header with Date Picker */}
@@ -217,7 +233,6 @@ const DailyMorningReport = ({ onNavigate: _ }: DailyMorningReportProps) => {
           + Generate Secure Share Link
         </button>
 
-        {/* Active Secure Shares */}
         <h3
           style={{
             fontSize: "12px",
@@ -228,58 +243,34 @@ const DailyMorningReport = ({ onNavigate: _ }: DailyMorningReportProps) => {
         >
           Active Secure Share Links
         </h3>
-        <div style={shareTableStyle}>
-          {/* Share Item 1 */}
-          <div style={shareItemStyle}>
-            <div style={shareItemRowStyle}>
-              <span style={shareItemLabelStyle}>Project ID</span>
-              <span style={shareItemValueStyle}>PID-0042</span>
-            </div>
-            <div style={shareItemRowStyle}>
-              <span style={shareItemLabelStyle}>Created Date</span>
-              <span style={shareItemValueStyle}>Oct 26, 2023</span>
-            </div>
-            <div style={shareItemRowStyle}>
-              <span style={shareItemLabelStyle}>Expires</span>
-              <span style={{ ...shareItemValueStyle, color: "#ef4444" }}>
-                In 2 days
-              </span>
-            </div>
-            <div style={shareItemRowStyle}>
-              <span style={shareItemLabelStyle}>Access Count</span>
-              <span style={shareItemValueStyle}>12</span>
-            </div>
-            <div style={actionButtonsStyle}>
-              <button style={smallButtonStyle}>Regenerate</button>
-              <button style={smallButtonStyle}>Revoke</button>
-            </div>
-          </div>
 
-          {/* Share Item 2 */}
-          <div style={shareItemStyle}>
-            <div style={shareItemRowStyle}>
-              <span style={shareItemLabelStyle}>Project ID</span>
-              <span style={shareItemValueStyle}>PID-0089</span>
+        <div style={shareTableStyle}>
+          {shareLinks.map((link, index) => (
+            <div key={index} style={shareItemStyle}>
+              <div style={shareItemRowStyle}>
+                <span style={shareItemLabelStyle}>Project ID</span>
+                <span style={shareItemValueStyle}>{link.projectId}</span>
+              </div>
+              <div style={shareItemRowStyle}>
+                <span style={shareItemLabelStyle}>Created Date</span>
+                <span style={shareItemValueStyle}>{link.createdDate}</span>
+              </div>
+              <div style={shareItemRowStyle}>
+                <span style={shareItemLabelStyle}>Expires</span>
+                <span style={{ ...shareItemValueStyle, color: "#ef4444" }}>
+                  {link.expires}
+                </span>
+              </div>
+              <div style={shareItemRowStyle}>
+                <span style={shareItemLabelStyle}>Access Count</span>
+                <span style={shareItemValueStyle}>{link.accessCount}</span>
+              </div>
+              <div style={actionButtonsStyle}>
+                <button style={smallButtonStyle}>Regenerate</button>
+                <button style={smallButtonStyle}>Revoke</button>
+              </div>
             </div>
-            <div style={shareItemRowStyle}>
-              <span style={shareItemLabelStyle}>Created Date</span>
-              <span style={shareItemValueStyle}>Oct 27, 2023</span>
-            </div>
-            <div style={shareItemRowStyle}>
-              <span style={shareItemLabelStyle}>Expires</span>
-              <span style={{ ...shareItemValueStyle, color: "#ef4444" }}>
-                Expires today
-              </span>
-            </div>
-            <div style={shareItemRowStyle}>
-              <span style={shareItemLabelStyle}>Access Count</span>
-              <span style={shareItemValueStyle}>8</span>
-            </div>
-            <div style={actionButtonsStyle}>
-              <button style={smallButtonStyle}>Regenerate</button>
-              <button style={smallButtonStyle}>Revoke</button>
-            </div>
-          </div>
+          ))}
         </div>
       </div>
     </div>

@@ -1,5 +1,5 @@
-import BankValuationJobDetail from '../../bank-credit-officer/pages/ValuationJobDetail';
-import type { Project } from '../../../services/projectService';
+import BankValuationJobDetail from "../../bank-credit-officer/pages/ValuationJobDetail";
+import type { Project } from "../../bank-credit-officer/types";
 
 interface ValuationJobDetailProps {
   projectId: string;

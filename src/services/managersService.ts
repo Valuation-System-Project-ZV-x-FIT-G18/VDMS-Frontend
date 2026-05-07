@@ -1,0 +1,37 @@
+import axiosInstance from '../api/axios';
+
+export const managersService = {
+  async getAll(role?: string) {
+    const params: any = {};
+    if (role) params.role = role;
+    const response = await axiosInstance.get('/managers', { params });
+    return response.data;
+  },
+
+  async getOne(id: string) {
+    const response = await axiosInstance.get(`/managers/${id}`);
+    return response.data;
+  },
+
+  async create(data: any) {
+    const response = await axiosInstance.post('/managers', data);
+    return response.data;
+  },
+
+  async update(id: string, data: any) {
+    const response = await axiosInstance.put(`/managers/${id}`, data);
+    return response.data;
+  },
+
+  async delete(id: string) {
+    const response = await axiosInstance.delete(`/managers/${id}`);
+    return response.data;
+  },
+
+  async findByRole(role: string) {
+    const response = await axiosInstance.get('/managers', {
+      params: { role },
+    });
+    return response.data;
+  },
+};

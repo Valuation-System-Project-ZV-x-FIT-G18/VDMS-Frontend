@@ -528,10 +528,7 @@ function L3Manager() {
           element={<L3PendingReviews onNavigate={handleNavigation} />}
         />
         <Route path="/approved" element={<L3ApprovedReports />} />
-        <Route
-          path="/rejected"
-          element={<L3RejectedReports onNavigate={handleNavigation} />}
-        />
+        <Route path="/rejected" element={<L3RejectedReports />} />
         <Route path="/all" element={<L3AllReports />} />
         <Route path="/finalized" element={<L3FinalizedReports />} />
         <Route path="/history" element={<L3VersionHistory />} />
@@ -629,10 +626,7 @@ function L2Manager() {
         <Route path="/approved" element={<L2ApprovedReports />} />
         <Route path="/all" element={<L2AllReports />} />
         <Route path="/finalized" element={<L2FinalizedReports />} />
-        <Route
-          path="/rejected"
-          element={<L2RejectedReports onNavigate={handleNavigation} />}
-        />
+        <Route path="/rejected" element={<L2RejectedReports />} />
         <Route path="/history" element={<L2VersionHistory />} />
         <Route
           path="/draft-review/:projectId"
@@ -817,6 +811,7 @@ function TechnicalOfficer() {
   );
 }
 function AppContent() {
+  const [role, setRole] = useState<Role | null>(null);
   const navigate = useNavigate();
   const location = useLocation();
   const validRoles: Role[] = [
@@ -837,6 +832,9 @@ function AppContent() {
     return (
       <RoleSelectPage
         onSelectRole={(selectedRole) => {
+          // Store selected role in localStorage
+          localStorage.setItem("selectedRole", selectedRole);
+          setRole(selectedRole);
           navigate(`/${selectedRole}/dashboard`);
         }}
       />
@@ -875,6 +873,10 @@ function AppContent() {
       <Route
         path="/senior-valuator"
         element={<BlankRolePage title="Senior Valuator Portal" />}
+      />
+      <Route
+        path="*"
+        element={<BlankRolePage title="404 - Page Not Found" />}
       />
     </Routes>
   );

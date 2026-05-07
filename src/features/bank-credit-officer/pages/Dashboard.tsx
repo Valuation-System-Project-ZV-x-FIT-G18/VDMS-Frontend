@@ -82,8 +82,8 @@ const DashboardPage = () => {
           setWarning('Some dashboard sections could not be loaded.');
         }
       } catch (err) {
-        setError('Failed to load dashboard data');
-        console.error('Dashboard error:', err);
+        setError("Failed to load dashboard data");
+        console.error("Dashboard error:", err);
       } finally {
         setLoading(false);
       }
@@ -103,45 +103,45 @@ const DashboardPage = () => {
   }
 
   const containerStyle: CSSProperties = {
-    maxWidth: '1400px',
-    margin: '0 auto',
-    padding: '0 32px',
-    boxSizing: 'border-box',
+    maxWidth: "1400px",
+    margin: "0 auto",
+    padding: "0 32px",
+    boxSizing: "border-box",
   };
 
   const headerStyle: CSSProperties = {
-    marginBottom: '24px',
+    marginBottom: "24px",
   };
 
   const titleStyle: CSSProperties = {
-    fontSize: '28px',
+    fontSize: "28px",
     fontWeight: 700,
     color: theme.colors.text.primary,
-    marginBottom: '8px',
+    marginBottom: "8px",
   };
 
   const subtitleStyle: CSSProperties = {
-    fontSize: '14px',
+    fontSize: "14px",
     color: theme.colors.text.secondary,
   };
 
   const statsGridStyle: CSSProperties = {
-    display: 'grid',
-    gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))',
-    gap: '20px',
-    marginBottom: '32px',
+    display: "grid",
+    gridTemplateColumns: "repeat(auto-fit, minmax(200px, 1fr))",
+    gap: "20px",
+    marginBottom: "32px",
   };
 
   const loadingStyle: CSSProperties = {
-    textAlign: 'center',
-    padding: '40px',
+    textAlign: "center",
+    padding: "40px",
     color: theme.colors.text.secondary,
   };
 
   const errorStyle: CSSProperties = {
-    textAlign: 'center',
-    padding: '40px',
-    color: '#dc2626',
+    textAlign: "center",
+    padding: "40px",
+    color: "#dc2626",
   };
 
   if (loading) {
@@ -160,13 +160,13 @@ const DashboardPage = () => {
           <button 
             onClick={() => setRefreshKey((current) => current + 1)}
             style={{
-              marginTop: '16px',
-              padding: '8px 16px',
+              marginTop: "16px",
+              padding: "8px 16px",
               backgroundColor: theme.colors.primary.main,
-              color: 'white',
-              border: 'none',
-              borderRadius: '6px',
-              cursor: 'pointer',
+              color: "white",
+              border: "none",
+              borderRadius: "6px",
+              cursor: "pointer",
             }}
           >
             {RETRY_BUTTON_LABEL}

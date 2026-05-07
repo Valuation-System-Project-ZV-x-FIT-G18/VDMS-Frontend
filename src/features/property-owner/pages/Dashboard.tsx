@@ -1,9 +1,9 @@
-import { useState, useEffect } from 'react';
-import type { CSSProperties } from 'react';
+import { useState, useEffect } from "react";
+import type { CSSProperties } from "react";
 import {
- FolderOutlined, 
+  FolderOutlined,
   CheckCircleOutlined,
-   FileTextOutlined, 
+  FileTextOutlined,
   CreditCardOutlined,
   FileOutlined,
 } from '@ant-design/icons'; 
@@ -39,8 +39,8 @@ const DashboardPage = () => {
         const ownerValuationJobs = await projectService.getAll({ clientId: OWNER_CLIENT_ID });
         setValuationJobs(ownerValuationJobs);
       } catch (err) {
-        setError('Failed to load dashboard data');
-        console.error('Owner dashboard error:', err);
+        setError("Failed to load dashboard data");
+        console.error("Owner dashboard error:", err);
       } finally {
         setLoading(false);
       }
@@ -64,9 +64,9 @@ const DashboardPage = () => {
     completedValuationJobs: valuationJobs.filter((p) => p.status === 'Completed').length,
     activeValuationJobs: valuationJobs.filter(
       (p) =>
-        p.status === 'In Progress' ||
-        p.status === 'Site Inspected' ||
-        p.status === 'Report Prepared',
+        p.status === "In Progress" ||
+        p.status === "Site Inspected" ||
+        p.status === "Report Prepared",
     ).length,
     pendingPayment: valuationJobs.filter((p) => p.paymentStatus === 'Pending').length,
     pendingDocuments: valuationJobs.filter((p) => p.status === 'Awaiting Docs').length,
@@ -75,45 +75,45 @@ const DashboardPage = () => {
   const recentValuationJobs = valuationJobs.slice(0, uiDefaults.recentItemsLimit);
 
   const containerStyle: CSSProperties = {
-    maxWidth: '1400px',
-    margin: '0 auto',
-    padding: '0 32px',
-    boxSizing: 'border-box',
+    maxWidth: "1400px",
+    margin: "0 auto",
+    padding: "0 32px",
+    boxSizing: "border-box",
   };
 
   const headerStyle: CSSProperties = {
-    marginBottom: '24px',
+    marginBottom: "24px",
   };
 
   const titleStyle: CSSProperties = {
-    fontSize: '28px',
+    fontSize: "28px",
     fontWeight: 700,
     color: theme.colors.text.primary,
-    marginBottom: '8px',
+    marginBottom: "8px",
   };
 
   const subtitleStyle: CSSProperties = {
-    fontSize: '14px',
+    fontSize: "14px",
     color: theme.colors.text.secondary,
   };
 
   const statsGridStyle: CSSProperties = {
-    display: 'grid',
-    gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))',
-    gap: '20px',
-    marginBottom: '32px',
+    display: "grid",
+    gridTemplateColumns: "repeat(auto-fit, minmax(200px, 1fr))",
+    gap: "20px",
+    marginBottom: "32px",
   };
 
   const loadingStyle: CSSProperties = {
-    textAlign: 'center',
-    padding: '40px',
+    textAlign: "center",
+    padding: "40px",
     color: theme.colors.text.secondary,
   };
 
   const errorStyle: CSSProperties = {
-    textAlign: 'center',
-    padding: '40px',
-    color: '#dc2626',
+    textAlign: "center",
+    padding: "40px",
+    color: "#dc2626",
   };
 
   if (loading) {
@@ -132,13 +132,13 @@ const DashboardPage = () => {
           <button
             onClick={() => window.location.reload()}
             style={{
-              marginTop: '16px',
-              padding: '8px 16px',
+              marginTop: "16px",
+              padding: "8px 16px",
               backgroundColor: theme.colors.primary.main,
-              color: 'white',
-              border: 'none',
-              borderRadius: '6px',
-              cursor: 'pointer',
+              color: "white",
+              border: "none",
+              borderRadius: "6px",
+              cursor: "pointer",
             }}
           >
             {retryButtonLabel}

@@ -63,68 +63,70 @@ const AllProjectsPage = () => {
   }
 
   const containerStyle: CSSProperties = {
-    maxWidth: '1400px',
-    margin: '0 auto',
-    padding: '0 32px',
-    boxSizing: 'border-box',
+    maxWidth: "1400px",
+    margin: "0 auto",
+    padding: "0 32px",
+    boxSizing: "border-box",
   };
 
   const headerStyle: CSSProperties = {
-    marginBottom: '24px',
+    marginBottom: "24px",
   };
 
   const titleStyle: CSSProperties = {
-    fontSize: '28px',
+    fontSize: "28px",
     fontWeight: 700,
     color: theme.colors.text.primary,
-    marginBottom: '8px',
+    marginBottom: "8px",
   };
 
   const subtitleStyle: CSSProperties = {
-    fontSize: '14px',
+    fontSize: "14px",
     color: theme.colors.text.secondary,
   };
 
   const filtersContainerStyle: CSSProperties = {
     backgroundColor: theme.colors.background.paper,
-    padding: '20px 0',
-    borderRadius: '8px',
-    marginBottom: '24px',
-    display: 'flex',
-    gap: '16px',
-    alignItems: 'center',
+    padding: "20px 0",
+    borderRadius: "8px",
+    marginBottom: "24px",
+    display: "flex",
+    gap: "16px",
+    alignItems: "center",
   };
 
   const searchWrapperStyle: CSSProperties = {
     flex: 1,
-    position: 'relative',
+    position: "relative",
   };
 
   const searchInputStyle: CSSProperties = {
-    width: '100%',
-    padding: '8px 16px 8px 36px',
+    width: "100%",
+    padding: "8px 16px 8px 36px",
     border: `1px solid ${theme.colors.border}`,
-    borderRadius: '6px',
-    fontSize: '14px',
-    outline: 'none',
-    backgroundImage: 'url("data:image/svg+xml,%3Csvg xmlns=\'http://www.w3.org/2000/svg\' width=\'16\' height=\'16\' viewBox=\'0 0 24 24\' fill=\'none\' stroke=\'%238c8c8c\' stroke-width=\'2\' stroke-linecap=\'round\' stroke-linejoin=\'round\'%3E%3Ccircle cx=\'11\' cy=\'11\' r=\'8\'%3E%3C/circle%3E%3Cpath d=\'m21 21-4.35-4.35\'%3E%3C/path%3E%3C/svg%3E")',
-    backgroundRepeat: 'no-repeat',
-    backgroundPosition: '12px center',
+    borderRadius: "6px",
+    fontSize: "14px",
+    outline: "none",
+    backgroundImage:
+      "url(\"data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%238c8c8c' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Ccircle cx='11' cy='11' r='8'%3E%3C/circle%3E%3Cpath d='m21 21-4.35-4.35'%3E%3C/path%3E%3C/svg%3E\")",
+    backgroundRepeat: "no-repeat",
+    backgroundPosition: "12px center",
   };
 
   const selectStyle: CSSProperties = {
-    padding: '8px 32px 8px 12px',
+    padding: "8px 32px 8px 12px",
     border: `1px solid ${theme.colors.border}`,
-    borderRadius: '6px',
-    fontSize: '14px',
-    outline: 'none',
-    cursor: 'pointer',
+    borderRadius: "6px",
+    fontSize: "14px",
+    outline: "none",
+    cursor: "pointer",
     backgroundColor: theme.colors.background.paper,
-    appearance: 'none',
-    backgroundImage: 'url("data:image/svg+xml,%3Csvg xmlns=\'http://www.w3.org/2000/svg\' width=\'12\' height=\'12\' viewBox=\'0 0 12 12\'%3E%3Cpath fill=\'%23666\' d=\'M6 9L1 4h10z\'/%3E%3C/svg%3E")',
-    backgroundRepeat: 'no-repeat',
-    backgroundPosition: 'right 12px center',
-    minWidth: '150px',
+    appearance: "none",
+    backgroundImage:
+      "url(\"data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%23666' d='M6 9L1 4h10z'/%3E%3C/svg%3E\")",
+    backgroundRepeat: "no-repeat",
+    backgroundPosition: "right 12px center",
+    minWidth: "150px",
   };
 
   return (
@@ -190,18 +192,18 @@ const AllProjectsPage = () => {
       )}
 
       {error && (
-        <div style={{ textAlign: 'center', padding: '40px', color: '#dc2626' }}>
+        <div style={{ textAlign: "center", padding: "40px", color: "#dc2626" }}>
           <p>{error}</p>
           <button
             onClick={() => window.location.reload()}
             style={{
-              marginTop: '16px',
-              padding: '8px 16px',
+              marginTop: "16px",
+              padding: "8px 16px",
               backgroundColor: theme.colors.primary.main,
-              color: 'white',
-              border: 'none',
-              borderRadius: '6px',
-              cursor: 'pointer',
+              color: "white",
+              border: "none",
+              borderRadius: "6px",
+              cursor: "pointer",
             }}
           >
             {retryButtonLabel}
