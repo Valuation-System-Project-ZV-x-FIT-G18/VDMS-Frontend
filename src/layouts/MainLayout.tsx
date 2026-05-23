@@ -9,6 +9,8 @@ interface MainLayoutProps {
   activePage: string;
   onNavigate: (page: string, projectId?: string) => void;
   role?: string;
+  userName?: string;
+  onLogout?: () => void;
 }
 
 const getRoleLabel = (role?: string): string => {
@@ -30,6 +32,8 @@ const MainLayout = ({
   activePage,
   onNavigate,
   role,
+  userName = "User",
+  onLogout,
 }: MainLayoutProps) => {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [isMobile, setIsMobile] = useState(window.innerWidth < 768);
@@ -107,11 +111,12 @@ const MainLayout = ({
       {/* Fixed Header */}
       <div style={headerWrapperStyle}>
         <Header
-          userName="John Doe"
+          userName={userName}
           userRole={getRoleLabel(role)}
           onMenuToggle={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
           isMobile={isMobile}
           menuOpen={isMobileMenuOpen}
+          onLogout={onLogout}
         />
       </div>
 

@@ -5,6 +5,7 @@ import {
   ThunderboltFilled,
   MenuOutlined,
   CloseOutlined,
+  LogoutOutlined,
 } from "@ant-design/icons";
 import NotificationsDropdown from "../components/organisms/NotificationsDropdown";
 import MessagingSystem from "../components/organisms/MessagingSystem";
@@ -16,6 +17,7 @@ interface HeaderProps {
   onMenuToggle?: () => void;
   isMobile?: boolean;
   menuOpen?: boolean;
+  onLogout?: () => void;
 }
 
 const Header = ({
@@ -24,6 +26,7 @@ const Header = ({
   onMenuToggle,
   isMobile,
   menuOpen,
+  onLogout,
 }: HeaderProps) => {
   const [showMessaging, setShowMessaging] = useState(false);
 
@@ -183,6 +186,20 @@ const Header = ({
           </div>
 
           <div style={avatarStyle}>{userName.charAt(0).toUpperCase()}</div>
+
+          <button
+            style={{
+              ...iconButtonStyle,
+              marginLeft: isMobile ? "4px" : "8px",
+              backgroundColor: "#fff2f0",
+              color: "#ff4d4f",
+              border: "1px solid #ffccc7",
+            }}
+            onClick={onLogout}
+            title="Logout"
+          >
+            <LogoutOutlined />
+          </button>
         </div>
       </header>
 

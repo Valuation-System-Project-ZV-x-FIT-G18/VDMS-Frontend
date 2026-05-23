@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import type { CSSProperties } from 'react';
 import { 
   FolderOutlined, 
@@ -10,11 +10,34 @@ import {
 import StatCard from '../../../components/atoms/StatCard';
 import ProjectsTable from '../../../components/organisms/ProjectsTable';
 import ValuationJobDetail from './ValuationJobDetail';
-import { dashboardStats, mockProjects } from '../utils/mockData';
+import valuationJobService, { type ValuationJob, type JobStats } from '../../../services/valuationJobService';
 import { theme } from '../../../styles/theme';
 
 const DashboardPage = () => {
   const [selectedProjectId, setSelectedProjectId] = useState<string | null>(null);
+  const [stats, setStats] = useState<JobStats | null>(null);
+  const [recentProjects, setRecentProjects] = useState<ValuationJob[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    fetchDashboardData();
+  }, []);
+
+  const fetchDashboardData = async () => {
+    try {
+      setLoading(true);
+      const [statsData, jobsData] = await Promise.all([
+        valuationJobService.getStats(),
+        valuationJobService.getJobs(),
+      ]);
+      setStats(statsData);
+      setRecentProjects(jobsData.slice(0, 5));
+    } catch (err) {
+      console.error("Failed to fetch dashboard data", err);
+    } finally {
+      setLoading(false);
+    }
+  };
 
   if (selectedProjectId) {
     return (
@@ -69,42 +92,46 @@ const DashboardPage = () => {
       <div style={statsGridStyle}>
         <StatCard
           title="Total Project"
-          value={dashboardStats.totalProjects}
+          value={stats?.totalProjects || 0}
           icon={<FolderOutlined />}
           iconBgColor="#1890ff"
         />
         <StatCard
           title="Completed Project"
-          value={dashboardStats.completedProjects}
+          value={stats?.completedProjects || 0}
           icon={<CheckCircleOutlined />}
           iconBgColor="#52c41a"
         />
         <StatCard
           title="Active Project"
-          value={dashboardStats.activeProjects}
+          value={stats?.activeProjects || 0}
           icon={<FileTextOutlined />}
           iconBgColor="#13c2c2"
         />
         <StatCard
           title="Pending Payment"
-          value={dashboardStats.pendingPayment}
+          value={stats?.pendingPayment || 0}
           icon={<CreditCardOutlined />}
           iconBgColor="#722ed1"
         />
         <StatCard
           title="Pending Document"
-          value={dashboardStats.pendingDocuments}
+          value={stats?.pendingDocuments || 0}
           icon={<FileOutlined />}
           iconBgColor="#fa8c16"
         />
       </div>
 
       {/* Projects Table */}
-      <ProjectsTable 
-        projects={mockProjects.slice(0, 5)} 
-        showSearch 
-        onProjectClick={(projectId) => setSelectedProjectId(projectId)}
-      />
+      {loading ? (
+        <div style={{ textAlign: 'center', padding: '40px' }}>Loading data...</div>
+      ) : (
+        <ProjectsTable
+          projects={recentProjects as any}
+          showSearch
+          onProjectClick={(projectId) => setSelectedProjectId(projectId)}
+        />
+      )}
     </div>
   );
 };

@@ -17,7 +17,6 @@ import {
   BarChartOutlined,
   PlusOutlined,
 } from "@ant-design/icons";
-import { useNavigate } from "react-router-dom";
 import { theme } from "../styles/theme";
 
 interface SidebarProps {
@@ -27,7 +26,6 @@ interface SidebarProps {
 }
 
 const Sidebar = ({ activePage, onNavigate, role }: SidebarProps) => {
-  const navigate = useNavigate();
   const [isMobile, setIsMobile] = useState(window.innerWidth < 768);
 
   useEffect(() => {
@@ -78,8 +76,12 @@ const Sidebar = ({ activePage, onNavigate, role }: SidebarProps) => {
   // Admin menu items
   const adminMenuItems = [
     { id: "dashboard", label: "Dashboard", icon: DashboardOutlined },
-    { id: "users", label: "Users", icon: UserOutlined },
+    { id: "users", label: "Users & Roles", icon: UserOutlined },
+    { id: "valuation-types", label:"Valuation Types", icon: FileTextOutlined},
+    { id: "templates", label:"Templates", icon:  BarChartOutlined},
   ];
+
+  
 
   // Technical Officer menu items
   const technicalOfficerMenuItems = [
@@ -189,25 +191,22 @@ const Sidebar = ({ activePage, onNavigate, role }: SidebarProps) => {
     width: "100%",
   });
 
-  const getMenuItemHoverStyle = (isActive: boolean): CSSProperties => ({
-    backgroundColor: isActive ? "#d9e9ff" : "#f3f4f6",
-    color: isActive ? "#2563eb" : "#4b5563",
-  });
+const getMenuItemHoverStyle = (isActive: boolean): CSSProperties => ({
+  backgroundColor: isActive ? "#d9e9ff" : "#f3f4f6",
+  color: isActive ? "#2563eb" : "#4b5563",
+});
 
-  // Handle navigation with special cases
+// Handle navigation with special cases
   const handleItemClick = (itemId: string) => {
     if (itemId === "logout") {
-      localStorage.clear();
-      sessionStorage.clear();
-      navigate("/");
+      onNavigate("logout");
     } else if (itemId === "create-project") {
       onNavigate("create-project");
     } else if (itemId === "fleet-management") {
       onNavigate("fleet-management");
-    } else if (itemId === "project-status") {
-      onNavigate("project-status");
-    } else if (itemId === "messages") {
-      onNavigate("messages");
+    } else if (itemId === "project-status" || itemId === "messages") {
+      // Both pages are currently not implemented; fallback to dashboard
+      onNavigate("dashboard");
     } else {
       onNavigate(itemId);
     }
