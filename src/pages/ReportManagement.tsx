@@ -1,5 +1,3 @@
-import React from "react";
-
 const ReportManagement = () => {
   return (
     <div style={{ minHeight: "100vh", padding: 24 }}>
