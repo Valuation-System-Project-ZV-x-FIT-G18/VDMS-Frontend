@@ -12,6 +12,7 @@ import RoleSelectPage from "./pages/RoleSelectPage";
 // Technical Officer pages
 import TechnicalOfficerDashboard from "./features/technical-officer/pages/Dashboard";
 import AssignedProject from "./features/technical-officer/pages/AssignedProject";
+import ProjectDetails from "./features/technical-officer/pages/ProjectDetails";
 import Report from "./features/technical-officer/pages/Report";
 import Documents from "./features/technical-officer/pages/Documents";
 import Attendance from "./features/technical-officer/pages/Attendance";
@@ -810,6 +811,42 @@ function TechnicalOfficer() {
     </MainLayout>
   );
 }
+
+function TechnicalOfficerManager() {
+  const navigate = useNavigate();
+  const location = useLocation();
+
+  const getCurrentPage = () => {
+    const pathSegments = location.pathname.split("/").filter(Boolean);
+    const page = pathSegments[1] || "dashboard";
+    return page === "projects" ? "projects" : page;
+  };
+
+  const handleNavigation = (page: string) => {
+    navigate(`/technical-officer/${page}`);
+  };
+
+  const activePage = getCurrentPage();
+
+  return (
+    <MainLayout
+      role="technical-officer"
+      onNavigate={handleNavigation}
+      activePage={activePage}
+    >
+      <Routes>
+        <Route path="/" element={<TechnicalOfficerDashboard />} />
+        <Route path="/dashboard" element={<TechnicalOfficerDashboard />} />
+        <Route path="/projects" element={<AssignedProject />} />
+        <Route path="/projects/:projectId" element={<ProjectDetails />} />
+        <Route path="/reports" element={<Report />} />
+        <Route path="/documents" element={<Documents />} />
+        <Route path="/attendance" element={<Attendance />} />
+      </Routes>
+    </MainLayout>
+  );
+}
+
 function AppContent() {
   const [role, setRole] = useState<Role | null>(null);
   const navigate = useNavigate();
@@ -840,6 +877,9 @@ function AppContent() {
       />
     );
   }
+
+  // ✅ Other roles: blank pages only
+  // Route-based rendering
   return (
     <Routes>
       <Route path="/bank/*" element={<BankManager />} />
@@ -870,6 +910,10 @@ function AppContent() {
       </Route>
       <Route path="/technical-officer/*" element={<TechnicalOfficer />} />
       <Route path="/admin" element={<BlankRolePage title="Admin Portal" />} />
+      <Route
+        path="/technical-officer/*"
+        element={<TechnicalOfficerManager />}
+      />
       <Route
         path="/senior-valuator"
         element={<BlankRolePage title="Senior Valuator Portal" />}
