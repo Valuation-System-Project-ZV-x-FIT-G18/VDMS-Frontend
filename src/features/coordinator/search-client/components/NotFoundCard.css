@@ -1,0 +1,59 @@
+/* Styles for the NotFoundCard component */
+.not-found-card {
+  background: #e8f0f7;
+  border: 1px solid #e2c0c0;
+  border-radius: 16px;
+  padding: 2rem 2rem 1.75rem;
+  color: #183a57;
+  max-width: 420px;
+  width: 100%;
+  text-align: center;
+  box-shadow: 0 12px 32px rgba(29, 67, 102, 0.14);
+  animation: nf-slidein 0.35s ease both;
+}
+
+@keyframes nf-slidein {
+  from { opacity: 0; transform: translateY(14px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+.nf-icon {
+  font-size: 2.4rem;
+  margin-bottom: 0.75rem;
+}
+
+.not-found-title {
+  color: #c0392b;
+  margin: 0 0 0.6rem;
+  font-size: 1.2rem;
+}
+
+.nf-sub {
+  margin: 0 0 0.4rem;
+  font-size: 0.9rem;
+  color: #4e708c;
+  line-height: 1.5;
+}
+
+.nf-hint {
+  margin: 0 0 1.25rem;
+  font-size: 0.85rem;
+  color: #7a9ab5;
+}
+
+.register-btn {
+  padding: 10px 28px;
+  border: none;
+  border-radius: 10px;
+  background: linear-gradient(135deg, #f2a53e 0%, #dd8f20 100%);
+  color: #fff;
+  font-size: 0.92rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: opacity 0.2s, transform 0.15s;
+}
+
+.register-btn:hover {
+  opacity: 0.9;
+  transform: translateY(-1px);
+}

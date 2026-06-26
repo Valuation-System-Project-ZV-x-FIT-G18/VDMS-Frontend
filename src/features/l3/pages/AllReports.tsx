@@ -1,16 +1,34 @@
 import type { CSSProperties } from "react";
-import { useState, useMemo } from "react";
-import { mockProjects } from "../utils/mockData";
+import { useState, useMemo, useEffect } from "react";
 import { formatDate } from "../utils/helpers";
+import { projectService } from "../../../services/projectService";
 
 const AllReports = () => {
   const [searchQuery, setSearchQuery] = useState("");
   const [statusFilter, setStatusFilter] = useState("all");
   const [currentPage, setCurrentPage] = useState(1);
+  const [projects, setProjects] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
   const itemsPerPage = 6;
 
+  useEffect(() => {
+    const fetchProjects = async () => {
+      try {
+        setLoading(true);
+        const data = await projectService.getAll();
+        setProjects(Array.isArray(data) ? data : []);
+      } catch (err) {
+        console.error("Error fetching projects:", err);
+        setProjects([]);
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchProjects();
+  }, []);
+
   const filteredProjects = useMemo(() => {
-    let filtered = mockProjects;
+    let filtered = projects;
 
     if (statusFilter !== "all") {
       filtered = filtered.filter((p) => p.status === statusFilter);
@@ -26,7 +44,7 @@ const AllReports = () => {
     }
 
     return filtered;
-  }, [searchQuery, statusFilter]);
+  }, [searchQuery, statusFilter, projects]);
 
   const totalPages = Math.ceil(filteredProjects.length / itemsPerPage);
   const startIndex = (currentPage - 1) * itemsPerPage;

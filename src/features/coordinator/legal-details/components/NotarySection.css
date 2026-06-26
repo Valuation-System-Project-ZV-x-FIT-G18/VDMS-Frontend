@@ -1,0 +1,30 @@
+.notary-section {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.notary-label {
+  font-weight: 600;
+  font-size: 0.9rem;
+  color: #2b4a67;
+  text-shadow: none;
+}
+.notary-label .required {
+  color: #d92d20;
+}
+
+.notary-textarea {
+  width: 100%;
+  padding: 0.6rem 0.8rem;
+  border: 1px solid #ddd;
+  border-radius: 8px;
+  font-size: 0.95rem;
+  font-family: inherit;
+  resize: vertical;
+  box-sizing: border-box;
+}
+.notary-textarea:focus {
+  outline: none;
+  border-color: #2563eb;
+}

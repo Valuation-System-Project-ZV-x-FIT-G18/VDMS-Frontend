@@ -1,0 +1,15 @@
+.name-section { display: flex; flex-direction: column; gap: 0.75rem; }
+.section-label {
+  font-size: 0.78rem;
+  font-weight: 700;
+  color: #3f5f7d;
+  text-shadow: none;
+  letter-spacing: 0.5px;
+  text-transform: uppercase;
+  margin-top: 0.5rem;
+}
+.row {
+  display: flex;
+  gap: 1rem;                  /* space between side-by-side fields */
+  flex-wrap: wrap;
+}

@@ -1,5 +1,7 @@
 import type { CSSProperties } from "react";
-import { useState } from "react";
+import { useState, useEffect } from "react";
+import { draftReportService } from "../../../services/draftReportService";
+import { projectService } from "../../../services/projectService";
 
 interface DraftReportDetailProps {
   projectId?: string;
@@ -7,6 +9,7 @@ interface DraftReportDetailProps {
   onEditDetails?: () => void;
   onRejectDraft?: () => void;
   onRequestClarification?: () => void;
+  onApproveDraft?: () => void;
 }
 
 const DraftReportDetail = ({
@@ -15,8 +18,36 @@ const DraftReportDetail = ({
   onEditDetails,
   onRejectDraft,
   onRequestClarification,
+  onApproveDraft,
 }: DraftReportDetailProps) => {
   const [comments, setComments] = useState("");
+  const [draft, setDraft] = useState<any>(null);
+  const [project, setProject] = useState<any>(null);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    const fetchData = async () => {
+      try {
+        setLoading(true);
+        // Try to fetch draft by projectId
+        const drafts = await draftReportService.getByProject(projectId);
+        if (drafts && drafts.length > 0) {
+          setDraft(drafts[0]);
+        }
+        // Also fetch project details
+        const projects = await projectService.getAll();
+        const matchedProject = projects.find(
+          (p: any) => p.projectId === projectId
+        );
+        if (matchedProject) setProject(matchedProject);
+      } catch (error) {
+        console.error("Failed to fetch draft report:", error);
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchData();
+  }, [projectId]);
 
   const containerStyle: CSSProperties = {
     padding: "0",
@@ -220,7 +251,6 @@ const DraftReportDetail = ({
     padding: "12px",
     textAlign: "center",
     cursor: "pointer",
-    transition: "all 0.2s ease",
   };
 
   const fileIconStyle: CSSProperties = {
@@ -279,23 +309,10 @@ const DraftReportDetail = ({
     variant: "primary" | "secondary" | "danger",
   ): CSSProperties => {
     const variants = {
-      primary: {
-        backgroundColor: "#3b82f6",
-        color: "#ffffff",
-        border: "none",
-      },
-      secondary: {
-        backgroundColor: "#ffffff",
-        color: "#3b82f6",
-        border: "1px solid #3b82f6",
-      },
-      danger: {
-        backgroundColor: "#ffffff",
-        color: "#ef4444",
-        border: "1px solid #ef4444",
-      },
+      primary: { backgroundColor: "#3b82f6", color: "#ffffff", border: "none" },
+      secondary: { backgroundColor: "#ffffff", color: "#3b82f6", border: "1px solid #3b82f6" },
+      danger: { backgroundColor: "#ffffff", color: "#ef4444", border: "1px solid #ef4444" },
     };
-
     return {
       width: "100%",
       padding: "10px 16px",
@@ -364,7 +381,6 @@ const DraftReportDetail = ({
     display: "flex",
     justifyContent: "center",
     alignItems: "center",
-    gap: "-8px",
     marginBottom: "12px",
   };
 
@@ -387,6 +403,14 @@ const DraftReportDetail = ({
     lineHeight: "1.5",
   };
 
+  if (loading) {
+    return (
+      <div style={{ display: "flex", justifyContent: "center", alignItems: "center", minHeight: "100vh" }}>
+        <p>Loading draft report...</p>
+      </div>
+    );
+  }
+
   return (
     <div style={containerStyle}>
       {/* Header */}
@@ -399,10 +423,16 @@ const DraftReportDetail = ({
           )}
           <h1 style={titleStyle}>
             Draft Report: {projectId}
-            <span style={statusBadgeStyle}>Under Review</span>
+            <span style={statusBadgeStyle}>
+              {draft?.status || "Under Review"}
+            </span>
           </h1>
         </div>
-        <div style={lastEditedStyle}>Last edited 2 hours ago by Sarah J.</div>
+        <div style={lastEditedStyle}>
+          {draft
+            ? `Last updated: ${new Date(draft.updated_at).toLocaleString()}`
+            : "Last edited 2 hours ago by Sarah J."}
+        </div>
       </div>
 
       {/* Main Content */}
@@ -424,22 +454,28 @@ const DraftReportDetail = ({
                 <div style={rowStyle}>
                   <div style={fieldStyle}>
                     <label style={labelStyle}>Project ID</label>
-                    <div style={valueStyle}>{projectId}-TX</div>
+                    <div style={valueStyle}>{projectId}</div>
                   </div>
                   <div style={fieldStyle}>
                     <label style={labelStyle}>Client Name</label>
-                    <div style={valueStyle}>Starlight Real Estate Holdings</div>
+                    <div style={valueStyle}>
+                      {draft?.clientName || project?.applicant || "Starlight Real Estate Holdings"}
+                    </div>
                   </div>
                 </div>
 
                 <div style={lastRowStyle}>
                   <div style={fieldStyle}>
                     <label style={labelStyle}>Valuation Date</label>
-                    <div style={valueStyle}>October 24, 2024</div>
+                    <div style={valueStyle}>
+                      {project?.requestedDate || "October 24, 2024"}
+                    </div>
                   </div>
                   <div style={fieldStyle}>
                     <label style={labelStyle}>Assigned Appraiser</label>
-                    <div style={valueStyle}>Jonathan Miller, MAI</div>
+                    <div style={valueStyle}>
+                      {draft?.assignedAppraiser || project?.technicalOfficer || "Jonathan Miller, MAI"}
+                    </div>
                   </div>
                 </div>
               </div>
@@ -456,26 +492,30 @@ const DraftReportDetail = ({
                   <div style={fieldStyle}>
                     <label style={labelStyle}>Address</label>
                     <div style={valueStyle}>
-                      842 Industrial Way, Austin, TX 78701
+                      {draft?.propertyAddress || project?.propertyAddress || "842 Industrial Way, Austin, TX 78701"}
                     </div>
                   </div>
                 </div>
 
                 <div style={rowStyle}>
                   <div style={fieldStyle}>
-                    <label style={labelStyle}>Lot Size</label>
-                    <div style={valueStyle}>2.45 Acres</div>
+                    <label style={labelStyle}>Lot No.</label>
+                    <div style={valueStyle}>{draft?.lotNo || "2.45 Acres"}</div>
                   </div>
                   <div style={fieldStyle}>
-                    <label style={labelStyle}>Zoning Type</label>
-                    <div style={valueStyle}>LI-Industrial</div>
+                    <label style={labelStyle}>Plan No.</label>
+                    <div style={valueStyle}>{draft?.planNo || "LI-Industrial"}</div>
                   </div>
                 </div>
 
                 <div style={lastRowStyle}>
                   <div style={fieldStyle}>
-                    <label style={labelStyle}>Year Built</label>
-                    <div style={valueStyle}>2012 (Renovated 2018)</div>
+                    <label style={labelStyle}>Estimated Value</label>
+                    <div style={valueStyle}>
+                      {draft?.estimatedValue
+                        ? `${draft.currency || 'USD'} ${Number(draft.estimatedValue).toLocaleString()}`
+                        : "Not set"}
+                    </div>
                   </div>
                 </div>
               </div>
@@ -487,19 +527,21 @@ const DraftReportDetail = ({
                 <div style={sectionHeaderStyle}>
                   <span style={sectionIconStyle}>◆</span>
                   <h3 style={sectionTitleStyle}>Land Description</h3>
-                  <span
-                    style={{
-                      marginLeft: "auto",
-                      fontSize: "11px",
-                      backgroundColor: "#e0f2fe",
-                      color: "#0369a1",
-                      padding: "4px 8px",
-                      borderRadius: "4px",
-                      fontWeight: 600,
-                    }}
-                  >
-                    AI-Generated
-                  </span>
+                  {draft?.aiAssisted && (
+                    <span
+                      style={{
+                        marginLeft: "auto",
+                        fontSize: "11px",
+                        backgroundColor: "#e0f2fe",
+                        color: "#0369a1",
+                        padding: "4px 8px",
+                        borderRadius: "4px",
+                        fontWeight: 600,
+                      }}
+                    >
+                      AI-Generated
+                    </span>
+                  )}
                 </div>
               </div>
 
@@ -513,15 +555,8 @@ const DraftReportDetail = ({
                 </div>
 
                 <p style={descriptionTextStyle}>
-                  The subject property comprises a rectangularly shaped parcel
-                  of land located on the eastern side of Industrial Way. The
-                  topography is generally level and at street grade, providing
-                  excellent visibility and accessibility. Based on the provided
-                  survey, the site contains no significant wetlands or
-                  environmental encumbrances that would impede further
-                  development. Utility infrastructure including municipal water,
-                  sewer, and high-capacity fiber optic cabling is readily
-                  available at the perimeter.
+                  {draft?.landDescription ||
+                    "The subject property comprises a rectangularly shaped parcel of land located on the eastern side of Industrial Way. The topography is generally level and at street grade, providing excellent visibility and accessibility."}
                 </p>
 
                 <div style={fileGridStyle}>
@@ -556,9 +591,7 @@ const DraftReportDetail = ({
               <div style={reviewButtonsContainerStyle}>
                 <button
                   style={buttonStyle("primary")}
-                  onClick={() => {
-                    // TODO: Implement approve draft functionality
-                  }}
+                  onClick={onApproveDraft}
                 >
                   ✓ Approve Draft
                 </button>
@@ -566,13 +599,32 @@ const DraftReportDetail = ({
                 <button
                   style={buttonStyle("secondary")}
                   onClick={onRequestClarification}
+                  disabled={draft?.isLocked}
                 >
                   ⟲ Request Changes
                 </button>
 
-                <button style={buttonStyle("danger")} onClick={onRejectDraft}>
+                <button
+                  style={buttonStyle("danger")}
+                  onClick={onRejectDraft}
+                  disabled={draft?.isLocked}
+                >
                   ✕ Reject Draft
                 </button>
+
+                {draft?.isLocked && (
+                  <div style={{
+                    textAlign: "center",
+                    fontSize: "11px",
+                    color: "#ef4444",
+                    fontWeight: 600,
+                    padding: "8px",
+                    backgroundColor: "#fee2e2",
+                    borderRadius: "4px",
+                  }}>
+                    🔒 Report is locked
+                  </div>
+                )}
               </div>
             </div>
 
@@ -587,7 +639,7 @@ const DraftReportDetail = ({
               />
               <button style={feedbackLinkStyle}>
                 <span>📋</span>
-                <span>View previous 3 feedback rounds</span>
+                <span>View previous feedback rounds</span>
               </button>
             </div>
 

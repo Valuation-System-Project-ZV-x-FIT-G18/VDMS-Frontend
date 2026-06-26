@@ -1,27 +1,12 @@
-import type { CSSProperties } from "react";
-import { useEffect, useState } from "react";
+import type { MenuItem } from './types/layout';
+import { menuConfig } from './data/menu-config';
+import SideBarMenu from './SideBarMenu';
+import LogoutButton from './LogoutButton';
 
-import {
-  DashboardOutlined,
-  FolderOpenOutlined,
-  CreditCardOutlined,
-  SettingOutlined,
-  LogoutOutlined,
-  ClockCircleOutlined,
-  CheckCircleOutlined,
-  CloseCircleOutlined,
-  FileTextOutlined,
-  LockOutlined,
-  HistoryOutlined,
-  UserOutlined,
-  BarChartOutlined,
-  PlusOutlined,
-} from "@ant-design/icons";
-import { theme } from "../styles/theme";
-
-interface SidebarProps {
-  activePage: string;
-  onNavigate: (page: string) => void;
+interface Props {
+  items?: MenuItem[];              // role-specific menu items
+  activePage?: string;
+  onNavigate?: (page: string) => void;
   role?: string;
 }
 
@@ -202,141 +187,23 @@ const Sidebar = ({ activePage, onNavigate, role }: SidebarProps) => {
       onNavigate(itemId);
     }
   };
+/* Full sidebar — main menu on top, settings + logout pinned at bottom */
+const SideBar = ({ items, activePage, onNavigate, role }: Props) => {
+  void activePage;
+  void onNavigate;
+  const resolvedItems = items ?? menuConfig[role || ''] ?? [];
+  const topItems = resolvedItems.filter(i => i.position !== 'bottom');   // main nav items
+  const bottomItems = resolvedItems.filter(i => i.position === 'bottom'); // e.g. Settings
 
   return (
-    <div style={sidebarStyle}>
-      {/* Main Menu */}
-      <div
-        style={{
-          display: "flex",
-          flexDirection: "column",
-          gap: isMobile ? "4px" : "4px",
-        }}
-      >
-        {menuItems.map((item) => {
-          const IconComponent = item.icon;
-          const isActive = activePage === item.id;
-
-          return (
-            <button
-              key={item.id}
-              style={getMenuItemStyle(isActive)}
-              onClick={() => handleItemClick(item.id)}
-              onMouseEnter={(e) => {
-                const hoverStyle = getMenuItemHoverStyle(isActive);
-                Object.assign(e.currentTarget.style, hoverStyle);
-              }}
-              onMouseLeave={(e) => {
-                const baseStyle = getMenuItemStyle(isActive);
-                e.currentTarget.style.backgroundColor =
-                  baseStyle.backgroundColor as string;
-                e.currentTarget.style.color = baseStyle.color as string;
-              }}
-            >
-              <IconComponent
-                style={{
-                  fontSize: isMobile ? "16px" : "18px",
-                  color: isActive ? theme.colors.primary.main : "#1f2937",
-                  transition: "all 0.25s cubic-bezier(0.4, 0, 0.2, 1)",
-                  flexShrink: 0,
-                }}
-              />
-              <span
-                style={{
-                  flex: 1,
-                  overflow: "hidden",
-                  textOverflow: "ellipsis",
-                  whiteSpace: "nowrap",
-                  textAlign: "left",
-                }}
-              >
-                {item.label}
-              </span>
-              {isActive && (
-                <div
-                  style={{
-                    width: "3px",
-                    height: "18px",
-                    borderRadius: "2px",
-                    backgroundColor: "#3b82f6",
-                    marginLeft: "auto",
-                    flexShrink: 0,
-                  }}
-                />
-              )}
-            </button>
-          );
-        })}
+    <aside className="sidebar">
+      <SideBarMenu items={topItems} />     {/* scrollable main menu */}
+      <div className="sidebar-bottom">
+        <SideBarMenu items={bottomItems} /> {/* settings etc. above logout */}
+        <LogoutButton />                    {/* logout always last */}
       </div>
-
-      {/* Bottom Menu (Settings & Logout) */}
-      <div
-        style={{
-          marginTop: "auto",
-          display: "flex",
-          flexDirection: "column",
-          gap: isMobile ? "4px" : "4px",
-          paddingTop: isMobile ? "8px" : "12px",
-          borderTop: "1px solid #e5e7eb",
-        }}
-      >
-        {bottomItems.map((item) => {
-          const IconComponent = item.icon;
-          const isActive = activePage === item.id;
-
-          return (
-            <button
-              key={item.id}
-              style={getMenuItemStyle(isActive)}
-              onClick={() => handleItemClick(item.id)}
-              onMouseEnter={(e) => {
-                const hoverStyle = getMenuItemHoverStyle(isActive);
-                Object.assign(e.currentTarget.style, hoverStyle);
-              }}
-              onMouseLeave={(e) => {
-                const baseStyle = getMenuItemStyle(isActive);
-                e.currentTarget.style.backgroundColor =
-                  baseStyle.backgroundColor as string;
-                e.currentTarget.style.color = baseStyle.color as string;
-              }}
-            >
-              <IconComponent
-                style={{
-                  fontSize: isMobile ? "16px" : "18px",
-                  color: isActive ? theme.colors.primary.main : "#1f2937",
-                  transition: "all 0.25s cubic-bezier(0.4, 0, 0.2, 1)",
-                  flexShrink: 0,
-                }}
-              />
-              <span
-                style={{
-                  flex: 1,
-                  overflow: "hidden",
-                  textOverflow: "ellipsis",
-                  whiteSpace: "nowrap",
-                  textAlign: "left",
-                }}
-              >
-                {item.label}
-              </span>
-              {isActive && (
-                <div
-                  style={{
-                    width: "3px",
-                    height: "18px",
-                    borderRadius: "2px",
-                    backgroundColor: "#3b82f6",
-                    marginLeft: "auto",
-                    flexShrink: 0,
-                  }}
-                />
-              )}
-            </button>
-          );
-        })}
-      </div>
-    </div>
+    </aside>
   );
 };
 
-export default Sidebar;
+export default SideBar;

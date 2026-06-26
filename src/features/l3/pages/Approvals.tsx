@@ -1,5 +1,5 @@
 import type { CSSProperties } from "react";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import {
   CheckOutlined,
   CloseOutlined,
@@ -8,8 +8,8 @@ import {
   ClockCircleOutlined,
 } from "@ant-design/icons";
 import { theme } from "../../../styles/theme";
-import { pendingApprovals } from "../utils/mockData";
 import { getPriorityColor, getApprovalTypeIcon } from "../utils/helpers";
+import { approvalsService } from "../../../services/approvalsService";
 
 interface ApprovalStatus {
   projectId: string;
@@ -17,30 +17,68 @@ interface ApprovalStatus {
 }
 
 const ApprovalsPage = () => {
-  const [approvals, setApprovals] = useState<ApprovalStatus[]>(
-    pendingApprovals.map((item) => ({
-      projectId: item.projectId,
-      status: "pending" as const,
-    })),
-  );
+  const [approvals, setApprovals] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+  const [approvalStatus, setApprovalStatus] = useState<ApprovalStatus[]>([]);
   const [activeTab, setActiveTab] = useState<"pending" | "processed">(
     "pending",
   );
 
+  // Fetch approvals from API
+  useEffect(() => {
+    const fetchApprovals = async () => {
+      try {
+        setLoading(true);
+        const data = await approvalsService.getPending();
+        setApprovals(Array.isArray(data) ? data : []);
+        setApprovalStatus(
+          (Array.isArray(data) ? data : []).map((item: any) => ({
+            projectId: item.projectId,
+            status: "pending" as const,
+          })),
+        );
+      } catch (err) {
+        console.error("Error fetching approvals:", err);
+        setError("Failed to load approvals");
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchApprovals();
+  }, []);
+
   const handleApprove = (projectId: string) => {
-    setApprovals((prev) =>
+    setApprovalStatus((prev) =>
       prev.map((item) =>
         item.projectId === projectId ? { ...item, status: "approved" } : item,
       ),
     );
+    // Call API to approve
+    const approval = approvals.find((a) => a.projectId === projectId);
+    if (approval) {
+      approvalsService.approve(approval.id).catch((err) => {
+        console.error("Error approving:", err);
+        setError("Failed to approve");
+      });
+    }
   };
 
   const handleReject = (projectId: string) => {
-    setApprovals((prev) =>
+    setApprovalStatus((prev) =>
       prev.map((item) =>
         item.projectId === projectId ? { ...item, status: "rejected" } : item,
       ),
     );
+    // Call API to reject
+    const approval = approvals.find((a) => a.projectId === projectId);
+    if (approval) {
+      approvalsService.reject(approval.id).catch((err) => {
+        console.error("Error rejecting:", err);
+        setError("Failed to reject");
+      });
+    }
   };
 
   const containerStyle: CSSProperties = {
@@ -213,18 +251,22 @@ const ApprovalsPage = () => {
     marginBottom: "16px",
   };
 
-  const pendingCount = approvals.filter((a) => a.status === "pending").length;
-  const processedCount = approvals.filter((a) => a.status !== "pending").length;
+  const pendingCount = approvalStatus.filter(
+    (a) => a.status === "pending",
+  ).length;
+  const processedCount = approvalStatus.filter(
+    (a) => a.status !== "pending",
+  ).length;
 
   const displayedApprovals =
     activeTab === "pending"
-      ? pendingApprovals.filter((a) =>
-          approvals.find(
+      ? approvals.filter((a) =>
+          approvalStatus.find(
             (ap) => ap.projectId === a.projectId && ap.status === "pending",
           ),
         )
-      : pendingApprovals.filter((a) =>
-          approvals.find(
+      : approvals.filter((a) =>
+          approvalStatus.find(
             (ap) => ap.projectId === a.projectId && ap.status !== "pending",
           ),
         );

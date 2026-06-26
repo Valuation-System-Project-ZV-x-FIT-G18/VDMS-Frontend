@@ -1,14 +1,15 @@
 import { useState } from "react";
+import { useNavigate } from "react-router-dom";
 import type { CSSProperties } from "react";
 import {
   MessageOutlined,
   ThunderboltFilled,
   MenuOutlined,
   CloseOutlined,
+  LogoutOutlined,
 } from "@ant-design/icons";
-import NotificationsDropdown from "../components/organisms/NotificationsDropdown";
+// import NotificationsDropdown from "../components/organisms/NotificationsDropdown";
 import MessagingSystem from "../components/organisms/MessagingSystem";
-import { theme } from "../styles/theme";
 
 interface HeaderProps {
   userName: string;
@@ -26,11 +27,13 @@ const Header = ({
   menuOpen,
 }: HeaderProps) => {
   const [showMessaging, setShowMessaging] = useState(false);
+  const [showUserMenu, setShowUserMenu] = useState(false);
+  const navigate = useNavigate();
 
   const headerStyle: CSSProperties = {
     height: "64px",
-    backgroundColor: "#e6f7ff",
-    borderBottom: "1px solid #c9dcff",
+    backgroundColor: "#d7e6f1",
+    borderBottom: "1px solid #b9cfdf",
     display: "flex",
     alignItems: "center",
     justifyContent: "space-between",
@@ -53,18 +56,18 @@ const Header = ({
     width: "40px",
     height: "40px",
     borderRadius: "50%",
-    backgroundColor: "white",
-    border: "none",
+    backgroundColor: "#ffffff",
+    border: "1px solid #c6d8e7",
     cursor: "pointer",
     fontSize: "18px",
-    color: theme.colors.primary.main,
+    color: "#1f6fbf",
   };
 
   const brandIconStyle: CSSProperties = {
     width: isMobile ? "28px" : "34px",
     height: isMobile ? "28px" : "34px",
     borderRadius: "10px",
-    backgroundColor: theme.colors.primary.main,
+    backgroundColor: "#2b83da",
     display: "flex",
     alignItems: "center",
     justifyContent: "center",
@@ -76,7 +79,7 @@ const Header = ({
   const brandTextStyle: CSSProperties = {
     fontSize: isMobile ? "12px" : "14px",
     fontWeight: 700,
-    color: theme.colors.primary.main,
+    color: "#1d74c7",
     whiteSpace: "nowrap",
   };
 
@@ -91,8 +94,8 @@ const Header = ({
     width: "40px",
     height: "40px",
     borderRadius: "50%",
-    backgroundColor: "white",
-    border: "none",
+    backgroundColor: "#ffffff",
+    border: "1px solid #c6d8e7",
     cursor: "pointer",
     display: "flex",
     alignItems: "center",
@@ -111,27 +114,16 @@ const Header = ({
   const userNameStyle: CSSProperties = {
     fontSize: "14px",
     fontWeight: 600,
-    color: theme.colors.text.primary,
+    color: "#1f3348",
   };
 
   const userRoleStyle: CSSProperties = {
     fontSize: "12px",
-    color: theme.colors.text.secondary,
+    color: "#48637c",
   };
 
   const getAvatarColor = () => {
-    const colors = [
-      "#1890ff",
-      "#52c41a",
-      "#722ed1",
-      "#fa8c16",
-      "#eb2f96",
-      "#13c2c2",
-      "#f5222d",
-      "#faad14",
-    ];
-    const index = userName.charCodeAt(0) % colors.length;
-    return colors[index];
+    return "#2b83da";
   };
 
   const avatarStyle: CSSProperties = {
@@ -146,6 +138,40 @@ const Header = ({
     fontWeight: 600,
     fontSize: isMobile ? "14px" : "16px",
     flexShrink: 0,
+    cursor: "pointer",
+    position: "relative",
+  };
+
+  const userMenuStyle: CSSProperties = {
+    position: "absolute",
+    top: "100%",
+    right: 0,
+    marginTop: "8px",
+    backgroundColor: "white",
+    borderRadius: "8px",
+    border: "1px solid #e5e7eb",
+    boxShadow: "0 4px 6px rgba(0, 0, 0, 0.1)",
+    minWidth: "160px",
+    zIndex: 1000,
+  };
+
+  const menuItemStyle: CSSProperties = {
+    padding: "12px 16px",
+    borderBottom: "1px solid #f3f4f6",
+    cursor: "pointer",
+    display: "flex",
+    alignItems: "center",
+    gap: "8px",
+    color: "#374151",
+    fontSize: "13px",
+    transition: "background-color 0.2s",
+  };
+
+  const handleLogout = () => {
+    localStorage.clear();
+    setShowUserMenu(false);
+    navigate("/");
+    window.location.reload();
   };
 
   return (
@@ -165,7 +191,7 @@ const Header = ({
         </div>
 
         <div style={rightStyle}>
-          <NotificationsDropdown />
+          {/* <NotificationsDropdown /> */}
 
           {/* Message Icon - Opens Messaging System */}
           <button
@@ -182,7 +208,35 @@ const Header = ({
             <span style={userRoleStyle}>{userRole}</span>
           </div>
 
-          <div style={avatarStyle}>{userName.charAt(0).toUpperCase()}</div>
+          <div style={{ position: "relative" }}>
+            <div
+              style={avatarStyle}
+              onClick={() => setShowUserMenu(!showUserMenu)}
+              title="Click to open user menu"
+            >
+              {userName.charAt(0).toUpperCase()}
+            </div>
+
+            {/* User Menu Dropdown */}
+            {showUserMenu && (
+              <div style={userMenuStyle}>
+                <div
+                  style={menuItemStyle}
+                  onClick={handleLogout}
+                  onMouseEnter={(e) => {
+                    (e.target as HTMLElement).style.backgroundColor = "#f3f4f6";
+                  }}
+                  onMouseLeave={(e) => {
+                    (e.target as HTMLElement).style.backgroundColor =
+                      "transparent";
+                  }}
+                >
+                  <LogoutOutlined style={{ fontSize: "14px" }} />
+                  Logout
+                </div>
+              </div>
+            )}
+          </div>
         </div>
       </header>
 
