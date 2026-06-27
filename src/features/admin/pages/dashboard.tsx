@@ -55,24 +55,7 @@ const QUICK_ACCESS = [
   },
 ];
 
-const ENVIRONMENTS = ["Production", "Staging", "Development", "QA Testing"];
-const SERVICES     = ["Core API", "Valuation Engine", "Reporting Module", "Auth Service", "Data Pipeline"];
 
-const EMPTY_DEPLOY = {
-  deployName: "", version: "",
-  environment: ENVIRONMENTS[0], service: SERVICES[0],
-  description: "", notify: true,
-};
-
-const inputStyle: React.CSSProperties = {
-  width: "100%", boxSizing: "border-box", padding: "9px 12px",
-  borderRadius: 9, border: "1.5px solid #D1D5DB",
-  fontSize: 13, color: "#111827", outline: "none", background: "#fff",
-};
-const labelStyle: React.CSSProperties = {
-  fontSize: 11, fontWeight: 600, color: "#6B7280",
-  textTransform: "uppercase", display: "block", marginBottom: 5,
-};
 
 interface DashboardProps {
   onNavigate: (page: string) => void;
@@ -88,10 +71,7 @@ export default function DashboardContent({ onNavigate }: DashboardProps) {
   const [stats,         setStats]         = useState({ total: 0, active: 0 });
   const [loading,       setLoading]       = useState(true);
   const [showAll,       setShowAll]       = useState(false);
-  const [showPanel,     setShowPanel]     = useState(false);
-  const [deployForm,    setDeployForm]    = useState(EMPTY_DEPLOY);
-  const [deployError,   setDeployError]   = useState("");
-  const [deploySuccess, setDeploySuccess] = useState(false);
+
 
   useEffect(() => {
     const fetchData = async () => {
@@ -113,24 +93,7 @@ export default function DashboardContent({ onNavigate }: DashboardProps) {
 
   const displayed = showAll ? users : users.slice(0, 5);
 
-  const set = (key: string, val: string | boolean) =>
-    setDeployForm(f => ({ ...f, [key]: val }));
 
-  const closePanel = () => {
-    setShowPanel(false);
-    setDeployError("");
-    setDeploySuccess(false);
-    setDeployForm(EMPTY_DEPLOY);
-  };
-
-  const handleLaunch = () => {
-    if (!deployForm.deployName.trim() || !deployForm.version.trim()) {
-      setDeployError("Deployment name and version are required.");
-      return;
-    }
-    setDeploySuccess(true);
-    setTimeout(() => closePanel(), 1800);
-  };
 
   //Stat cards data with label,value,change,badge and icon
   const statCards: StatCard[] = [
@@ -141,14 +104,6 @@ export default function DashboardContent({ onNavigate }: DashboardProps) {
     {
       label: "Active Users", value: stats.active, badge: "Live", badgeColor: "#10B981", bg: "#F0FDF4",
       icon: <svg width="22" height="22" fill="none" viewBox="0 0 24 24"><path d="M22 11.08V12a10 10 0 11-5.93-9.14" stroke="#10B981" strokeWidth="2" strokeLinecap="round"/><path d="M22 4L12 14.01l-3-3" stroke="#10B981" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/></svg>,
-    },
-    {
-      label: "System Health", value: "Excellent", badge: "99.9%", badgeColor: "#6366F1", bg: "#F5F3FF",
-      icon: <svg width="22" height="22" fill="none" viewBox="0 0 24 24"><path d="M22 12h-4l-3 9L9 3l-3 9H2" stroke="#6366F1" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/></svg>,
-    },
-    {
-      label: "Pending Actions", value: "2", badge: "New", badgeColor: "#F59E0B", bg: "#FFFBEB",
-      icon: <svg width="22" height="22" fill="none" viewBox="0 0 24 24"><path d="M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z" stroke="#F59E0B" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/><line x1="12" y1="9" x2="12" y2="13" stroke="#F59E0B" strokeWidth="2" strokeLinecap="round"/><line x1="12" y1="17" x2="12.01" y2="17" stroke="#F59E0B" strokeWidth="3" strokeLinecap="round"/></svg>,
     },
   ];
 
@@ -177,16 +132,11 @@ export default function DashboardContent({ onNavigate }: DashboardProps) {
           <h1 style={{ margin: 0, fontSize: 22, fontWeight: 700, color: "#111827" }}>System Administration Dashboard</h1>
           <p style={{ margin: "4px 0 0", fontSize: 13, color: "#9CA3AF" }}>{dateStr}</p>
         </div>
-        <button
-          onClick={() => { setShowPanel(true); setDeployError(""); setDeploySuccess(false); }}
-          style={{ padding: "9px 18px", borderRadius: 10, border: "none", background: "linear-gradient(135deg,#4F8EF7,#2563EB)", color: "#fff", fontSize: 13, fontWeight: 600, cursor: "pointer", boxShadow: "0 4px 12px rgba(79,142,247,0.35)" }}>
-          + New Deployment
-        </button>
       </div>
 
 
       {/* ── Stat Cards ── */}
-      <div style={{ display: "grid", gridTemplateColumns: "repeat(4,1fr)", gap: 16, marginBottom: 24 }}>
+      <div style={{ display: "grid", gridTemplateColumns: "repeat(2,1fr)", gap: 16, marginBottom: 24 }}>
         {statCards.map(card => (
           <div key={card.label} style={{ background: "#fff", borderRadius: 16, padding: "20px 22px", border: "1px solid #E8EDF5", boxShadow: "0 2px 8px rgba(0,0,0,0.04)" }}>
             <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 14 }}>
@@ -296,78 +246,7 @@ export default function DashboardContent({ onNavigate }: DashboardProps) {
         <span>© 2026 ZaVolt Valuation Management Systems. All rights reserved.</span>
       </div>
 
-      {/* ── Deployment Side Panel ── */}
-      {showPanel && (
-        <>
-          <div onClick={closePanel} style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,0.25)", zIndex: 200 }} />
-          <div style={{ position: "fixed", top: 0, right: 0, bottom: 0, width: 420, background: "#fff", zIndex: 201, boxShadow: "-8px 0 40px rgba(0,0,0,0.12)", display: "flex", flexDirection: "column" }}>
-            <div style={{ padding: "22px 24px 18px", borderBottom: "1px solid #F3F4F6" }}>
-              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-                <div>
-                  <div style={{ fontSize: 16, fontWeight: 700, color: "#111827" }}>New Deployment</div>
-                  <div style={{ fontSize: 12, color: "#9CA3AF", marginTop: 3 }}>Configure and launch a system deployment</div>
-                </div>
-                <button onClick={closePanel} style={{ width: 32, height: 32, borderRadius: 8, border: "1.5px solid #E8EDF5", background: "#F9FAFB", cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 15, color: "#6B7280" }}>✕</button>
-              </div>
-            </div>
-            <div style={{ flex: 1, overflowY: "auto", padding: "22px 24px", display: "flex", flexDirection: "column", gap: 18 }}>
-              {deployError && (
-                <div style={{ background: "#FEF2F2", border: "1px solid #FECACA", borderRadius: 10, padding: "10px 14px", fontSize: 12, color: "#EF4444" }}>{deployError}</div>
-              )}
-              {deploySuccess && (
-                <div style={{ background: "#F0FDF4", border: "1px solid #BBF7D0", borderRadius: 12, padding: "20px", textAlign: "center" }}>
-                  <div style={{ fontSize: 32, marginBottom: 8 }}>🚀</div>
-                  <div style={{ fontSize: 14, fontWeight: 700, color: "#10B981" }}>Deployment Launched!</div>
-                  <div style={{ fontSize: 12, color: "#6B7280", marginTop: 4 }}>Your deployment is being processed…</div>
-                </div>
-              )}
-              <div>
-                <label style={labelStyle}>Deployment Name</label>
-                <input value={deployForm.deployName} onChange={e => set("deployName", e.target.value)} placeholder="e.g. Release v3.2.1" style={inputStyle} />
-              </div>
-              <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12 }}>
-                <div>
-                  <label style={labelStyle}>Version Tag</label>
-                  <input value={deployForm.version} onChange={e => set("version", e.target.value)} placeholder="e.g. v3.2.1" style={inputStyle} />
-                </div>
-                <div>
-                  <label style={labelStyle}>Environment</label>
-                  <select value={deployForm.environment} onChange={e => set("environment", e.target.value)} style={inputStyle}>
-                    {ENVIRONMENTS.map(env => <option key={env}>{env}</option>)}
-                  </select>
-                </div>
-              </div>
-              <div>
-                <label style={labelStyle}>Target Service</label>
-                <select value={deployForm.service} onChange={e => set("service", e.target.value)} style={inputStyle}>
-                  {SERVICES.map(s => <option key={s}>{s}</option>)}
-                </select>
-              </div>
-              <div>
-                <label style={labelStyle}>Release Notes</label>
-                <textarea value={deployForm.description} onChange={e => set("description", e.target.value)} placeholder="Describe what's changing in this deployment…" rows={4} style={{ ...inputStyle, resize: "vertical" as const, lineHeight: 1.6 }} />
-              </div>
-              <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", background: "#F8FAFF", borderRadius: 10, padding: "12px 16px", border: "1px solid #E8EDF5" }}>
-                <div>
-                  <div style={{ fontSize: 13, fontWeight: 600, color: "#111827" }}>Notify Team</div>
-                  <div style={{ fontSize: 11, color: "#9CA3AF", marginTop: 2 }}>Send deployment alert to all active users</div>
-                </div>
-                <div onClick={() => set("notify", !deployForm.notify)} style={{ width: 44, height: 24, borderRadius: 12, cursor: "pointer", background: deployForm.notify ? "#4F8EF7" : "#D1D5DB", position: "relative", transition: "background 0.2s" }}>
-                  <div style={{ width: 18, height: 18, borderRadius: "50%", background: "#fff", position: "absolute", top: 3, left: deployForm.notify ? 23 : 3, transition: "left 0.2s", boxShadow: "0 1px 4px rgba(0,0,0,0.15)" }} />
-                </div>
-              </div>
-            </div>
-            <div style={{ padding: "16px 24px", borderTop: "1px solid #F3F4F6", display: "flex", gap: 10 }}>
-              <button onClick={closePanel} style={{ flex: 1, padding: "10px", borderRadius: 10, border: "1.5px solid #D1D5DB", background: "#fff", color: "#374151", fontSize: 13, fontWeight: 500, cursor: "pointer" }}>
-                Cancel
-              </button>
-              <button onClick={handleLaunch} style={{ flex: 2, padding: "10px", borderRadius: 10, border: "none", background: "linear-gradient(135deg,#4F8EF7,#2563EB)", color: "#fff", fontSize: 13, fontWeight: 700, cursor: "pointer", boxShadow: "0 4px 12px rgba(79,142,247,0.35)" }}>
-                🚀 Launch Deployment
-              </button>
-            </div>
-          </div>
-        </>
-      )}
+
     </div>
   );
 }

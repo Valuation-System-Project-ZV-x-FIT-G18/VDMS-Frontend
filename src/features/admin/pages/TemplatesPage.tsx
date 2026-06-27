@@ -113,9 +113,13 @@ export default function TemplatesPage() {
       "application/msword",
       "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
       "application/pdf",
+      "image/jpeg",
+      "image/png",
+      "image/webp",
+      "image/gif",
     ];
-    if (!allowedTypes.includes(file.type) && !file.name.match(/\.(doc|docx|pdf)$/i)) {
-      alert("Please upload a Word document (.doc, .docx) or PDF file.");
+    if (!allowedTypes.includes(file.type) && !file.name.match(/\.(doc|docx|pdf|jpg|jpeg|png|webp|gif)$/i)) {
+      alert("Please upload a Word document (.doc, .docx), PDF, or image file (.jpg, .png, .webp).");
       return;
     }
 
@@ -206,7 +210,19 @@ export default function TemplatesPage() {
                   </div>
                   <div style={{ display: "flex", gap: 4 }}>
                     <button
-                      onClick={() => window.open(`http://localhost:5001${t.fileUrl}`, '_blank')}
+                      onClick={() => {
+                        if (t.fileUrl?.startsWith('data:')) {
+                          // Mock mode: base64 download
+                          const a = document.createElement('a');
+                          a.href = t.fileUrl;
+                          a.download = t.fileName || 'template-file';
+                          document.body.appendChild(a);
+                          a.click();
+                          document.body.removeChild(a);
+                        } else {
+                          window.open(`http://localhost:5001${t.fileUrl}`, '_blank');
+                        }
+                      }}
                       title="Download Document"
                       style={{ width: 22, height: 22, borderRadius: 5, border: "none", background: "#EFF6FF", color: "#2563EB", cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center" }}>
                       <svg width="12" height="12" fill="none" viewBox="0 0 24 24"><path d="M12 15V3m0 12l-4-4m4 4l4-4M4 17v2a2 2 0 002 2h12a2 2 0 002-2v-2" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/></svg>
@@ -221,12 +237,12 @@ export default function TemplatesPage() {
                 </div>
               )}
 
-              {/* Upload Word doc button */}
+              {/* Upload file button */}
               <button
                 onClick={() => setUploadTarget(t)}
                 style={{ width: "100%", padding: "8px 12px", borderRadius: 9, border: "1.5px dashed #D1D5DB", background: "#FAFBFF", color: "#6B7280", fontSize: 12, fontWeight: 500, cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", gap: 6, marginBottom: 14 }}>
                 <svg width="14" height="14" fill="none" viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4M17 8l-5-5-5 5M12 3v12" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/></svg>
-                {t.fileName ? "Replace Document" : "Upload Word / PDF Template"}
+                {t.fileName ? "Replace Document" : "Upload Sample Form / Word Template"}
               </button>
 
               <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
@@ -309,7 +325,7 @@ export default function TemplatesPage() {
             <input
               ref={fileInputRef}
               type="file"
-              accept=".doc,.docx,.pdf,application/msword,application/vnd.openxmlformats-officedocument.wordprocessingml.document,application/pdf"
+              accept=".doc,.docx,.pdf,.jpg,.jpeg,.png,.webp,.gif,application/msword,application/vnd.openxmlformats-officedocument.wordprocessingml.document,application/pdf,image/*"
               style={{ display: "none" }}
               onChange={e => {
                 const file = e.target.files?.[0];
@@ -338,11 +354,11 @@ export default function TemplatesPage() {
                 <svg width="26" height="26" fill="none" viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4M17 8l-5-5-5 5M12 3v12" stroke="#4F8EF7" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/></svg>
               </div>
               <div style={{ fontSize: 14, fontWeight: 700, color: "#111827", marginBottom: 6 }}>
-                {dragOver ? "Drop your file here" : "Drag & drop your document here"}
+                {dragOver ? "Drop your file here" : "Drag & drop your file here"}
               </div>
-              <div style={{ fontSize: 12, color: "#9CA3AF", marginBottom: 14 }}>or click to browse from your computer</div>
-              <div style={{ display: "flex", gap: 8, justifyContent: "center" }}>
-                {[".docx", ".doc", ".pdf"].map(ext => (
+              <div style={{ fontSize: 12, color: "#9CA3AF", marginBottom: 14 }}>Upload a sample form image or an editable Word document</div>
+              <div style={{ display: "flex", gap: 8, justifyContent: "center", flexWrap: "wrap" }}>
+                {[".docx", ".doc", ".pdf", ".jpg", ".png"].map(ext => (
                   <span key={ext} style={{ fontSize: 11, fontWeight: 600, color: "#4F8EF7", background: "#EFF6FF", padding: "3px 10px", borderRadius: 20 }}>{ext}</span>
                 ))}
               </div>

@@ -123,6 +123,39 @@ const templateService = {
   },
 
   uploadTemplateFile: async (id: string, file: File): Promise<Template> => {
+    // Check if using mock authentication
+    const token = localStorage.getItem("token") || sessionStorage.getItem("token");
+    if (token?.startsWith("mock-jwt-")) {
+      await new Promise(resolve => setTimeout(resolve, 400));
+      const templates = mockStorage.getTemplates();
+      const templateIndex = templates.findIndex(t => t.id === id);
+      if (templateIndex === -1) throw new Error("Template not found");
+
+      // Convert file to base64 for mock storage
+      const base64 = await new Promise<string>((resolve) => {
+        const reader = new FileReader();
+        reader.onload = () => resolve(reader.result as string);
+        reader.readAsDataURL(file);
+      });
+
+      const formatSize = (bytes: number) => {
+        if (bytes < 1024) return `${bytes} B`;
+        if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(1)} KB`;
+        return `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
+      };
+
+      templates[templateIndex] = {
+        ...templates[templateIndex],
+        fileUrl: base64,
+        fileName: file.name,
+        fileSize: formatSize(file.size),
+        fileUploadedAt: new Date().toISOString(),
+        updatedAt: new Date().toISOString(),
+      };
+      mockStorage.setTemplates(templates);
+      return templates[templateIndex];
+    }
+
     const formData = new FormData();
     formData.append('file', file);
     const response = await api.post(`/templates/${id}/upload`, formData, {
@@ -134,6 +167,26 @@ const templateService = {
   },
 
   removeTemplateFile: async (id: string): Promise<Template> => {
+    // Check if using mock authentication
+    const token = localStorage.getItem("token") || sessionStorage.getItem("token");
+    if (token?.startsWith("mock-jwt-")) {
+      await new Promise(resolve => setTimeout(resolve, 300));
+      const templates = mockStorage.getTemplates();
+      const templateIndex = templates.findIndex(t => t.id === id);
+      if (templateIndex === -1) throw new Error("Template not found");
+
+      templates[templateIndex] = {
+        ...templates[templateIndex],
+        fileUrl: null,
+        fileName: null,
+        fileSize: null,
+        fileUploadedAt: null,
+        updatedAt: new Date().toISOString(),
+      };
+      mockStorage.setTemplates(templates);
+      return templates[templateIndex];
+    }
+
     const response = await api.delete(`/templates/${id}/file`);
     return response.data;
   },

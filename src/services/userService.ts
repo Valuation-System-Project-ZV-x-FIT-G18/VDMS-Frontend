@@ -22,6 +22,7 @@ export interface CreateUserDto {
   role: string;
   department?: string;
   phone?: string;
+  photo?: string;
 }
 
 const userService = {
@@ -73,6 +74,7 @@ const userService = {
         department: dto.department || '',
         phone: dto.phone || '',
         status: true,
+        photo: dto.photo,
       };
       users.push(newUser);
       mockStorage.setUsers(users);

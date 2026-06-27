@@ -153,6 +153,7 @@ export default function UsersPage() {
           role: form.role,
           phone: form.phone,
           department: form.department,
+          photo: form.photo,
         };
         await userService.updateUser(editUser.id, updateDto);
       } else {
@@ -164,6 +165,7 @@ export default function UsersPage() {
           role: form.role,
           phone: form.phone,
           department: form.department,
+          photo: form.photo,
         };
         await userService.createUser(createDto);
       }
@@ -386,7 +388,7 @@ export default function UsersPage() {
 
                 <div style={{ display: "flex", gap: 16, marginBottom: 14 }}>
                   {/* Photo upload */}
-                  <div>
+                  <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 6 }}>
                     <input ref={photoRef} type="file" accept="image/*" onChange={handlePhotoChange} style={{ display: "none" }} />
                     <div onClick={() => photoRef.current?.click()} style={{ width: 80, height: 80, borderRadius: 14, border: "2px dashed #D1D5DB", background: "#F9FAFB", display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", cursor: "pointer", flexShrink: 0, overflow: "hidden", position: "relative" }}>
                       {form.photo ? (
@@ -406,6 +408,20 @@ export default function UsersPage() {
                         </>
                       )}
                     </div>
+                    {form.photo && (
+                      <button 
+                        type="button" 
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          f("photo", "");
+                        }} 
+                        style={{ fontSize: 10, color: "#EF4444", background: "none", border: "none", cursor: "pointer", fontWeight: 700, padding: "2px 6px", borderRadius: 4 }}
+                        onMouseEnter={e => (e.currentTarget.style.textDecoration = "underline")}
+                        onMouseLeave={e => (e.currentTarget.style.textDecoration = "none")}
+                      >
+                        Remove Photo
+                      </button>
+                    )}
                   </div>
 
                   <div style={{ flex: 1, display: "flex", flexDirection: "column", gap: 12 }}>
@@ -469,10 +485,6 @@ export default function UsersPage() {
                   </div>
                 </div>
                 <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12 }}>
-                  <div>
-                    <label style={labelStyle}>Employee ID</label>
-                    <input value={form.employeeId} onChange={e => f("employeeId", e.target.value)} placeholder="ZV-0000" style={inputStyle} />
-                  </div>
                   <div>
                     <label style={labelStyle}>Reporting Manager</label>
                     <select value={form.manager} onChange={e => f("manager", e.target.value)} style={inputStyle}>

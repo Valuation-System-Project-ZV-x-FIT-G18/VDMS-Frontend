@@ -15,6 +15,7 @@ import AdminDashboard from "./features/admin/pages/dashboard";
 import AdminUsers from "./features/admin/pages/users";
 import AdminTemplates from "./features/admin/pages/TemplatesPage";
 import AdminValuationTypes from "./features/admin/pages/ValuationTypesPage";
+import AdminSettings from "./features/admin/pages/Settings";
 
 //bank credit officer pages
 import BankDashboard from "./features/bank-credit-officer/pages/Dashboard";
@@ -41,7 +42,6 @@ import AssignedProject from "./features/technical-officer/pages/AssignedProject"
 import Report from "./features/technical-officer/pages/Report";
 import Documents from "./features/technical-officer/pages/Documents";
 import Attendance from "./features/technical-officer/pages/Attendance";
-import TechnicalOfficerSettingsPage from "./features/technical-officer/pages/Settings.tsx";
 
 // MANAGER pages (L1, L2, L3)
 // L3 Manager Pages
@@ -56,7 +56,6 @@ import L3DraftReportDetail from "./features/l3/pages/DraftReportDetail";
 import L3EditDraftReport from "./features/l3/pages/EditDraftReport";
 import L3RejectReportDraft from "./features/l3/pages/RejectReportDraft";
 import L3RequestClarification from "./features/l3/pages/RequestClarification";
-import L3Settings from "./features/l3/pages/Settings";
 
 // L2 Manager Pages
 import L2Dashboard from "./features/l2/pages/Dashboard";
@@ -73,7 +72,6 @@ import L2DraftReportDetail from "./features/l2/pages/DraftReportDetail";
 import L2EditDraftReport from "./features/l2/pages/EditDraftReport";
 import L2RejectReportDraft from "./features/l2/pages/RejectReportDraft";
 import L2RequestClarification from "./features/l2/pages/RequestClarification";
-import L2Settings from "./features/l2/pages/Settings";
 
 // L1 Manager Pages
 import L1Dashboard from "./features/l1/pages/Dashboard";
@@ -92,19 +90,16 @@ import L1DraftReportDetail from "./features/l1/pages/DraftReportDetail";
 import L1EditDraftReport from "./features/l1/pages/EditDraftReport";
 import L1RejectReportDraft from "./features/l1/pages/RejectReportDraft";
 import L1RequestClarification from "./features/l1/pages/RequestClarification";
-import L1Settings from "./features/l1/pages/Settings";
 
 // SENIOR VALUATOR pages
 import SeniorValuatorDashboard from "./features/technical-officer/pages/Dashboard"; // Using TO dashboard as base
 import SeniorValuatorReports from "./features/technical-officer/pages/Report";
 import SeniorValuatorApprovals from "./features/l2/pages/Approvals";
-import SeniorValuatorSettings from "./features/technical-officer/pages/Settings";
 
 // PROPERTY OWNER pages
 import OwnerDashboard from "./features/property-owner/pages/Dashboard";
 import OwnerAllProjects from "./features/property-owner/pages/AllProjects";
 import OwnerPayment from "./features/property-owner/pages/Payment";
-import OwnerSettings from "./features/property-owner/pages/Settings";
 
 type Role = "bank" | "owner" | "admin" | "coordinator" | "technical-officer" | "l3-manager" | "l2-manager" | "l1-manager" | "senior-valuator";
 
@@ -114,6 +109,51 @@ export default function App() {
   const [activeProjectId, setActiveProjectId] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
   const [resetToken, setResetToken] = useState<string | null>(null);
+  const [currentUser, setCurrentUser] = useState<any>(null);
+
+  const loadMockUser = (role: Role) => {
+    const defaultDetails: Record<Role, { firstName: string; lastName: string; email: string; photo?: string }> = {
+      admin: { firstName: "John", lastName: "Doe", email: "admin@zavolt.com" },
+      bank: { firstName: "Jane", lastName: "Smith", email: "bank@zavolt.com" },
+      coordinator: { firstName: "Mike", lastName: "Johnson", email: "coordinator@zavolt.com" },
+      "technical-officer": { firstName: "Sarah", lastName: "Williams", email: "technical-officer@zavolt.com" },
+      "senior-valuator": { firstName: "David", lastName: "Brown", email: "senior-valuator@zavolt.com" },
+      "l3-manager": { firstName: "Robert", lastName: "Miller", email: "l3-manager@zavolt.com" },
+      "l2-manager": { firstName: "Emily", lastName: "Davis", email: "l2-manager@zavolt.com" },
+      "l1-manager": { firstName: "James", lastName: "Wilson", email: "l1-manager@zavolt.com" },
+      owner: { firstName: "Patricia", lastName: "Taylor", email: "owner@zavolt.com" },
+    };
+
+    // Try to find in localStorage vdms_mock_users
+    const usersJson = localStorage.getItem("vdms_mock_users");
+    if (usersJson) {
+      try {
+        const parsed = JSON.parse(usersJson);
+        if (Array.isArray(parsed)) {
+          // Look for any user matching this role
+          const found = parsed.find((u: any) => u.role === role);
+          if (found) {
+            setCurrentUser(found);
+            return;
+          }
+        }
+      } catch (e) {
+        console.error(e);
+      }
+    }
+
+    const fallback = defaultDetails[role];
+    if (fallback) {
+      setCurrentUser({
+        id: "mock",
+        firstName: fallback.firstName,
+        lastName: fallback.lastName,
+        email: fallback.email,
+        role: role,
+        photo: fallback.photo
+      });
+    }
+  };
 
   // Check for existing token on load
   useEffect(() => {
@@ -130,6 +170,7 @@ export default function App() {
       if (token.startsWith("mock-jwt-")) {
         const role = token.split("-")[2] as Role;
         setUserRole(role);
+        loadMockUser(role);
       } else {
         // Real token validation
         fetchMe();
@@ -142,6 +183,7 @@ export default function App() {
     try {
       const user = await authService.getMe();
       setUserRole(user.role as Role);
+      setCurrentUser(user);
     } catch (err) {
       console.error("Auth check failed", err);
       handleLogout();
@@ -151,12 +193,14 @@ export default function App() {
   const handleSelectRole = (role: Role) => {
     setUserRole(role);
     setActivePage("dashboard");
+    loadMockUser(role);
   };
 
   const handleLogout = () => {
     localStorage.removeItem("token");
     sessionStorage.removeItem("token");
     setUserRole(null);
+    setCurrentUser(null);
     setActivePage("dashboard");
   };
 
@@ -181,7 +225,7 @@ export default function App() {
           case "users": return <AdminUsers />;
           case "templates": return <AdminTemplates />;
           case "valuation-types": return <AdminValuationTypes />;
-          case "settings": return <></>; // Show nothing
+          case "settings": return <AdminSettings role={userRole} />;
           default: return <AdminDashboard onNavigate={handleNavigate} />;
         }
       case "bank":
@@ -218,7 +262,7 @@ export default function App() {
           case "attendance": return <Attendance />;
           case "report": return <Report />;
           case "documents": return <Documents />;
-          case "settings": return <TechnicalOfficerSettingsPage />;
+          case "settings": return <AdminSettings role={userRole} />;
           default: return <TechnicalOfficerDashboard />;
         }
       case "senior-valuator":
@@ -226,7 +270,7 @@ export default function App() {
           case "dashboard": return <SeniorValuatorDashboard />;
           case "reports": return <SeniorValuatorReports />;
           case "approvals": return <SeniorValuatorApprovals />;
-          case "settings": return <SeniorValuatorSettings />;
+          case "settings": return <AdminSettings role={userRole} />;
           default: return <SeniorValuatorDashboard />;
         }
       case "l3-manager":
@@ -254,7 +298,7 @@ export default function App() {
             return <L3RejectReportDraft projectId={activeProjectId || undefined} onBack={() => handleNavigate("draft-review")} />;
           case "request-clarification":
             return <L3RequestClarification projectCode={activeProjectId || undefined} onBack={() => handleNavigate("draft-review")} />;
-          case "settings": return <L3Settings />;
+          case "settings": return <AdminSettings role={userRole} />;
           default: return <L3Dashboard onNavigate={handleNavigate} />;
         }
       case "l2-manager":
@@ -285,7 +329,7 @@ export default function App() {
             return <L2RejectReportDraft projectId={activeProjectId || undefined} onBack={() => handleNavigate("draft-review")} />;
           case "request-clarification":
             return <L2RequestClarification projectCode={activeProjectId || undefined} onBack={() => handleNavigate("draft-review")} />;
-          case "settings": return <L2Settings />;
+          case "settings": return <AdminSettings role={userRole} />;
           default: return <L2Dashboard onNavigate={handleNavigate} />;
         }
       case "l1-manager":
@@ -318,7 +362,7 @@ export default function App() {
             return <L1RejectReportDraft projectId={activeProjectId || undefined} onBack={() => handleNavigate("draft-review")} />;
           case "request-clarification":
             return <L1RequestClarification projectCode={activeProjectId || undefined} onBack={() => handleNavigate("draft-review")} />;
-          case "settings": return <L1Settings />;
+          case "settings": return <AdminSettings role={userRole} />;
           default: return <L1Dashboard onNavigate={handleNavigate} />;
         }
           case "owner":
@@ -326,7 +370,7 @@ export default function App() {
               case "dashboard": return <OwnerDashboard />;
               case "projects": return <OwnerAllProjects />;
               case "payment": return <OwnerPayment />;
-              case "settings": return <OwnerSettings />;
+              case "settings": return <AdminSettings role={userRole} />;
               default: return <OwnerDashboard />;
             }
       default:
@@ -371,7 +415,16 @@ export default function App() {
       onForgotPassword={() => alert("Redirecting to password reset...")}
     />
   ) : (
-    <MainLayout activePage={activePage} onNavigate={handleNavigate} role={userRole} userName={userRole} onLogout={handleLogout}>
+    <MainLayout
+      activePage={activePage}
+      onNavigate={handleNavigate}
+      role={userRole}
+      userName={currentUser ? `${currentUser.firstName} ${currentUser.lastName}` : userRole || "User"}
+      userPhoto={currentUser?.photo}
+      onLogout={handleLogout}
+      userEmail={currentUser?.email}
+      userPhone={currentUser?.phone || "+94 77 123 4567"}
+    >
       {renderContent()}
     </MainLayout>
   );
