@@ -3,6 +3,7 @@ import type { CSSProperties, ReactNode } from "react";
 import Sidebar from "./Sidebar";
 import Header from "./Header";
 import { theme } from "../styles/theme";
+import FloatingChatWidget from "../components/organisms/FloatingChatWidget";
 
 interface MainLayoutProps {
   children: ReactNode;
@@ -155,6 +156,8 @@ const MainLayout = ({
 
         <main style={contentWrapperStyle}>{children}</main>
       </div>
+
+      <FloatingChatWidget role={role} userNameHint="John Doe" />
     </div>
   );
 };

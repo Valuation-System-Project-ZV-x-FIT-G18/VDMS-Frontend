@@ -16,6 +16,25 @@ api.interceptors.request.use(
     if (token) {
       config.headers.Authorization = `Bearer ${token}`;
     }
+const apiBaseUrl = import.meta.env.VITE_API_BASE_URL ?? 'http://localhost:3000';
+
+// Create axios instance with base configuration
+const api = axios.create({
+  baseURL: apiBaseUrl,
+  headers: {
+    'Content-Type': 'application/json',
+  },
+  timeout: 10000, // 10 seconds
+});
+
+// Request interceptor (for adding auth tokens later)
+api.interceptors.request.use(
+  (config) => {
+    // You can add auth token here later
+    // const token = localStorage.getItem('token');
+    // if (token) {
+    //   config.headers.Authorization = `Bearer ${token}`;
+    // }
     return config;
   },
   (error) => {
@@ -32,9 +51,22 @@ api.interceptors.response.use(
       localStorage.removeItem('token');
       sessionStorage.removeItem('token');
       // window.location.href = '/'; // Or use a more React-friendly way
+// Response interceptor (for error handling)
+api.interceptors.response.use(
+  (response) => response,
+  (error) => {
+    if (error.response) {
+      // Server responded with error
+      console.error('API Error:', error.response.data);
+    } else if (error.request) {
+      // Request made but no response
+      console.error('Network Error:', error.message);
+    } else {
+      console.error('Error:', error.message);
     }
     return Promise.reject(error);
   }
 );
 
+export default api;
 export default api;

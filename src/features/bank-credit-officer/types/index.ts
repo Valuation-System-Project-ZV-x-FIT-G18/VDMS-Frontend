@@ -19,6 +19,7 @@ export type UserRole =
 
 export interface Project {
   id: string;
+  valuationJobId?: string; // Preferred display field for valuation job flows
   projectId: string; // Display ID like "PROJ-2023-001"
   propertyAddress: string;
  applicants?: string[];

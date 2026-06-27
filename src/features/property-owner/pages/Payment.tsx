@@ -1,39 +1,45 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import type { CSSProperties } from 'react';
 import { SearchOutlined, WarningOutlined } from '@ant-design/icons';
 import InvoiceDetail from './InvoiceDetail';
 import { theme } from '../../../styles/theme';
+import { invoiceService } from '../../../services/invoiceService';
+import type { Invoice } from '../../../services/invoiceService';
 
-interface Invoice {
-  id: string;
-  invoiceId: string;
-  valuationJobId: string;
-  amount: number;
-  dueDate: string;
-  status: 'Overdue' | 'Pending' | 'Paid';
-}
+const DEFAULT_OWNER_CLIENT_ID = 'client-001';
 
 const Payment = () => {
   const [searchQuery, setSearchQuery] = useState('');
   const [currentPage, setCurrentPage] = useState(1);
   const [selectedInvoiceId, setSelectedInvoiceId] = useState<string | null>(null);
+  const [invoices, setInvoices] = useState<Invoice[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
   const itemsPerPage = 5;
 
-  // Mock data - will come from API/database later
-  const invoices: Invoice[] = [
-    { id: '1', invoiceId: 'INV-2023-004', valuationJobId: 'Proj-8821', amount: 75000, dueDate: 'Oct 20, 2023', status: 'Overdue' },
-    { id: '2', invoiceId: 'INV-2023-003', valuationJobId: 'Proj-8815', amount: 75000, dueDate: 'Oct 22, 2023', status: 'Overdue' },
-    { id: '3', invoiceId: 'INV-2023-005', valuationJobId: 'Proj-8902', amount: 50000, dueDate: 'Nov 01, 2023', status: 'Pending' },
-    { id: '4', invoiceId: 'INV-2023-002', valuationJobId: 'Proj-8750', amount: 120000, dueDate: 'Oct 10, 2023', status: 'Paid' },
-    { id: '5', invoiceId: 'INV-2023-001', valuationJobId: 'Proj-8699', amount: 90000, dueDate: 'Sep 25, 2023', status: 'Paid' },
-    { id: '6', invoiceId: 'INV-2023-006', valuationJobId: 'Proj-8950', amount: 65000, dueDate: 'Nov 10, 2023', status: 'Pending' },
-    { id: '7', invoiceId: 'INV-2023-007', valuationJobId: 'Proj-8960', amount: 85000, dueDate: 'Nov 15, 2023', status: 'Paid' },
-    { id: '8', invoiceId: 'INV-2023-008', valuationJobId: 'Proj-8970', amount: 95000, dueDate: 'Oct 18, 2023', status: 'Overdue' },
-    { id: '9', invoiceId: 'INV-2023-009', valuationJobId: 'Proj-8980', amount: 110000, dueDate: 'Nov 20, 2023', status: 'Pending' },
-    { id: '10', invoiceId: 'INV-2023-010', valuationJobId: 'Proj-8990', amount: 130000, dueDate: 'Sep 30, 2023', status: 'Paid' },
-    { id: '11', invoiceId: 'INV-2023-011', valuationJobId: 'Proj-9000', amount: 70000, dueDate: 'Oct 25, 2023', status: 'Overdue' },
-    { id: '12', invoiceId: 'INV-2023-012', valuationJobId: 'Proj-9010', amount: 55000, dueDate: 'Nov 25, 2023', status: 'Pending' },
-  ];
+  useEffect(() => {
+    const loadInvoices = async () => {
+      try {
+        setLoading(true);
+        setError(null);
+
+        const clientId = localStorage.getItem('ownerClientId') || DEFAULT_OWNER_CLIENT_ID;
+        const data = await invoiceService.getAll({
+          clientId,
+          search: searchQuery || undefined,
+        });
+
+        setInvoices(data);
+      } catch (err) {
+        console.error('Error loading invoices:', err);
+        setError('Failed to load invoices');
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    loadInvoices();
+  }, [searchQuery]);
 
   const overdueCount = invoices.filter(i => i.status === 'Overdue').length;
 
@@ -47,12 +53,7 @@ const Payment = () => {
     );
   }
 
-  // Search filter
-  const filteredInvoices = invoices.filter(inv =>
-    !searchQuery ||
-    inv.invoiceId.toLowerCase().includes(searchQuery.toLowerCase()) ||
-    inv.valuationJobId.toLowerCase().includes(searchQuery.toLowerCase())
-  );
+  const filteredInvoices = invoices;
 
   // Pagination
   const totalPages = Math.ceil(filteredInvoices.length / itemsPerPage);
@@ -88,8 +89,17 @@ const Payment = () => {
   };
 
   // Format amount
-  const formatAmount = (amount: number) =>
-    amount.toLocaleString('en-US', { minimumFractionDigits: 2 });
+  const formatAmount = (amount: string | number) => {
+    const value = typeof amount === 'string' ? Number(amount) : amount;
+    return value.toLocaleString('en-US', { minimumFractionDigits: 2 });
+  };
+
+  const formatDueDate = (date: string) =>
+    new Date(date).toLocaleDateString('en-US', {
+      month: 'short',
+      day: '2-digit',
+      year: 'numeric',
+    });
 
   // Styles
   const containerStyle: CSSProperties = {
@@ -278,6 +288,19 @@ const Payment = () => {
 
       {/* Table */}
       <div style={tableContainerStyle}>
+        {loading && (
+          <div style={{ textAlign: 'center', padding: '32px', color: theme.colors.text.secondary }}>
+            Loading invoices...
+          </div>
+        )}
+
+        {error && (
+          <div style={{ textAlign: 'center', padding: '32px', color: '#dc2626' }}>
+            {error}
+          </div>
+        )}
+
+        {!loading && !error && (
         <table style={tableStyle}>
           <thead>
             <tr>
@@ -303,20 +326,20 @@ const Payment = () => {
                   <td style={tdStyle}>
                     <span
                       style={invoiceIdStyle}
-                      onClick={() => setSelectedInvoiceId(invoice.invoiceId)}
+                      onClick={() => setSelectedInvoiceId(invoice.id)}
                     >
                       {invoice.invoiceId}
                     </span>
                   </td>
                   <td style={tdStyle}>
                     <span style={valuationJobIdStyle}>
-                      {invoice.valuationJobId}
+                      {invoice.project?.projectId || '-'}
                     </span>
                   </td>
                   <td style={tdStyle}>
                     {formatAmount(invoice.amount)}
                   </td>
-                  <td style={tdStyle}>{invoice.dueDate}</td>
+                  <td style={tdStyle}>{formatDueDate(invoice.dueDate)}</td>
                   <td style={tdStyle}>
                     <span style={getStatusStyle(invoice.status)}>
                       {invoice.status}
@@ -341,8 +364,10 @@ const Payment = () => {
             )}
           </tbody>
         </table>
+        )}
 
         {/* Pagination */}
+        {!loading && !error && (
         <div style={paginationStyle}>
           <span>
             Showing <strong>{startIndex + 1}</strong> to{' '}
@@ -403,6 +428,7 @@ const Payment = () => {
             </button>
           </div>
         </div>
+        )}
       </div>
     </div>
   );

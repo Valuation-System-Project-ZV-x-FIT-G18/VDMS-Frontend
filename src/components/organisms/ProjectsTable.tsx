@@ -10,12 +10,18 @@ interface ProjectsTableProps {
   projects: Project[];
   showSearch?: boolean;
   onProjectClick?: (projectId: string) => void;
+  title?: string;
+  idLabel?: string;
+  searchPlaceholder?: string;
 }
 
 const ProjectsTable = ({
   projects,
   showSearch = false,
   onProjectClick,
+  title = 'Recent project',
+  idLabel = 'Job ID',
+  searchPlaceholder = 'Search projects...',
 }: ProjectsTableProps) => {
   const [searchQuery, setSearchQuery] = useState("");
   const [currentPage, setCurrentPage] = useState(1);
@@ -34,11 +40,10 @@ const ProjectsTable = ({
 
   const filteredProjects = useMemo(() => {
     if (!searchQuery) return projects;
-
     const query = searchQuery.toLowerCase();
     return projects.filter(
       (project) =>
-        project.projectId.toLowerCase().includes(query) ||
+        (project.valuationJobId ?? project.projectId).toLowerCase().includes(query) ||
         project.propertyAddress.toLowerCase().includes(query) ||
         project.status.toLowerCase().includes(query),
     );
@@ -50,9 +55,7 @@ const ProjectsTable = ({
   const currentProjects = filteredProjects.slice(startIndex, endIndex);
 
   const handlePageChange = (page: number) => {
-    if (page >= 1 && page <= totalPages) {
-      setCurrentPage(page);
-    }
+    if (page >= 1 && page <= totalPages) setCurrentPage(page);
   };
 
   const handleSearchChange = (value: string) => {
@@ -60,7 +63,6 @@ const ProjectsTable = ({
     setCurrentPage(1);
   };
 
-  // Header OUTSIDE border
   const headerStyle: CSSProperties = {
     display: "flex",
     flexDirection: isMobile ? "column" : "row",
@@ -89,7 +91,6 @@ const ProjectsTable = ({
     backgroundPosition: isMobile ? "8px center" : "12px center",
   };
 
-  // Table wrapper WITH border
   const tableWrapperStyle: CSSProperties = {
     backgroundColor: "white",
     border: "1px solid #f0f0f0",
@@ -104,7 +105,6 @@ const ProjectsTable = ({
     minWidth: isMobile ? "550px" : "auto",
   };
 
-  // ✅ Header background like Payment table
   const thStyle: CSSProperties = {
     textAlign: "left",
     padding: isMobile ? "10px 12px" : "12px 16px",
@@ -170,13 +170,12 @@ const ProjectsTable = ({
 
   return (
     <div>
-      {/* Header OUTSIDE border */}
       <div style={headerStyle}>
-        <h3 style={titleStyle}>Recent project</h3>
+        <h3 style={titleStyle}>{title}</h3>
         {showSearch && (
           <input
             type="text"
-            placeholder="Search projects..."
+            placeholder={searchPlaceholder}
             value={searchQuery}
             onChange={(e) => handleSearchChange(e.target.value)}
             style={searchInputStyle}
@@ -184,14 +183,13 @@ const ProjectsTable = ({
         )}
       </div>
 
-      {/* Table INSIDE border */}
       <div style={tableWrapperStyle}>
         {currentProjects.length > 0 ? (
           <>
             <table style={tableStyle}>
               <thead>
                 <tr>
-                  <th style={thStyle}>Job ID</th>
+                  <th style={thStyle}>{idLabel}</th>
                   <th style={thStyle}>Address</th>
                   {!isMobile && <th style={thStyle}>Applicant</th>}
                   <th style={thStyle}>Status</th>
@@ -205,7 +203,6 @@ const ProjectsTable = ({
                 {currentProjects.map((project) => (
                   <tr
                     key={project.id}
-                    // ✅ Row hover highlight (whole row)
                     onMouseEnter={(e) => {
                       if (!isMobile)
                         e.currentTarget.style.backgroundColor = "#fafafa";
@@ -218,11 +215,14 @@ const ProjectsTable = ({
                     <td style={tdStyle}>
                       <span
                         style={projectIdStyle}
-                        onClick={() =>
-                          onProjectClick && onProjectClick(project.projectId)
-                        }
+                        onClick={() => {
+                          const selectedId = project.id || project.valuationJobId || project.projectId;
+                          if (onProjectClick) {
+                            onProjectClick(selectedId);
+                          }
+                        }}
                       >
-                        {project.projectId}
+                        {project.valuationJobId ?? project.projectId}
                       </span>
                       {isMobile && (
                         <div
@@ -276,7 +276,6 @@ const ProjectsTable = ({
               </tbody>
             </table>
 
-            {/* Pagination */}
             <div style={paginationStyle}>
               {!isMobile && (
                 <span>
@@ -295,7 +294,6 @@ const ProjectsTable = ({
                     opacity: currentPage === 1 ? 0.5 : 1,
                     cursor: currentPage === 1 ? "not-allowed" : "pointer",
                   }}
-                  title="Previous page"
                 >
                   ←
                 </button>
@@ -340,7 +338,6 @@ const ProjectsTable = ({
                     cursor:
                       currentPage === totalPages ? "not-allowed" : "pointer",
                   }}
-                  title="Next page"
                 >
                   →
                 </button>
