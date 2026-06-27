@@ -2,6 +2,8 @@ import { useState, useEffect } from 'react';
 import type { CSSProperties } from 'react';
 import ProjectsTable from '../../../components/organisms/ProjectsTable';
 import ValuationJobDetail from './ValuationJobDetail';
+import NewRequest from './NewRequest';
+import valuationJobService, { type ValuationJob } from '../../../services/valuationJobService';
 import { projectService } from '../../../services/projectService';
 import type { Project } from '../types';
 import { theme } from '../../../styles/theme';
@@ -11,6 +13,46 @@ const AllProjectsPage = () => {
   const [paymentFilter, setPaymentFilter] = useState<string>('All');
   const [searchQuery, setSearchQuery] = useState<string>('');
   const [dateFormat, setDateFormat] = useState<string>('mm/dd/yy');
+  const [selectedProjectId, setSelectedProjectId] = useState<string | null>(null);
+  const [showNewRequest, setShowNewRequest] = useState(false);
+  const [projects, setProjects] = useState<ValuationJob[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    fetchJobs();
+  }, []);
+
+  const fetchJobs = async () => {
+    try {
+      setLoading(true);
+      const data = await valuationJobService.getJobs();
+      setProjects(data);
+    } catch (err) {
+      console.error("Failed to fetch jobs", err);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const filteredProjects = projects.filter((project) => {
+    const matchesStatus = statusFilter === 'All' || project.status === statusFilter;
+    const matchesPayment = paymentFilter === 'All' || project.paymentStatus === paymentFilter;
+    return matchesStatus && matchesPayment;
+  });
+
+  if (showNewRequest) {
+    return (
+      <NewRequest
+        onBack={() => setShowNewRequest(false)}
+        onSuccess={() => {
+          setShowNewRequest(false);
+          fetchJobs();
+        }}
+      />
+    );
+  }
+
+  if (selectedProjectId) {
   const [selectedValuationJob, setSelectedValuationJob] = useState<Project | null>(null);
   
   // ✅ NEW: State for API data
@@ -141,6 +183,29 @@ const AllProjectsPage = () => {
   return (
     <div style={containerStyle}>
       {/* Header */}
+      <div style={{ ...headerStyle, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+        <div>
+          <h1 style={titleStyle}>Valuation Jobs</h1>
+          <p style={subtitleStyle}>
+            Manage and track your valuation requests
+          </p>
+        </div>
+        <button
+          onClick={() => setShowNewRequest(true)}
+          style={{
+            padding: '10px 20px',
+            borderRadius: '8px',
+            border: 'none',
+            backgroundColor: theme.colors.primary.main,
+            color: '#fff',
+            fontSize: '14px',
+            fontWeight: 600,
+            cursor: 'pointer',
+            boxShadow: '0 4px 12px rgba(37,99,235,0.2)',
+          }}
+        >
+          + New Request
+        </button>
       <div style={headerStyle}>
         <h1 style={titleStyle}>Valuation Jobs</h1>
         <p style={subtitleStyle}>
@@ -195,6 +260,16 @@ const AllProjectsPage = () => {
         </select>
       </div>
 
+      {/* Projects Table */}
+      {loading ? (
+        <div style={{ textAlign: 'center', padding: '40px' }}>Loading projects...</div>
+      ) : (
+        <ProjectsTable
+          projects={filteredProjects as any}
+          showSearch={false}
+          onProjectClick={(projectId) => setSelectedProjectId(projectId)}
+        />
+      )}
       {/* ✅ Loading State */}
       {loading && (
         <div style={loadingStyle}>Loading valuation jobs...</div>

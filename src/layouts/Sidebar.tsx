@@ -17,8 +17,8 @@ import {
   BarChartOutlined,
   PlusOutlined,
 } from "@ant-design/icons";
-import { useNavigate } from "react-router-dom";
 import { theme } from "../styles/theme";
+import { useTranslation } from "../context/SettingsContext";
 
 interface SidebarProps {
   activePage: string;
@@ -27,8 +27,8 @@ interface SidebarProps {
 }
 
 const Sidebar = ({ activePage, onNavigate, role }: SidebarProps) => {
-  const navigate = useNavigate();
   const [isMobile, setIsMobile] = useState(window.innerWidth < 768);
+  const { t } = useTranslation();
 
   useEffect(() => {
     const handleResize = () => {
@@ -55,87 +55,89 @@ const Sidebar = ({ activePage, onNavigate, role }: SidebarProps) => {
 
   // Bank Credit Officer menu items
   const bankMenuItems = [
-    { id: "dashboard", label: "Dashboard", icon: DashboardOutlined },
-    { id: "projects", label: "All projects", icon: FolderOpenOutlined },
+    { id: "dashboard", label: t("dashboard"), icon: DashboardOutlined },
+    { id: "projects", label: t("allProjects"), icon: FolderOpenOutlined },
   ];
 
   // Property Owner menu items
   const ownerMenuItems = [
-    { id: "dashboard", label: "Dashboard", icon: DashboardOutlined },
-    { id: "projects", label: "All projects", icon: FolderOpenOutlined },
-    { id: "payment", label: "Payment", icon: CreditCardOutlined },
+    { id: "dashboard", label: t("dashboard"), icon: DashboardOutlined },
+    { id: "projects", label: t("allProjects"), icon: FolderOpenOutlined },
+    { id: "payment", label: t("payment"), icon: CreditCardOutlined },
   ];
 
   // COORDINATOR menu items
   const coordinatorMenuItems = [
-    { id: "dashboard", label: "Dashboard", icon: DashboardOutlined },
-    { id: "create-project", label: "Create Project", icon: PlusOutlined },
-    { id: "fleet-management", label: "Fleet Management", icon: UserOutlined },
-    { id: "project-status", label: "Project Status", icon: BarChartOutlined },
+    { id: "dashboard", label: t("dashboard"), icon: DashboardOutlined },
+    { id: "create-project", label: t("createProject"), icon: PlusOutlined },
+    { id: "fleet-management", label: t("fleetManagement"), icon: UserOutlined },
+    { id: "project-status", label: t("allProjects"), icon: BarChartOutlined },
     { id: "messages", label: "Messages", icon: FileTextOutlined },
   ];
 
   // Admin menu items
   const adminMenuItems = [
-    { id: "dashboard", label: "Dashboard", icon: DashboardOutlined },
-    { id: "users", label: "Users", icon: UserOutlined },
+    { id: "dashboard", label: t("dashboard"), icon: DashboardOutlined },
+    { id: "users", label: t("users"), icon: UserOutlined },
+    { id: "valuation-types", label: t("valuationTypes"), icon: FileTextOutlined},
+    { id: "templates", label: t("templates"), icon:  BarChartOutlined},
   ];
 
   // Technical Officer menu items
   const technicalOfficerMenuItems = [
-    { id: "dashboard", label: "Dashboard", icon: DashboardOutlined },
-    { id: "projects", label: "Assigned Projects", icon: FolderOpenOutlined },
-    { id: "reports", label: "Reports", icon: FileTextOutlined },
-    { id: "documents", label: "Documents", icon: FileTextOutlined },
-    { id: "attendance", label: "Attendance", icon: ClockCircleOutlined },
+    { id: "dashboard", label: t("dashboard"), icon: DashboardOutlined },
+    { id: "projects", label: t("assignedProjects"), icon: FolderOpenOutlined },
+    { id: "reports", label: t("reports"), icon: FileTextOutlined },
+    { id: "documents", label: t("documents"), icon: FileTextOutlined },
+    { id: "attendance", label: t("attendance"), icon: ClockCircleOutlined },
   ];
 
   // Senior Valuator menu items
   const seniorValuatorMenuItems = [
-    { id: "dashboard", label: "Dashboard", icon: DashboardOutlined },
-    { id: "reports", label: "Reports", icon: FileTextOutlined },
-    { id: "approvals", label: "Approvals", icon: CheckCircleOutlined },
+    { id: "dashboard", label: t("dashboard"), icon: DashboardOutlined },
+    { id: "reports", label: t("reports"), icon: FileTextOutlined },
+    { id: "approvals", label: t("approvals"), icon: CheckCircleOutlined },
   ];
 
   // L3 Manager menu items
   const l3MenuItems = [
-    { id: "dashboard", label: "Dashboard", icon: DashboardOutlined },
-    { id: "pending", label: "Pending Reviews", icon: ClockCircleOutlined },
-    { id: "approved", label: "Approved Reports", icon: CheckCircleOutlined },
-    { id: "rejected", label: "Rejected Reports", icon: CloseCircleOutlined },
-    { id: "all", label: "All Reports", icon: FileTextOutlined },
-    { id: "finalized", label: "Finalized Reports", icon: LockOutlined },
-    { id: "history", label: "Version History", icon: HistoryOutlined },
+    { id: "dashboard", label: t("dashboard"), icon: DashboardOutlined },
+    { id: "pending", label: t("pendingReviews"), icon: ClockCircleOutlined },
+    { id: "approved", label: t("approvedReports"), icon: CheckCircleOutlined },
+    { id: "rejected", label: t("rejectedReports"), icon: CloseCircleOutlined },
+    { id: "all", label: t("allReports"), icon: FileTextOutlined },
+    { id: "finalized", label: t("finalizedReports"), icon: LockOutlined },
+    { id: "history", label: t("versionHistory"), icon: HistoryOutlined },
   ];
 
   // L2 Manager menu items
   const l2MenuItems = [
-    { id: "dashboard", label: "Dashboard", icon: DashboardOutlined },
-    { id: "projects", label: "All Projects", icon: FolderOpenOutlined },
-    { id: "approvals", label: "Approvals", icon: CheckCircleOutlined },
-    { id: "reports", label: "Reports", icon: FileTextOutlined },
-    { id: "pending", label: "Pending Reviews", icon: ClockCircleOutlined },
-    { id: "approved", label: "Approved Reports", icon: CheckCircleOutlined },
-    { id: "rejected", label: "Rejected Reports", icon: CloseCircleOutlined },
-    { id: "all", label: "All Reports", icon: FileTextOutlined },
-    { id: "finalized", label: "Finalized Reports", icon: LockOutlined },
-    { id: "history", label: "Version History", icon: HistoryOutlined },
+    { id: "dashboard", label: t("dashboard"), icon: DashboardOutlined },
+    { id: "projects", label: t("allProjects"), icon: FolderOpenOutlined },
+    { id: "approvals", label: t("approvals"), icon: CheckCircleOutlined },
+    { id: "reports", label: t("reports"), icon: FileTextOutlined },
+    { id: "pending", label: t("pendingReviews"), icon: ClockCircleOutlined },
+    { id: "approved", label: t("approvedReports"), icon: CheckCircleOutlined },
+    { id: "rejected", label: t("rejectedReports"), icon: CloseCircleOutlined },
+    { id: "all", label: t("allReports"), icon: FileTextOutlined },
+    { id: "finalized", label: t("finalizedReports"), icon: LockOutlined },
+    { id: "history", label: t("versionHistory"), icon: HistoryOutlined },
   ];
 
   // L1 Manager menu items
   const l1MenuItems = [
-    { id: "dashboard", label: "Dashboard", icon: DashboardOutlined },
-    { id: "projects", label: "All Projects", icon: FolderOpenOutlined },
-    { id: "approvals", label: "Approvals", icon: CheckCircleOutlined },
-    { id: "reports", label: "Reports", icon: FileTextOutlined },
-    { id: "pending", label: "Pending Reviews", icon: ClockCircleOutlined },
-    { id: "approved", label: "Approved Reports", icon: CheckCircleOutlined },
-    { id: "rejected", label: "Rejected Reports", icon: CloseCircleOutlined },
-    { id: "all", label: "All Reports", icon: FileTextOutlined },
-    { id: "finalized", label: "Finalized Reports", icon: LockOutlined },
-    { id: "history", label: "Version History", icon: HistoryOutlined },
-    { id: "bottlenecks", label: "Bottlenecks", icon: BarChartOutlined },
-    { id: "morning-report", label: "Morning Report", icon: ClockCircleOutlined },
+    { id: "dashboard", label: t("dashboard"), icon: DashboardOutlined },
+    { id: "projects", label: t("allProjects"), icon: FolderOpenOutlined },
+    { id: "approvals", label: t("approvals"), icon: CheckCircleOutlined },
+    { id: "reports", label: t("reports"), icon: FileTextOutlined },
+    { id: "pending", label: t("pendingReviews"), icon: ClockCircleOutlined },
+    { id: "approved", label: t("approvedReports"), icon: CheckCircleOutlined },
+    { id: "rejected", label: t("rejectedReports"), icon: CloseCircleOutlined },
+    { id: "all", label: t("allReports"), icon: FileTextOutlined },
+    { id: "finalized", label: t("finalizedReports"), icon: LockOutlined },
+    { id: "history", label: t("versionHistory"), icon: HistoryOutlined },
+    { id: "bottlenecks", label: t("bottlenecks"), icon: BarChartOutlined },
+    { id: "morning-report", label: t("morningReport"), icon: ClockCircleOutlined },
   ];
 
   // Get menu items based on role
@@ -166,8 +168,8 @@ const Sidebar = ({ activePage, onNavigate, role }: SidebarProps) => {
 
   // Bottom items (common for all roles)
   const bottomItems = [
-    { id: "settings", label: "Settings", icon: SettingOutlined },
-    { id: "logout", label: "Logout", icon: LogoutOutlined },
+    { id: "settings", label: t("settings"), icon: SettingOutlined },
+    { id: "logout", label: t("logout"), icon: LogoutOutlined },
   ];
 
   const getMenuItemStyle = (isActive: boolean): CSSProperties => ({
@@ -189,25 +191,22 @@ const Sidebar = ({ activePage, onNavigate, role }: SidebarProps) => {
     width: "100%",
   });
 
-  const getMenuItemHoverStyle = (isActive: boolean): CSSProperties => ({
-    backgroundColor: isActive ? "#d9e9ff" : "#f3f4f6",
-    color: isActive ? "#2563eb" : "#4b5563",
-  });
+const getMenuItemHoverStyle = (isActive: boolean): CSSProperties => ({
+  backgroundColor: isActive ? "#d9e9ff" : "#f3f4f6",
+  color: isActive ? "#2563eb" : "#4b5563",
+});
 
-  // Handle navigation with special cases
+// Handle navigation with special cases
   const handleItemClick = (itemId: string) => {
     if (itemId === "logout") {
-      localStorage.clear();
-      sessionStorage.clear();
-      navigate("/");
+      onNavigate("logout");
     } else if (itemId === "create-project") {
       onNavigate("create-project");
     } else if (itemId === "fleet-management") {
       onNavigate("fleet-management");
-    } else if (itemId === "project-status") {
-      onNavigate("project-status");
-    } else if (itemId === "messages") {
-      onNavigate("messages");
+    } else if (itemId === "project-status" || itemId === "messages") {
+      // Both pages are currently not implemented; fallback to dashboard
+      onNavigate("dashboard");
     } else {
       onNavigate(itemId);
     }

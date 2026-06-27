@@ -10,6 +10,34 @@ import {
 import StatCard from '../../../components/atoms/StatCard';
 import ProjectsTable from '../../../components/organisms/ProjectsTable';
 import ValuationJobDetail from './ValuationJobDetail';
+import valuationJobService, { type ValuationJob, type JobStats } from '../../../services/valuationJobService';
+import { theme } from '../../../styles/theme';
+
+const DashboardPage = () => {
+  const [selectedProjectId, setSelectedProjectId] = useState<string | null>(null);
+  const [stats, setStats] = useState<JobStats | null>(null);
+  const [recentProjects, setRecentProjects] = useState<ValuationJob[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    fetchDashboardData();
+  }, []);
+
+  const fetchDashboardData = async () => {
+    try {
+      setLoading(true);
+      const [statsData, jobsData] = await Promise.all([
+        valuationJobService.getStats(),
+        valuationJobService.getJobs(),
+      ]);
+      setStats(statsData);
+      setRecentProjects(jobsData.slice(0, 5));
+    } catch (err) {
+      console.error("Failed to fetch dashboard data", err);
+    } finally {
+      setLoading(false);
+    }
+  };
 import { dashboardService } from '../../../services/dashboardService';
 import type { DashboardStats } from '../../../services/dashboardService';
 import type { Project } from '../types';
@@ -154,18 +182,24 @@ const DashboardPage = () => {
       {/* Stats Cards - ✅ Using REAL data from backend */}
       <div style={statsGridStyle}>
         <StatCard
+          title="Total Project"
+          value={stats?.totalProjects || 0}
           title="Total Valuation Jobs"
           value={stats.totalProjects}
           icon={<FolderOutlined />}
           iconBgColor="#1890ff"
         />
         <StatCard
+          title="Completed Project"
+          value={stats?.completedProjects || 0}
           title="Completed Valuation Jobs"
           value={stats.completedProjects}
           icon={<CheckCircleOutlined />}
           iconBgColor="#52c41a"
         />
         <StatCard
+          title="Active Project"
+          value={stats?.activeProjects || 0}
           title="Active Valuation Jobs"
           value={stats.activeProjects}
           icon={<FileTextOutlined />}
@@ -173,11 +207,14 @@ const DashboardPage = () => {
         />
         <StatCard
           title="Pending Payment"
+          value={stats?.pendingPayment || 0}
           value={stats.pendingPayments}
           icon={<CreditCardOutlined />}
           iconBgColor="#722ed1"
         />
         <StatCard
+          title="Pending Document"
+          value={stats?.pendingDocuments || 0}
           title="Pending Documents"
           value={stats.pendingDocuments}
           icon={<FileOutlined />}
@@ -185,6 +222,16 @@ const DashboardPage = () => {
         />
       </div>
 
+      {/* Projects Table */}
+      {loading ? (
+        <div style={{ textAlign: 'center', padding: '40px' }}>Loading data...</div>
+      ) : (
+        <ProjectsTable
+          projects={recentProjects as any}
+          showSearch
+          onProjectClick={(projectId) => setSelectedProjectId(projectId)}
+        />
+      )}
       {/* Valuation Jobs Table - ✅ Using REAL data from backend */}
       <ProjectsTable 
         projects={recentValuationJobs} 

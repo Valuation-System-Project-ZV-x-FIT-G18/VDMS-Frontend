@@ -7,41 +7,59 @@ import {
   UnorderedListOutlined,
   WarningOutlined,
 } from "@ant-design/icons";
+import { useState, useEffect } from "react";
+import valuationJobService, { type ValuationJob } from "../../../services/valuationJobService";
 
 
 // ─── Mock Data ────────────────────────────────────────────────────────────────
 
-const stats = [
-  { label: "Completed", value: "28", color: "#111827" },
-  { label: "In Progress", value: "8", color: "#1890ff" },
-  { label: "Pending Review", value: "4", color: "#fa8c16" },
-  { label: "Avg Completion", value: "3.2d", color: "#52c41a" },
-];
-
-const assignedProjects = [
-  { id: "VAL-2024-089", name: "Henderson Properties", deadline: "Dec 28, 2024", progress: 82, color: "#52c41a" },
-  { id: "VAL-2024-092", name: "Sarah Mitchell", deadline: "Dec 30, 2024", progress: 45, color: "#1890ff" },
-  { id: "VAL-2024-087", name: "Metro Development Corp", deadline: "Dec 26, 2024", progress: 70, color: "#52c41a" },
-  { id: "VAL-2024-085", name: "Johnson Family Trust", deadline: "Dec 22, 2024", progress: 30, color: "#ff4d4f" },
-];
-
-const recentActivity = [
-  { icon: "📷", text: "Uploaded inspection photos – VAL-2024-089", time: "2 hours ago" },
-  { icon: "📄", text: "Submitted valuation draft – VAL-2024-087", time: "4 hours ago" },
-  { icon: "📁", text: "Received new assignment – VAL-2024-092", time: "Yesterday" },
-  { icon: "✏️", text: "Updated property measurements – VAL-2024-085", time: "Yesterday" },
-];
-
-const quickActions = [
-  { icon: <UploadOutlined style={{ fontSize: 18, color: "#fff" }} />, label: "Upload Datasheet", bg: "#1890ff" },
-  { icon: <PictureOutlined style={{ fontSize: 18, color: "#fff" }} />, label: "Add Photos", bg: "#13c2c2" },
-  { icon: <EnvironmentOutlined style={{ fontSize: 18, color: "#fff" }} />, label: "Upload Maps", bg: "#722ed1" },
-  { icon: <UnorderedListOutlined style={{ fontSize: 18, color: "#fff" }} />, label: "View Checklist", bg: "#fa8c16" },
-];
-
-// ─── Main Component ───────────────────────────────────────────────────────────
-
 const TechnicalOfficerDashboard = () => {
+  const [jobs, setJobs] = useState<ValuationJob[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    fetchJobs();
+  }, []);
+
+  const fetchJobs = async () => {
+    try {
+      setLoading(true);
+      const data = await valuationJobService.getJobs();
+      setJobs(data);
+    } catch (err) {
+      console.error("Failed to fetch jobs", err);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const stats = [
+    { label: "Total Assignments", value: jobs.length.toString(), color: "#111827" },
+    { label: "Completed", value: jobs.filter(j => j.status === 'Completed').length.toString(), color: "#52c41a" },
+    { label: "In Progress", value: jobs.filter(j => j.status === 'In Progress' || j.status === 'Site Inspected').length.toString(), color: "#1890ff" },
+    { label: "Awaiting Docs", value: jobs.filter(j => j.status === 'Awaiting Docs').length.toString(), color: "#fa8c16" },
+  ];
+
+  const assignedProjects = jobs.slice(0, 4).map(j => ({
+    id: j.projectId,
+    name: j.propertyAddress.split(',')[0],
+    deadline: j.expectedCompletion || 'TBD',
+    progress: j.status === 'Completed' ? 100 : j.status === 'Report Prepared' ? 80 : 40,
+    color: j.status === 'Completed' ? "#52c41a" : "#1890ff",
+  }));
+
+  const recentActivity = [
+    { icon: "📷", text: "Uploaded inspection photos", time: "2 hours ago" },
+    { icon: "📄", text: "Submitted valuation draft", time: "4 hours ago" },
+    { icon: "📁", text: "Received new assignment", time: "Yesterday" },
+  ];
+
+  const quickActions = [
+    { icon: <UploadOutlined style={{ fontSize: 18, color: "#fff" }} />, label: "Upload Datasheet", bg: "#1890ff" },
+    { icon: <PictureOutlined style={{ fontSize: 18, color: "#fff" }} />, label: "Add Photos", bg: "#13c2c2" },
+    { icon: <EnvironmentOutlined style={{ fontSize: 18, color: "#fff" }} />, label: "Upload Maps", bg: "#722ed1" },
+    { icon: <UnorderedListOutlined style={{ fontSize: 18, color: "#fff" }} />, label: "View Checklist", bg: "#fa8c16" },
+  ];
   const page: CSSProperties = {
     maxWidth: "1400px",
     margin: "0 auto",
@@ -63,6 +81,8 @@ const TechnicalOfficerDashboard = () => {
       <h1 style={{ fontSize: "24px", fontWeight: 700, color: "#111827", margin: "0 0 24px" }}>
         Technical Officer Dashboard
       </h1>
+
+      {loading && <div style={{ textAlign: 'center', padding: '20px' }}>Loading assignments...</div>}
 
       {/* ── Welcome Banner ── */}
       <div
